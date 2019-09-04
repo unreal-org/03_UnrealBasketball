@@ -6,7 +6,8 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "HoopzPlayerMovementComponent.generated.h"
 
-class UCapsuleComponent;  // For Capsule Component Input/Movement
+//class AHoopzPlayer;        // Get for Movement
+class UPlayerCapsuleComponent;  // For Capsule Component Input/Movement
 
 /**
  * Controls Hoopz Player Movement:
@@ -21,24 +22,25 @@ class UNREALBASKETBALL_API UHoopzPlayerMovementComponent : public UPawnMovementC
 	GENERATED_BODY()
 	
 public:
-	// Input setup
+    //virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;  
+
+	// Initial setup
 	UFUNCTION(BluePrintCallable, Category = "Setup")      
-	void Initialize(UCapsuleComponent* CapsuleComponentToSet);
+	void Initialize(UPlayerCapsuleComponent* PlayerCapsuleComponentToSet);
 
 	// Capsule Movement
 	UFUNCTION(BluePrintCallable, Category = "Input")
-	void MoveForward(float Throw);
+	void IntendMoveForward(float Throw);
 	UFUNCTION(BluePrintCallable, Category = "Input")
-	void MoveRight(float Throw);
+	void IntendMoveRight(float Throw);
 
-	// Max force for Capsule Movement in newtons
-	UPROPERTY(EditDefaultsOnly)
-	float MaxMovementForce = 35;
+// 	// Max force for Capsule Movement in newtons
+// 	UPROPERTY(EditDefaultsOnly)
+// 	float MaxMovementForce = 35;
 
-private:
-	// Components to set
-	UCapsuleComponent* CapsuleComponent = nullptr;
+// private:
+// 	// Throw for movement
+// 	//float CurrentThrow = 0;
 
-	float CurrentThrow = 0;
-
+ 	UPlayerCapsuleComponent* PlayerCapsuleComponent = nullptr;
 };

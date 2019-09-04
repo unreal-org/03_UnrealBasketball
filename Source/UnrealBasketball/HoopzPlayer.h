@@ -6,6 +6,9 @@
 #include "GameFramework/Pawn.h"
 #include "HoopzPlayer.generated.h"
 
+class UPlayerCapsuleComponent;   // Root Component
+class UHoopzPlayerMovementComponent;
+
 UCLASS()
 class UNREALBASKETBALL_API AHoopzPlayer : public APawn
 {

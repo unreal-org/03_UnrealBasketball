@@ -2,6 +2,8 @@
 
 
 #include "HoopzPlayer.h"
+#include "PlayerCapsuleComponent.h"
+#include "HoopzPlayerMovementComponent.h"
 
 // Sets default values
 AHoopzPlayer::AHoopzPlayer()
@@ -9,8 +11,20 @@ AHoopzPlayer::AHoopzPlayer()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	// PlayerCapsuleComponent = CreateDefaultSubobject<UPlayerCapsuleComponent>(TEXT("RootPlayerCapsuleComponent"));
+	// PlayerCapsuleComponent->SetSimulatePhysics(true);
+	// PlayerCapsuleComponent->SetCollisionProfileName(TEXT("Pawn"));
+	//RootComponent = PlayerCapsuleComponent;
+	
+	//PlayerMovementComponent = CreateDefaultSubobject<UHoopzPlayerMovementComponent>(TEXT("PlayerMovementComponent"));
+	//PlayerMovementComponent->UpdatedComponent = RootComponent;
+	
 	// Possess default player
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
+	
+	// Set Root Component
+	//RootComponent = CapsuleComponent;
+	
 }
 
 // Called when the game starts or when spawned
@@ -33,4 +47,3 @@ void AHoopzPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
-
