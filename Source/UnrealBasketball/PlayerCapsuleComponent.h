@@ -21,14 +21,13 @@ public:
 	void SetMoveRightRate(float Rate);
 
 	UPROPERTY(EditDefaultsOnly)
-	float MaxMoveForce = 35000;  
+	float MaxMoveForce = 1500;  
 
 private:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
 
 	void Move();
-	//void MoveRight();
 
 	float CurrentForwardRate = 0;
 	float CurrentRightRate = 0;
