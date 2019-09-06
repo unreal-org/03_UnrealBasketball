@@ -7,7 +7,6 @@
 #include "HoopzPlayerMovementComponent.generated.h"
 
 class UPlayerCapsuleComponent;  // For Capsule Component Input/Movement
-class UInputComponent;
 
 /**
  * Controls Hoopz Player Movement:
@@ -22,11 +21,6 @@ class UNREALBASKETBALL_API UHoopzPlayerMovementComponent : public UPawnMovementC
 	GENERATED_BODY()
 	
 public:
-	///// Input Component Setup
-	// void SetupInputComponent();
-
-	// UInputComponent* InputComponent = nullptr;
-
 	///// Capsule Component Setup
 	UFUNCTION(BluePrintCallable, Category = "Setup")      
 	void Initialize(UPlayerCapsuleComponent* PlayerCapsuleComponentToSet);

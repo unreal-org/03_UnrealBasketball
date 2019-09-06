@@ -5,9 +5,24 @@
 #include "Components/PrimitiveComponent.h"
 #include "Math/UnrealMathUtility.h"
 
+UPlayerCapsuleComponent::UPlayerCapsuleComponent()
+{
+    CapsuleHalfHeight = 96.0f;        // Capsule height
+
+    SetSimulatePhysics(true);
+    BodyInstance.bLockXRotation = true;     // Lock Capsule Rotations
+    BodyInstance.bLockYRotation = true;
+    
+    SetNotifyRigidBodyCollision(true);          // Simulation Generates Hit Events
+    SetCollisionProfileName(TEXT("Pawn"));      // Collision Preset Pawn
+
+    // TODO: Reduce Bounciness to Capsule - Possibly do this with physics material
+}
+
 void UPlayerCapsuleComponent::BeginPlay()
 {
     Super::BeginPlay();
+
     OnComponentHit.AddDynamic(this, &UPlayerCapsuleComponent::OnHit);
 }
 
@@ -25,6 +40,7 @@ void UPlayerCapsuleComponent::OnHit(UPrimitiveComponent* HitComponent, AActor* O
     CurrentJumpRate = 0;
 }
 
+//////////////////////////////// Movement ///////////////////////////////////////
 void UPlayerCapsuleComponent::SetMoveForwardRate(float Rate)
 {
     CurrentForwardRate = FMath::Clamp<float>(CurrentForwardRate + Rate, -1, 1);
@@ -37,6 +53,7 @@ void UPlayerCapsuleComponent::SetMoveRightRate(float Rate)
 
 void UPlayerCapsuleComponent::SetJumpRate(float Rate)
 {
+    if(GetComponentLocation().Z > CapsuleHalfHeight + 20.1) { return; }    // quick workaround to check if capsul is in air - May have to fix later
     CurrentJumpRate = FMath::Clamp<float>(Rate, 0, 1);
 }
 

@@ -7,11 +7,6 @@
 #include "PlayerCapsuleComponent.h"
 #include "Engine/World.h"
 
-// void UHoopzPlayerMovementComponent::SetupInputComponent()
-// {
-//     InputComponent = 
-// }
-
 void UHoopzPlayerMovementComponent::Initialize(UPlayerCapsuleComponent* PlayerCapsuleComponentToSet)
 {
     PlayerCapsuleComponent = PlayerCapsuleComponentToSet;
@@ -32,9 +27,6 @@ void UHoopzPlayerMovementComponent::IntendMoveRight(float Throw)
 void UHoopzPlayerMovementComponent::IntendJumpCalled()
 {
     JumpCalledTime = GetWorld()->GetTimeSeconds();
-    //JumpPressedTime = 
-    // float Throw = 0.0f;
-    // PlayerCapsuleComponent->SetJumpRate(Throw);
 }
 
 void UHoopzPlayerMovementComponent::IntendJumpReleased()

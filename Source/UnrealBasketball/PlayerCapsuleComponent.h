@@ -15,6 +15,9 @@ class UNREALBASKETBALL_API UPlayerCapsuleComponent : public UCapsuleComponent
 	GENERATED_BODY()
 	
 public:
+	// Constructor to set default capsule values
+	UPlayerCapsuleComponent();
+
 	// Movement
 	UFUNCTION(BluePrintCallable, Category = "Input")
 	void SetMoveForwardRate(float Rate);
@@ -23,11 +26,12 @@ public:
 	UFUNCTION(BluePrintCallable, Category = "Input")
 	void SetJumpRate(float Rate);
 
+	// Properties
 	UPROPERTY(EditDefaultsOnly)
 	float MaxMoveForce = 1500;  
 
 private:
-	// Apply Force only when in contact with Court
+	// To Apply Force only when in contact with Court
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit);
 
