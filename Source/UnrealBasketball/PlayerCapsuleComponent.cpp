@@ -4,6 +4,12 @@
 #include "PlayerCapsuleComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Math/UnrealMathUtility.h"
+#include "PlayerSkeletalMeshComponent.h"
+
+void UPlayerCapsuleComponent::Initialize(UPlayerSkeletalMeshComponent* SkeletalMeshComponentToSet)
+{
+    SkeletalMeshComponent = SkeletalMeshComponentToSet;
+}
 
 UPlayerCapsuleComponent::UPlayerCapsuleComponent()
 {

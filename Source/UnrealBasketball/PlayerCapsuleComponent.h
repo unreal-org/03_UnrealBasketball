@@ -6,6 +6,8 @@
 #include "Components/CapsuleComponent.h"
 #include "PlayerCapsuleComponent.generated.h"
 
+class UPlayerSkeletalMeshComponent;
+
 /**
  * 
  */
@@ -15,8 +17,13 @@ class UNREALBASKETBALL_API UPlayerCapsuleComponent : public UCapsuleComponent
 	GENERATED_BODY()
 	
 public:
-	// Constructor to set default capsule values
+	// Constructor & Skeletal Mesh Setup
 	UPlayerCapsuleComponent();
+	
+	UFUNCTION(BluePrintCallable, Category = "Setup")      
+	void Initialize(UPlayerSkeletalMeshComponent* SkeletalMeshComponentToSet);
+	
+	UPlayerSkeletalMeshComponent* SkeletalMeshComponent = nullptr;
 
 	// Movement
 	UFUNCTION(BluePrintCallable, Category = "Input")
