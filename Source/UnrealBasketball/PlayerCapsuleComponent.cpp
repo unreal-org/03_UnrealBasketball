@@ -59,10 +59,16 @@ void UPlayerCapsuleComponent::SetJumpRate(float Rate)
 
 void UPlayerCapsuleComponent::Move()
 {
+    // If CurrentForwardRate and CurrentRightRate == 0 
+        // Then Auto place feet to default positions (according to capsule location and body angle)
+    
     FVector ForwardForceToApply = FVector(1, 0, 0) * CurrentForwardRate * MaxMoveForce;
     FVector RightForceToApply = FVector(0, 1, 0) * CurrentRightRate * MaxMoveForce;
     FVector TotalForceToApply = ForwardForceToApply + RightForceToApply;
     AddForce(TotalForceToApply, NAME_None, true);
+
+    // If Capsule moves,
+        // use vector magnitude as amplitude for sine wave (used to calculate foot positions)
 }
 
 void UPlayerCapsuleComponent::Jump()
