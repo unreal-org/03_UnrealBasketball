@@ -14,9 +14,12 @@ struct FBone
 	GENERATED_USTRUCT_BODY()
 	
 	FName BoneName;
-	float BoneLength;
-	FRotator BoneJoint;
+	FVector BoneLength = FVector(0, 0, 0);
 
+	FBone(FName Name)
+	{
+		BoneName = Name;
+	}
 };
 
 /**
@@ -28,33 +31,26 @@ class UNREALBASKETBALL_API UMainAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 	
 public:
-	// Walking - Joints to Rotate - Left = 0, Right = 1
+	// Walking 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FRotator Pelvis;
-	// Right Leg
+	// Joints to Rotate - Left = 0, Right = 1
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator RightThigh;
+	TArray<FRotator> Thigh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator RightCalf;
+	TArray<FRotator> Calf;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator RightFoot;
-	// Left Leg
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator LeftThigh;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator LeftCalf;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator LeftFoot;
+	TArray<FRotator> Foot;
 
 	// Max Leg Reach
 	float MaxReach;
 	bool RightFootFree = true;
 
 	// Inverse Kinematics
-	FVector ForwardKinematics(TArray<float> JointAngles);
-	float DistanceFromTarget(FVector TargetFootPosition, TArray<float> JointAngles);
-	float PartialGradient(FVector TargetFootPosition, TArray<float> JointAngles, int i);
-	void InverseKinematics(FVector TargetFootPosition, TArray<float> JointAngles);
+	FVector ForwardKinematics();
+	float DistanceFromTarget(FVector TargetFootPosition);
+	float PartialGradient(FVector TargetFootPosition);
+	void InverseKinematics(FVector TargetFootPosition);
 
 public:
 	// Constructor
@@ -68,12 +64,13 @@ public:
 private:
 	USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;
 
+	FVector GetBoneLength(FName Bone);
+
 	// Left = 0, Right = 1
-	// Consider having above Frotators as member variables when initializing
-	FBone Pelvis;
-	TArray<FBone> Thigh;
-	TArray<FBone> Calf;
-	TArray<FBone> Leg;
+	FBone FPelvis;
+	TArray<FBone> FThigh;
+	TArray<FBone> FCalf;
+	TArray<FBone> FFoot;
 
 	// Foot Positions - To be updated every tick & locked while walking - Left = 0, Right = 1
 	TArray<FVector> DefaultFootPosition;      // Feet will default back to this position
