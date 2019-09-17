@@ -24,6 +24,7 @@ void UPlayerCapsuleComponent::BeginPlay()
     Super::BeginPlay();
 
     OnComponentHit.AddDynamic(this, &UPlayerCapsuleComponent::OnHit);
+    MainAnimation = Cast<UMainAnimInstance>(Cast<USkeletalMeshComponent>(GetChildComponent(0))->GetAnimInstance());
 }
 
 void UPlayerCapsuleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -69,9 +70,18 @@ void UPlayerCapsuleComponent::Move()
 
     // If Capsule moves,
         // use vector magnitude as amplitude for sine wave (used to calculate foot positions)
+        // On PIVOT
+            // 1. left stick - closer foot moves towards direction of capsule movement - pass FVector( current forward rate, current right rate, 0)
 }
 
 void UPlayerCapsuleComponent::Jump()
 {
     AddImpulse(FVector(0, 0, CurrentJumpRate * MaxMoveForce), NAME_None, true);
+}
+
+void UPlayerCapsuleComponent::Turn(float ZRotation)
+{
+    if (!ensure(MainAnimation)) { return; }
+
+    MainAnimation->TurnBody(ZRotation);
 }

@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "MainAnimInstance.h"
+
 #include "CoreMinimal.h"
 #include "Components/CapsuleComponent.h"
 #include "PlayerCapsuleComponent.generated.h"
@@ -25,10 +27,14 @@ public:
 	void SetMoveRightRate(float Rate);
 	UFUNCTION(BluePrintCallable, Category = "Input")
 	void SetJumpRate(float Rate);
+	
+	void Turn(float ZRotation);
 
 	// Properties
 	UPROPERTY(EditDefaultsOnly)
 	float MaxMoveForce = 1500;  
+
+	// TODO : Contstruct and Set Sub Anim Instance Capsule Half Height * Scale.Z Here
 
 private:
 	// To Apply Force only when in contact with Court
@@ -42,6 +48,8 @@ private:
 	float CurrentForwardRate = 0;
 	float CurrentRightRate = 0;
 	float CurrentJumpRate = 0;
+
+	UMainAnimInstance* MainAnimation = nullptr;
 
 protected:
 	virtual void BeginPlay() override;

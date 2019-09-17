@@ -35,3 +35,15 @@ void UHoopzPlayerMovementComponent::IntendJumpReleased()
     if (!ensure(PlayerCapsuleComponent)) { return; }
     PlayerCapsuleComponent->SetJumpRate(JumpPressedTime);
 }
+
+void UHoopzPlayerMovementComponent::TurnLeft()
+{
+    if (!ensure(PlayerCapsuleComponent)) { return; }
+    PlayerCapsuleComponent->Turn(-1);
+}
+
+void UHoopzPlayerMovementComponent::TurnRight()
+{
+    if (!ensure(PlayerCapsuleComponent)) { return; }
+    PlayerCapsuleComponent->Turn(1);
+}

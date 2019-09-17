@@ -8,20 +8,6 @@
 
 class USkeletalMeshComponent;
 
-USTRUCT()
-struct FBone
-{
-	GENERATED_USTRUCT_BODY()
-	
-	FName BoneName;
-	FVector BoneLength = FVector(0, 0, 0);
-
-	FBone(FName Name)
-	{
-		BoneName = Name;
-	}
-};
-
 /**
  * 
  */
@@ -33,24 +19,17 @@ class UNREALBASKETBALL_API UMainAnimInstance : public UAnimInstance
 public:
 	// Walking 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator Pelvis;
-	// Joints to Rotate - Left = 0, Right = 1
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	TArray<FRotator> Thigh;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	TArray<FRotator> Calf;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	TArray<FRotator> Foot;
+	FVector RightFootLocation;
 
-	// Max Leg Reach
-	float MaxReach;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector LeftFootLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FRotator PelvisRotation;
+
+	// Max Leg Reach between feet
+	float MaxReach = 50;
 	bool RightFootFree = true;
-
-	// Inverse Kinematics
-	FVector ForwardKinematics();
-	float DistanceFromTarget(FVector TargetFootPosition);
-	float PartialGradient(FVector TargetFootPosition);
-	void InverseKinematics(FVector TargetFootPosition);
 
 public:
 	// Constructor
@@ -61,19 +40,31 @@ public:
 	// Tick
 	virtual void NativeUpdateAnimation(float DeltaTimeX) override;
 
+	// IK Foot Trace Offset
+	// float IKFootTrace(FName Foot, float CapsuleLocationZ);
+
+	// Rotates Pelvis
+	void TurnBody(float ZRotation);
+
 private:
+
+	float CapsuleHalfHeight;
+	float CapsuleScale;
+
+	bool Pivot = true;
+	bool FootCanMove = false;
+	bool PostUp = false;
+
+	FName RightFoot = FName(TEXT("foot_r"));
+	FName LeftFoot = FName(TEXT("foot_l"));
+	FName Pelvis = FName(TEXT("pelvis"));
+
+
+	// Foot Target Position Calculator - to be called by capsule with move();
+	void CalculateTargetFootPosition(FVector MoveDirection);
+
+protected:
+	UPROPERTY(BluePrintReadOnly)
 	USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;
-
-	FVector GetBoneLength(FName Bone);
-
-	// Left = 0, Right = 1
-	FBone FPelvis;
-	TArray<FBone> FThigh;
-	TArray<FBone> FCalf;
-	TArray<FBone> FFoot;
-
-	// Foot Positions - To be updated every tick & locked while walking - Left = 0, Right = 1
-	TArray<FVector> DefaultFootPosition;      // Feet will default back to this position
-	TArray<FVector> TargetFootPosition;       // Calculate next foot position on move()
 
 };

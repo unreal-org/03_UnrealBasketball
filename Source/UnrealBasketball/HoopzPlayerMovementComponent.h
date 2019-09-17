@@ -37,6 +37,11 @@ public:
 	UFUNCTION(BluePrintCallable, Category = "Input")
 	void IntendJumpReleased();
 
+	UFUNCTION(BluePrintCallable, Category = "Input")
+	void TurnLeft();
+	UFUNCTION(BluePrintCallable, Category = "Input")
+	void TurnRight();
+
 	///// Timer
 	float JumpCalledTime = 0;
 	float JumpPressedTime = 0;
