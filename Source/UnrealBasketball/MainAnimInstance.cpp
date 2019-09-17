@@ -17,6 +17,9 @@ void UMainAnimInstance::NativeInitializeAnimation()
     Super::NativeInitializeAnimation();
 
     PlayerSkeletalMesh = GetSkelMeshComponent();
+
+    if(!ensure(PlayerSkeletalMesh)) { return; }
+    PelvisRotation.Add(90, 90, 90);
     // CapsuleHalfHeight = 1.0f;
 	// CapsuleScale = 1.0f;
     //if(!ensure(PlayerSkeletalMesh)) { return; }
@@ -84,9 +87,6 @@ void UMainAnimInstance::TurnBody(float ZRotation)
     // Rotate body by 45 degrees - unless post-up = true
     // FRotator CurrentRotation = PlayerSkeletalMesh->GetSocketRotation(Pelvis);
 
-    // CurrentRotation.Roll += 45 * ZRotation;
-    PelvisRotation.Pitch = 45 * ZRotation;
-    PelvisRotation.Roll = 0;
-    PelvisRotation.Yaw = 0;
-
+    // CurrentRotation.Yaw += 45 * ZRotation;
+    PelvisRotation.Yaw += 45 * ZRotation;
 }
