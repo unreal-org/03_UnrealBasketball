@@ -44,7 +44,8 @@ public:
 	// float IKFootTrace(FName Foot, float CapsuleLocationZ);
 
 	// Rotates Pelvis
-	void TurnBody(float ZRotation);
+	void SetZRotation(float ZThrow);
+	void TurnBody(float DeltaTimeX);
 
 private:
 
@@ -59,6 +60,13 @@ private:
 	FName LeftFoot = FName(TEXT("foot_l"));
 	FName Pelvis = FName(TEXT("pelvis"));
 
+	// Lerp Time
+	float LerpTime;
+	float LerpDuration = .5;
+	float ZRotation = 0;
+
+	// Rotation Target
+	FRotator TargetRotation;
 
 	// Foot Target Position Calculator - to be called by capsule with move();
 	void CalculateTargetFootPosition(FVector MoveDirection);

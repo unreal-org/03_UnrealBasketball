@@ -83,5 +83,5 @@ void UPlayerCapsuleComponent::Turn(float ZRotation)
 {
     if (!ensure(MainAnimation)) { return; }
 
-    MainAnimation->TurnBody(ZRotation);
+    MainAnimation->SetZRotation(ZRotation);
 }

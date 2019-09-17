@@ -20,6 +20,7 @@ void UMainAnimInstance::NativeInitializeAnimation()
 
     if(!ensure(PlayerSkeletalMesh)) { return; }
     PelvisRotation.Add(90, 90, 90);
+    TargetRotation = PelvisRotation;
     // CapsuleHalfHeight = 1.0f;
 	// CapsuleScale = 1.0f;
     //if(!ensure(PlayerSkeletalMesh)) { return; }
@@ -28,6 +29,8 @@ void UMainAnimInstance::NativeInitializeAnimation()
 void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 {
     Super::NativeUpdateAnimation(DeltaTimeX);
+
+    TurnBody(DeltaTimeX);
 }
 
 ///////////////////////// Target Foot Position Calculator /////////////////////////////
@@ -80,13 +83,23 @@ void UMainAnimInstance::CalculateTargetFootPosition(FVector MoveDirection)
     }
 }
 
-void UMainAnimInstance::TurnBody(float ZRotation)
+void UMainAnimInstance::SetZRotation(float ZThrow)
+{
+    ZRotation = ZThrow;
+    TargetRotation.Yaw += 45 * ZRotation;
+    ZRotation = 0;
+}
+
+void UMainAnimInstance::TurnBody(float DeltaTimeX)
 {
     if(!ensure(PlayerSkeletalMesh)) { return; }
-
+    
     // Rotate body by 45 degrees - unless post-up = true
-    // FRotator CurrentRotation = PlayerSkeletalMesh->GetSocketRotation(Pelvis);
+    LerpTime = 0;
 
-    // CurrentRotation.Yaw += 45 * ZRotation;
-    PelvisRotation.Yaw += 45 * ZRotation;
+    if(LerpTime < LerpDuration)
+    {
+        LerpTime += DeltaTimeX;
+        PelvisRotation = FMath::Lerp(PelvisRotation, TargetRotation, LerpTime / LerpDuration);
+    }
 }
