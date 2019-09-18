@@ -9,7 +9,7 @@
 class USkeletalMeshComponent;
 
 /**
- * 
+ * Controls Upper Body and Passes Feet variables to adjust legs in SubAnimInstance
  */
 UCLASS( transient, Blueprintable, hideCategories = AnimInstance, BlueprintType )
 class UNREALBASKETBALL_API UMainAnimInstance : public UAnimInstance
@@ -17,19 +17,11 @@ class UNREALBASKETBALL_API UMainAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 	
 public:
-	// Walking 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector RightFootLocation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector LeftFootLocation;
-
+	// Body Angle
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FRotator PelvisRotation;
-
-	// Max Leg Reach between feet
-	float MaxReach = 50;
-	bool RightFootFree = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FRotator Spine3Rotation;
 
 public:
 	// Constructor
@@ -48,17 +40,7 @@ public:
 	void TurnBody(float DeltaTimeX);
 
 private:
-
-	float CapsuleHalfHeight;
-	float CapsuleScale;
-
-	bool Pivot = true;
-	bool FootCanMove = false;
-	bool PostUp = false;
-
-	FName RightFoot = FName(TEXT("foot_r"));
-	FName LeftFoot = FName(TEXT("foot_l"));
-	FName Pelvis = FName(TEXT("pelvis"));
+	//FName Pelvis = FName(TEXT("pelvis"));
 
 	// Lerp Time
 	float LerpTime;
@@ -68,9 +50,7 @@ private:
 	// Rotation Target
 	FRotator TargetRotation;
 
-	// Foot Target Position Calculator - to be called by capsule with move();
-	void CalculateTargetFootPosition(FVector MoveDirection);
-
+	
 protected:
 	UPROPERTY(BluePrintReadOnly)
 	USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;

@@ -20,7 +20,9 @@ void UMainAnimInstance::NativeInitializeAnimation()
 
     if(!ensure(PlayerSkeletalMesh)) { return; }
     PelvisRotation.Add(90, 90, 90);
-    TargetRotation = PelvisRotation;
+    Spine3Rotation.Add(90, 90, 180);
+    
+    TargetRotation = Spine3Rotation;
     // CapsuleHalfHeight = 1.0f;
 	// CapsuleScale = 1.0f;
     //if(!ensure(PlayerSkeletalMesh)) { return; }
@@ -58,31 +60,11 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 //     return 0; // No Hit = No Offset
 // }
 
-void UMainAnimInstance::CalculateTargetFootPosition(FVector MoveDirection)
-{
-    // Pivot - Looking Straight - Get current rates
-    if (Pivot) // && Both feet planted?
-    {
-        if(!ensure(PlayerSkeletalMesh)) { return; }
-        FVector TargetFootLocation = MoveDirection * MaxReach + PlayerSkeletalMesh->GetComponentLocation();
-        // determine which foot is closer to direction
-        if ((TargetFootLocation - PlayerSkeletalMesh->GetSocketLocation(RightFoot)).Size() <= (TargetFootLocation - PlayerSkeletalMesh->GetSocketLocation(LeftFoot)).Size())
-        {
-            RightFootFree = true;
-            RightFootLocation = TargetFootLocation;
-            return;
-        }
-        else
-        {
-            RightFootFree = false;
-            LeftFootLocation = TargetFootLocation;
-            return;
-        }
-        
-            // move foot to targetlocation - if within XY constraints - otherwise move max reach
-    }
-}
 
+
+// TODO : Pass Target Rotations by TArray to void 180 (back turned towards basket) angle
+// TODO : Consider limiting too many turns in given time
+// TODO : add Camera angles for these rotations
 void UMainAnimInstance::SetZRotation(float ZThrow)
 {
     ZRotation = ZThrow;
@@ -100,6 +82,7 @@ void UMainAnimInstance::TurnBody(float DeltaTimeX)
     if(LerpTime < LerpDuration)
     {
         LerpTime += DeltaTimeX;
-        PelvisRotation = FMath::Lerp(PelvisRotation, TargetRotation, LerpTime / LerpDuration);
+        //PelvisRotation = FMath::Lerp(PelvisRotation, TargetRotation, LerpTime / LerpDuration);
+        Spine3Rotation = FMath::Lerp(Spine3Rotation, TargetRotation, LerpTime / LerpDuration);
     }
 }
