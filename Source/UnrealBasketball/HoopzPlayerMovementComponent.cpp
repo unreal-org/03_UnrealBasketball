@@ -39,11 +39,11 @@ void UHoopzPlayerMovementComponent::IntendJumpReleased()
 void UHoopzPlayerMovementComponent::TurnLeft()
 {
     if (!ensure(PlayerCapsuleComponent)) { return; }
-    PlayerCapsuleComponent->Turn(-1);
+    PlayerCapsuleComponent->Turn(1);
 }
 
 void UHoopzPlayerMovementComponent::TurnRight()
 {
     if (!ensure(PlayerCapsuleComponent)) { return; }
-    PlayerCapsuleComponent->Turn(1);
+    PlayerCapsuleComponent->Turn(-1);
 }

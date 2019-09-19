@@ -83,5 +83,8 @@ void UPlayerCapsuleComponent::Turn(float ZRotation)
 {
     if (!ensure(MainAnimation)) { return; }
 
+    // if pivot
+        // Calculate root distance from target leg and make circular capsule movement
+        
     MainAnimation->SetZRotation(ZRotation);
 }

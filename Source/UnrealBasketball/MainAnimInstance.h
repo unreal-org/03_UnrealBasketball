@@ -20,9 +20,7 @@ public:
 	// Body Angle
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FRotator PelvisRotation;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator Spine3Rotation;
-
+	
 public:
 	// Constructor
 	UMainAnimInstance(const FObjectInitializer& ObjectInitializer);
@@ -45,11 +43,8 @@ private:
 	// Lerp Time
 	float LerpTime;
 	float LerpDuration = .5;
-	float ZRotation = 0;
-
-	// Rotation Target
-	FRotator TargetRotation;
-
+	
+	FRotator PelvisTargetRotation;
 	
 protected:
 	UPROPERTY(BluePrintReadOnly)
