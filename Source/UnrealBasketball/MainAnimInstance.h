@@ -20,6 +20,16 @@ public:
 	// Body Angle
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FRotator PelvisRotation;
+
+	// Feet
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector RightFootLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector LeftFootLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector RightFootSocketLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector LeftFootSocketLocation;
 	
 public:
 	// Constructor
@@ -30,21 +40,30 @@ public:
 	// Tick
 	virtual void NativeUpdateAnimation(float DeltaTimeX) override;
 
-	// IK Foot Trace Offset
-	// float IKFootTrace(FName Foot, float CapsuleLocationZ);
-
 	// Rotates Pelvis
 	void SetZRotation(float ZThrow);
 	void TurnBody(float DeltaTimeX);
-
+	void SetFeet();
+	
+	// IK Foot Trace Offset
+	float IKFootTrace(FName Foot);
+	
 private:
-	//FName Pelvis = FName(TEXT("pelvis"));
+	FName RightFoot;
+	FName LeftFoot;
+	FName Pelvis;
+	//FName Root;
 
 	// Lerp Time
 	float LerpTime;
 	float LerpDuration = .5;
 	
 	FRotator PelvisTargetRotation;
+	FVector TargetRightFootLocation;
+	FVector TargetLeftFootLocation;
+	//FVector RootLocation;
+
+	float CapsuleHalfHeight;
 	
 protected:
 	UPROPERTY(BluePrintReadOnly)

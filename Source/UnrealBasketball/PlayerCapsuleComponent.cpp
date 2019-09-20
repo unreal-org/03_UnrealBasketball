@@ -7,7 +7,7 @@
 
 UPlayerCapsuleComponent::UPlayerCapsuleComponent()
 {
-    CapsuleHalfHeight = 96.0f;        // Capsule height
+    CapsuleHalfHeight = 85.0f;        // Capsule height
 
     SetSimulatePhysics(true);
     BodyInstance.bLockXRotation = true;     // Lock Capsule Rotations
