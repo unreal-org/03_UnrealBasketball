@@ -62,8 +62,6 @@ private:
 	FVector TargetRightFootLocation;
 	FVector TargetLeftFootLocation;
 	//FVector RootLocation;
-
-	float CapsuleHalfHeight;
 	
 protected:
 	UPROPERTY(BluePrintReadOnly)

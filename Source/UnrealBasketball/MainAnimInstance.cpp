@@ -3,8 +3,9 @@
 #include "MainAnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Math/Rotator.h"
-#include "Engine/World.h"
+#include "Engine/World.h"	
 #include "Kismet/KismetMathLibrary.h"
+//#include "Kismet/GameplayStatics.h"
 
 UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
@@ -44,25 +45,31 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 float UMainAnimInstance::IKFootTrace(FName Foot)
 {
     if(!ensure(PlayerSkeletalMesh)) { return 0; }
-    FVector SkeletalMeshLocation = PlayerSkeletalMesh->GetComponentLocation();
     FVector FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(Foot);
-    FootSocketLocation.Z = SkeletalMeshLocation.Z;
-    SkeletalMeshLocation = FootSocketLocation;
-    SkeletalMeshLocation.Z -= CapsuleHalfHeight;
+    //FVector RootLocation = PlayerSkeletalMesh->GetSocketLocation("root");  // Trace from Foot straight down to Capsule location Z
+    FVector RootLocation = PlayerSkeletalMesh->GetOwner()->GetRootComponent()->GetComponentLocation();
+    RootLocation.X = FootSocketLocation.X;   
+    RootLocation.Y = FootSocketLocation.Y;
+    RootLocation.Z -= PlayerSkeletalMesh->GetOwner()->GetRootComponent()->CapsuleHalfHeight;
 
     FHitResult HitResult;
-    FCollisionQueryParams TraceParameters(false);
+    FName TraceTag("TraceTag");
+    GetWorld()->DebugDrawTraceTag = TraceTag;
+    FCollisionQueryParams TraceParameters(TraceTag, false);
+    TraceParameters.AddIgnoredComponent(Cast<UPrimitiveComponent>(PlayerSkeletalMesh));
+    TraceParameters.AddIgnoredActor(Cast<AActor>(PlayerSkeletalMesh->GetOwner()));
     if (GetWorld()->LineTraceSingleByChannel(
             HitResult,
             FootSocketLocation,
-            SkeletalMeshLocation,
+            RootLocation,
             ECollisionChannel::ECC_WorldStatic,
             TraceParameters))
     {
-        FVector FootOffset = SkeletalMeshLocation - HitResult.GetComponent()->GetComponentLocation();
-        return FootOffset.Size(); // /CapsuleScale;
+        float FootOffset = abs(PlayerSkeletalMesh->GetSocketLocation(Foot).Z - HitResult.GetActor()->GetActorLocation().Z);   // TODO: change to CapsuleLocation
+        UE_LOG(LogTemp, Warning, TEXT("%s hit at %s and %f offset."),  *HitResult.GetActor()->GetName(), *HitResult.GetActor()->GetActorLocation().ToString(), FootOffset)
+        return FootOffset; // /CapsuleScale;
     }
-    
+    UE_LOG(LogTemp, Warning, TEXT("nothing hit."))
     return 0;
 }
 
@@ -89,11 +96,11 @@ void UMainAnimInstance::TurnBody(float DeltaTimeX)
 
 void UMainAnimInstance::SetFeet()
 {
-    TargetRightFootLocation = FVector(0, 20, 10);
-    TargetLeftFootLocation = FVector(0, -20, 10);
+    TargetRightFootLocation = FVector(0, 20, 0);  // z = 10 lays foot flat on ground
+    TargetLeftFootLocation = FVector(0, -20, 0);
     
-    TargetRightFootLocation.Z -= IKFootTrace(RightFoot);
-    TargetLeftFootLocation.Z -= IKFootTrace(LeftFoot);
+    TargetRightFootLocation.Z += IKFootTrace(RightFoot);
+    TargetLeftFootLocation.Z += IKFootTrace(LeftFoot);
 
     RightFootLocation = TargetRightFootLocation;
     LeftFootLocation = TargetLeftFootLocation;
