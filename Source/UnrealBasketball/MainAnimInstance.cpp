@@ -11,20 +11,44 @@ UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer
     : Super(ObjectInitializer)
 {
     // Set capsule half height and scale here with parameter
-    
+    Root = FName(TEXT("root"));
+    Pelvis = FName(TEXT("pelvis_socket"));
+    RightFoot = FName(TEXT("foot_target_r"));
+    LeftFoot = FName(TEXT("foot_target_l"));
+    RightJointTarget = FName(TEXT("joint_target_r"));
+    LeftJointTarget = FName(TEXT("joint_target_l"));
+ 
 }
 
 void UMainAnimInstance::NativeInitializeAnimation()
 {
     Super::NativeInitializeAnimation();
-
+    
     PlayerSkeletalMesh = GetSkelMeshComponent();
-    PelvisRotation.Add(90, 90, 180);
+    
+    if (!ensure(PlayerSkeletalMesh)) { return; }
+    
+    //RootLocation = PlayerSkeletalMesh->GetBoneLocation(Root, EBoneSpaces::WorldSpace);      // world space
+    RootLocation = PlayerSkeletalMesh->GetOwner()->GetRootComponent()->GetComponentLocation();
+    RootLocation.Z = 0;
+
+    PelvisRotation = PlayerSkeletalMesh->GetSocketRotation(Pelvis);
     PelvisTargetRotation = PelvisRotation;
 
-    RightFoot = FName(TEXT("foot_r"));
-    LeftFoot = FName(TEXT("foot_l"));
-    Pelvis = FName(TEXT("pelvis"));
+    RightJointTargetLocation = RootLocation + PlayerSkeletalMesh->GetSocketLocation(RightJointTarget);
+    LeftJointTargetLocation = RootLocation + PlayerSkeletalMesh->GetSocketLocation(LeftJointTarget);
+
+    RightFootTargetLocation = RootLocation + PlayerSkeletalMesh->GetSocketLocation(RightFoot);
+    LeftFootTargetLocation = RootLocation + PlayerSkeletalMesh->GetSocketLocation(LeftFoot);
+
+    // UE_LOG(LogTemp, Warning, TEXT("RJT %s. LJT %s."), *RightFootTargetLocation.ToString(), *LeftFootTargetLocation.ToString())
+    // UE_LOG(LogTemp, Warning, TEXT("RJT %s. LJT %s."), *RightFootTargetLocation.ToString(), *LeftFootTargetLocation.ToString())
+    
+    //PelvisRotation.Add(90, 90, 180);
+    // PelvisRotation = PlayerSkeletalMesh->GetSocketRotation(Pelvis);
+    // PelvisTargetRotation = PelvisRotation;
+
+    
     //Root = PlayerSkeletalMesh->GetBoneName(0);
     
     // TargetRightFootLocation = PlayerSkeletalMesh->GetBoneLocation(RightFoot, EBoneSpaces::WorldSpace);
@@ -45,12 +69,14 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 float UMainAnimInstance::IKFootTrace(FName Foot)
 {
     if(!ensure(PlayerSkeletalMesh)) { return 0; }
+
+    // TODO: ADD VIRTUAL BONES
     FVector FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(Foot);
-    //FVector RootLocation = PlayerSkeletalMesh->GetSocketLocation("root");  // Trace from Foot straight down to Capsule location Z
     FVector RootLocation = PlayerSkeletalMesh->GetOwner()->GetRootComponent()->GetComponentLocation();
+    FootSocketLocation.Z = RootLocation.Z;
     RootLocation.X = FootSocketLocation.X;   
     RootLocation.Y = FootSocketLocation.Y;
-    RootLocation.Z -= PlayerSkeletalMesh->GetOwner()->GetRootComponent()->CapsuleHalfHeight;
+    RootLocation.Z -= 86;
 
     FHitResult HitResult;
     FName TraceTag("TraceTag");
@@ -65,11 +91,12 @@ float UMainAnimInstance::IKFootTrace(FName Foot)
             ECollisionChannel::ECC_WorldStatic,
             TraceParameters))
     {
-        float FootOffset = abs(PlayerSkeletalMesh->GetSocketLocation(Foot).Z - HitResult.GetActor()->GetActorLocation().Z);   // TODO: change to CapsuleLocation
-        UE_LOG(LogTemp, Warning, TEXT("%s hit at %s and %f offset."),  *HitResult.GetActor()->GetName(), *HitResult.GetActor()->GetActorLocation().ToString(), FootOffset)
+        if (!ensure(HitResult.GetActor())) { return 0; }
+        float FootOffset = abs(HitResult.GetActor()->GetActorLocation().Z + 13);   // TODO: change to CapsuleLocation
+        //UE_LOG(LogTemp, Warning, TEXT("%s "),  *PlayerSkeletalMesh->GetSocketLocation(Foot).ToString())
         return FootOffset; // /CapsuleScale;
     }
-    UE_LOG(LogTemp, Warning, TEXT("nothing hit."))
+    //UE_LOG(LogTemp, Warning, TEXT("nothing hit."))
     return 0;
 }
 
@@ -83,8 +110,6 @@ void UMainAnimInstance::SetZRotation(float ZThrow)
 
 void UMainAnimInstance::TurnBody(float DeltaTimeX)
 {
-    if(!ensure(PlayerSkeletalMesh)) { return; }
-
     LerpTime = 0;
 
     if(LerpTime < LerpDuration)
@@ -92,19 +117,23 @@ void UMainAnimInstance::TurnBody(float DeltaTimeX)
         LerpTime += DeltaTimeX;
         PelvisRotation = FMath::Lerp(PelvisRotation, PelvisTargetRotation, LerpTime / LerpDuration);
     }
+    ZRotation = 0;
 }
 
 void UMainAnimInstance::SetFeet()
 {
-    TargetRightFootLocation = FVector(0, 20, 0);  // z = 10 lays foot flat on ground
-    TargetLeftFootLocation = FVector(0, -20, 0);
+    // TargetRightFootLocation = FVector(0, 30, 0);  // z = 10 lays foot flat on ground
+    // TargetLeftFootLocation = FVector(0, -30, 0);
     
-    TargetRightFootLocation.Z += IKFootTrace(RightFoot);
-    TargetLeftFootLocation.Z += IKFootTrace(LeftFoot);
+    // TargetRightFootLocation.Z = IKFootTrace(RightFoot);
+    // TargetLeftFootLocation.Z = IKFootTrace(LeftFoot);
 
-    RightFootLocation = TargetRightFootLocation;
-    LeftFootLocation = TargetLeftFootLocation;
+    // RightFootLocation = TargetRightFootLocation;
+    // LeftFootLocation = TargetLeftFootLocation;
     // UE_LOG(LogTemp, Warning, TEXT("Right %s. Left %s. Root "), *RightFootSocketLocation.ToString(), *LeftFootSocketLocation.ToString())//, *RootLocation.ToString())
     // UE_LOG(LogTemp, Warning, TEXT("Bone Name is %s and %s and "), *RightFoot.ToString(), *LeftFoot.ToString())//, *Root.ToString())
     
+    UE_LOG(LogTemp, Warning, TEXT("Root %s."), *RootLocation.ToString())
+    UE_LOG(LogTemp, Warning, TEXT("RFT %s. LFT %s."), *RightFootTargetLocation.ToString(), *LeftFootTargetLocation.ToString())
+    UE_LOG(LogTemp, Warning, TEXT("RJT %s. LJT %s."), *RightJointTargetLocation.ToString(), *LeftJointTargetLocation.ToString())
 }

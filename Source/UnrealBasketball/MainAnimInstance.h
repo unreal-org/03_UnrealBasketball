@@ -23,13 +23,13 @@ public:
 
 	// Feet
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector RightFootLocation;
+	FVector RightFootTargetLocation;   // heel - world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector LeftFootLocation;
+	FVector LeftFootTargetLocation;    // heel - world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector RightFootSocketLocation;
+	FVector RightJointTargetLocation;   // world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector LeftFootSocketLocation;
+	FVector LeftJointTargetLocation;    // world space
 	
 public:
 	// Constructor
@@ -49,18 +49,22 @@ public:
 	float IKFootTrace(FName Foot);
 	
 private:
+	FName Root;
 	FName RightFoot;
 	FName LeftFoot;
 	FName Pelvis;
-	//FName Root;
+	FName RightJointTarget;
+	FName LeftJointTarget;
 
 	// Lerp Time
 	float LerpTime;
 	float LerpDuration = .5;
+	float ZRotation = 0;
 	
 	FRotator PelvisTargetRotation;
-	FVector TargetRightFootLocation;
-	FVector TargetLeftFootLocation;
+	FVector RootLocation;
+	//FVector TargetRightFootLocation;
+	//FVector TargetLeftFootLocation;
 	//FVector RootLocation;
 	
 protected:
