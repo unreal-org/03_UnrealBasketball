@@ -11,14 +11,16 @@ UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer
     : Super(ObjectInitializer)
 {
     // Set capsule half height and scale here with parameter
-    Root = FName(TEXT("root"));
+    //Root = FName(TEXT("root"));
     Pelvis = FName(TEXT("pelvis_socket"));
     RightFoot = FName(TEXT("foot_target_r"));
     LeftFoot = FName(TEXT("foot_target_l"));
     RightJointTarget = FName(TEXT("joint_target_r"));
     LeftJointTarget = FName(TEXT("joint_target_l"));
-    RightHeel = FName(TEXT("heel_r"));
-    LeftHeel = FName(TEXT("heel_l"));
+    // RightHeel = FName(TEXT("heel_r"));
+    // LeftHeel = FName(TEXT("heel_l"));
+
+    TraceTag = FName(TEXT("TraceTag"));
 }
 
 void UMainAnimInstance::NativeInitializeAnimation()
@@ -28,6 +30,11 @@ void UMainAnimInstance::NativeInitializeAnimation()
     PlayerSkeletalMesh = GetSkelMeshComponent();
     
     if (!ensure(PlayerSkeletalMesh)) { return; }
+
+    //GetWorld()->DebugDrawTraceTag = TraceTag;
+    TraceParameters = FCollisionQueryParams(TraceTag, false);
+    TraceParameters.AddIgnoredComponent(Cast<UPrimitiveComponent>(PlayerSkeletalMesh));
+    TraceParameters.AddIgnoredActor(Cast<AActor>(PlayerSkeletalMesh->GetOwner()));
     
     //RootLocation = PlayerSkeletalMesh->GetBoneLocation(Root, EBoneSpaces::WorldSpace);      // world space
     RootLocation = PlayerSkeletalMesh->GetOwner()->GetRootComponent()->GetComponentLocation();
@@ -41,6 +48,9 @@ void UMainAnimInstance::NativeInitializeAnimation()
 
     RightFootTargetLocation = RootLocation + PlayerSkeletalMesh->GetSocketLocation(RightFoot);
     LeftFootTargetLocation = RootLocation + PlayerSkeletalMesh->GetSocketLocation(LeftFoot);
+
+    RightFootLocation = RightFootTargetLocation;
+    LeftFootLocation = LeftFootTargetLocation;
 
     // UE_LOG(LogTemp, Warning, TEXT("RJT %s. LJT %s."), *RightFootTargetLocation.ToString(), *LeftFootTargetLocation.ToString())
     // UE_LOG(LogTemp, Warning, TEXT("RJT %s. LJT %s."), *RightFootTargetLocation.ToString(), *LeftFootTargetLocation.ToString())
@@ -62,8 +72,9 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 {
     Super::NativeUpdateAnimation(DeltaTimeX);
 
-    TurnBody(DeltaTimeX);
-    SetFeet();
+    if (PelvisRotation != PelvisTargetRotation) { TurnBody(DeltaTimeX); }
+    if (RightFootLocation != RightFootTargetLocation) { SetRightFoot(); }
+    if (LeftFootLocation != LeftFootTargetLocation) { SetLeftFoot(); }
 }
 
 ///////////////////////// Target Foot Position Calculator /////////////////////////////
@@ -78,11 +89,6 @@ float UMainAnimInstance::IKFootTrace(FName Foot)
     FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, RootLocation.Z - 90 - 15); // - capsule half height - trace distance;
 
     FHitResult HitResult(ForceInit);
-    FName TraceTag("TraceTag");
-    GetWorld()->DebugDrawTraceTag = TraceTag;
-    FCollisionQueryParams TraceParameters(TraceTag, false);
-    TraceParameters.AddIgnoredComponent(Cast<UPrimitiveComponent>(PlayerSkeletalMesh));
-    TraceParameters.AddIgnoredActor(Cast<AActor>(PlayerSkeletalMesh->GetOwner()));
     
     if (!ensure(GetWorld())) { return 0; }
     bool HitConfirm = GetWorld()->LineTraceSingleByChannel(
@@ -120,14 +126,16 @@ void UMainAnimInstance::TurnBody(float DeltaTimeX)   // TODO : Rotate Target Joi
     ZRotation = 0;
 }
 
-void UMainAnimInstance::SetFeet()
+void UMainAnimInstance::SetRightFoot()
 {
-    RightFootTargetLocation.Z = IKFootTrace(RightFoot);
-    LeftFootTargetLocation.Z = IKFootTrace(LeftFoot);
+    // set target foot pos
+    RightFootTargetLocation.Z = IKFootTrace(LeftFoot);
+    RightFootLocation = RightFootTargetLocation;
+}
 
-    // RightFootLocation = TargetRightFootLocation;
-    // LeftFootLocation = TargetLeftFootLocation;
-    // UE_LOG(LogTemp, Warning, TEXT("Right %s. Left %s. Root "), *RightFootSocketLocation.ToString(), *LeftFootSocketLocation.ToString())//, *RootLocation.ToString())
-    // UE_LOG(LogTemp, Warning, TEXT("Bone Name is %s and %s and "), *RightFoot.ToString(), *LeftFoot.ToString())//, *Root.ToString())
-    
+void UMainAnimInstance::SetLeftFoot()
+{
+    // set target foot pos
+    LeftFootTargetLocation.Z = IKFootTrace(LeftFoot);
+    LeftFootLocation = LeftFootTargetLocation;
 }

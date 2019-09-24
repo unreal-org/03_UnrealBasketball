@@ -23,9 +23,9 @@ public:
 
 	// Feet
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector RightFootTargetLocation;   // heel - world space
+	FVector RightFootLocation;   // heel - world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector LeftFootTargetLocation;    // heel - world space
+	FVector LeftFootLocation;    // heel - world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector RightJointTargetLocation;   // world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
@@ -43,20 +43,21 @@ public:
 	// Rotates Pelvis
 	void SetZRotation(float ZThrow);
 	void TurnBody(float DeltaTimeX);
-	void SetFeet();
+	void SetRightFoot();
+	void SetLeftFoot();
 	
 	// IK Foot Trace Offset
 	float IKFootTrace(FName Foot);
 	
 private:
-	FName Root;
+	//FName Root;
 	FName RightFoot;
 	FName LeftFoot;
 	FName Pelvis;
 	FName RightJointTarget;
 	FName LeftJointTarget;
-	FName RightHeel;
-	FName LeftHeel;
+	// FName RightHeel;
+	// FName LeftHeel;
 
 	// Lerp Time
 	float LerpTime;
@@ -65,9 +66,13 @@ private:
 	
 	FRotator PelvisTargetRotation;
 	FVector RootLocation;
-	//FVector TargetRightFootLocation;
-	//FVector TargetLeftFootLocation;
+	FVector RightFootTargetLocation;
+	FVector LeftFootTargetLocation;
 	//FVector RootLocation;
+
+	// Foot Trace
+	FName TraceTag;
+	FCollisionQueryParams TraceParameters;
 	
 protected:
 	UPROPERTY(BluePrintReadOnly)
