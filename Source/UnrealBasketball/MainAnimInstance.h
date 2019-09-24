@@ -46,7 +46,7 @@ public:
 	void SetFeet();
 	
 	// IK Foot Trace Offset
-	float IKFootTrace(FName Heel, FName Foot);
+	float IKFootTrace(FName Foot);
 	
 private:
 	FName Root;
