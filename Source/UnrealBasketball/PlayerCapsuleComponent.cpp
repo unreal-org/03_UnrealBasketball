@@ -63,8 +63,8 @@ void UPlayerCapsuleComponent::Move()
     // If CurrentForwardRate and CurrentRightRate == 0 
         // Then Auto place feet to default positions (according to capsule location and body angle)
     
-    FVector ForwardForceToApply = FVector(0, -1, 0) * CurrentForwardRate * MaxMoveForce;
-    FVector RightForceToApply = FVector(1, 0, 0) * CurrentRightRate * MaxMoveForce;
+    FVector ForwardForceToApply = FVector(1, 0, 0) * CurrentForwardRate * MaxMoveForce;
+    FVector RightForceToApply = FVector(0, 1, 0) * CurrentRightRate * MaxMoveForce;
     FVector TotalForceToApply = ForwardForceToApply + RightForceToApply;
     AddForce(TotalForceToApply, NAME_None, true);
 
