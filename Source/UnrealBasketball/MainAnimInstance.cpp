@@ -49,23 +49,8 @@ void UMainAnimInstance::NativeInitializeAnimation()
     RightFootTargetLocation = RootLocation + PlayerSkeletalMesh->GetSocketLocation(RightFoot);
     LeftFootTargetLocation = RootLocation + PlayerSkeletalMesh->GetSocketLocation(LeftFoot);
 
-    RightFootLocation = RightFootTargetLocation;
-    LeftFootLocation = LeftFootTargetLocation;
-
-    // UE_LOG(LogTemp, Warning, TEXT("RJT %s. LJT %s."), *RightFootTargetLocation.ToString(), *LeftFootTargetLocation.ToString())
-    // UE_LOG(LogTemp, Warning, TEXT("RJT %s. LJT %s."), *RightFootTargetLocation.ToString(), *LeftFootTargetLocation.ToString())
-    
-    //PelvisRotation.Add(90, 90, 180);
-    // PelvisRotation = PlayerSkeletalMesh->GetSocketRotation(Pelvis);
-    // PelvisTargetRotation = PelvisRotation;
-
-    
-    //Root = PlayerSkeletalMesh->GetBoneName(0);
-    
-    // TargetRightFootLocation = PlayerSkeletalMesh->GetBoneLocation(RightFoot, EBoneSpaces::WorldSpace);
-    // TargetLeftFootLocation = PlayerSkeletalMesh->GetBoneLocation(LeftFoot, EBoneSpaces::WorldSpace);
-    //RootLocation = PlayerSkeletalMesh->GetSocketLocation(Root);
-    
+    RightFootTargetLocation.Z = IKFootTrace(RightFoot);
+    LeftFootTargetLocation.Z = IKFootTrace(LeftFoot);
 }
 
 void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
@@ -74,7 +59,9 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 
     if (PelvisRotation != PelvisTargetRotation) { TurnBody(DeltaTimeX); }
     if (RightFootLocation != RightFootTargetLocation) { SetRightFoot(); }
+    //SetRightFoot();
     if (LeftFootLocation != LeftFootTargetLocation) { SetLeftFoot(); }
+    //SetLeftFoot();
 }
 
 ///////////////////////// Target Foot Position Calculator /////////////////////////////
@@ -129,7 +116,7 @@ void UMainAnimInstance::TurnBody(float DeltaTimeX)   // TODO : Rotate Target Joi
 void UMainAnimInstance::SetRightFoot()
 {
     // set target foot pos
-    RightFootTargetLocation.Z = IKFootTrace(LeftFoot);
+    RightFootTargetLocation.Z = IKFootTrace(RightFoot);
     RightFootLocation = RightFootTargetLocation;
 }
 

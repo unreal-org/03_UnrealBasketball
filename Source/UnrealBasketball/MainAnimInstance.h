@@ -68,7 +68,6 @@ private:
 	FVector RootLocation;
 	FVector RightFootTargetLocation;
 	FVector LeftFootTargetLocation;
-	//FVector RootLocation;
 
 	// Foot Trace
 	FName TraceTag;

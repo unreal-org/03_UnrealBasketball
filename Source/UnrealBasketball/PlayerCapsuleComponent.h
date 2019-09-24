@@ -32,7 +32,7 @@ public:
 
 	// Properties
 	UPROPERTY(EditDefaultsOnly)
-	float MaxMoveForce = 1500;  
+	float MaxMoveForce = 1000;  
 
 	// TODO : Contstruct and Set Sub Anim Instance Capsule Half Height * Scale.Z Here
 
