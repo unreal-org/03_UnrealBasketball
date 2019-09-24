@@ -17,7 +17,8 @@ UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer
     LeftFoot = FName(TEXT("foot_target_l"));
     RightJointTarget = FName(TEXT("joint_target_r"));
     LeftJointTarget = FName(TEXT("joint_target_l"));
- 
+    RightHeel = FName(TEXT("heel_r"));
+    LeftHeel = FName(TEXT("heel_l"));
 }
 
 void UMainAnimInstance::NativeInitializeAnimation()
@@ -70,33 +71,32 @@ float UMainAnimInstance::IKFootTrace(FName Foot)
 {
     if(!ensure(PlayerSkeletalMesh)) { return 0; }
 
-    // TODO: ADD VIRTUAL BONES
     FVector FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(Foot);
     FVector RootLocation = PlayerSkeletalMesh->GetOwner()->GetRootComponent()->GetComponentLocation();
-    FootSocketLocation.Z = RootLocation.Z;
-    RootLocation.X = FootSocketLocation.X;   
-    RootLocation.Y = FootSocketLocation.Y;
-    RootLocation.Z -= 86;
+    
+    FVector StartTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, RootLocation.Z);
+    FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, RootLocation.Z - 90 - 15); // - capsule half height - trace distance;
 
-    FHitResult HitResult;
+    FHitResult HitResult(ForceInit);
     FName TraceTag("TraceTag");
     GetWorld()->DebugDrawTraceTag = TraceTag;
     FCollisionQueryParams TraceParameters(TraceTag, false);
     TraceParameters.AddIgnoredComponent(Cast<UPrimitiveComponent>(PlayerSkeletalMesh));
     TraceParameters.AddIgnoredActor(Cast<AActor>(PlayerSkeletalMesh->GetOwner()));
-    if (GetWorld()->LineTraceSingleByChannel(
+    
+    if (!ensure(GetWorld())) { return 0; }
+    bool HitConfirm = GetWorld()->LineTraceSingleByChannel(
             HitResult,
-            FootSocketLocation,
-            RootLocation,
-            ECollisionChannel::ECC_WorldStatic,
-            TraceParameters))
+            StartTrace,
+            EndTrace,
+            ECollisionChannel::ECC_Visibility,
+            TraceParameters);
+    if (HitConfirm)
     {
         if (!ensure(HitResult.GetActor())) { return 0; }
-        float FootOffset = abs(HitResult.GetActor()->GetActorLocation().Z + 13);   // TODO: change to CapsuleLocation
-        //UE_LOG(LogTemp, Warning, TEXT("%s "),  *PlayerSkeletalMesh->GetSocketLocation(Foot).ToString())
-        return FootOffset; // /CapsuleScale;
+        return (HitResult.Location - HitResult.TraceEnd).Size() - 15 + 13.47; // FootOffset
     }
-    //UE_LOG(LogTemp, Warning, TEXT("nothing hit."))
+    
     return 0;
 }
 
@@ -108,7 +108,7 @@ void UMainAnimInstance::SetZRotation(float ZThrow)
     PelvisTargetRotation.Roll += 45 * ZThrow;
 }
 
-void UMainAnimInstance::TurnBody(float DeltaTimeX)
+void UMainAnimInstance::TurnBody(float DeltaTimeX)   // TODO : Rotate Target Joints
 {
     LerpTime = 0;
 
@@ -122,18 +122,12 @@ void UMainAnimInstance::TurnBody(float DeltaTimeX)
 
 void UMainAnimInstance::SetFeet()
 {
-    // TargetRightFootLocation = FVector(0, 30, 0);  // z = 10 lays foot flat on ground
-    // TargetLeftFootLocation = FVector(0, -30, 0);
-    
-    // TargetRightFootLocation.Z = IKFootTrace(RightFoot);
-    // TargetLeftFootLocation.Z = IKFootTrace(LeftFoot);
+    RightFootTargetLocation.Z = IKFootTrace(RightFoot);
+    LeftFootTargetLocation.Z = IKFootTrace(LeftFoot);
 
     // RightFootLocation = TargetRightFootLocation;
     // LeftFootLocation = TargetLeftFootLocation;
     // UE_LOG(LogTemp, Warning, TEXT("Right %s. Left %s. Root "), *RightFootSocketLocation.ToString(), *LeftFootSocketLocation.ToString())//, *RootLocation.ToString())
     // UE_LOG(LogTemp, Warning, TEXT("Bone Name is %s and %s and "), *RightFoot.ToString(), *LeftFoot.ToString())//, *Root.ToString())
     
-    UE_LOG(LogTemp, Warning, TEXT("Root %s."), *RootLocation.ToString())
-    UE_LOG(LogTemp, Warning, TEXT("RFT %s. LFT %s."), *RightFootTargetLocation.ToString(), *LeftFootTargetLocation.ToString())
-    UE_LOG(LogTemp, Warning, TEXT("RJT %s. LJT %s."), *RightJointTargetLocation.ToString(), *LeftJointTargetLocation.ToString())
 }

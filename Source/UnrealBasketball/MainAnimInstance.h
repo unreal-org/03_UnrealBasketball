@@ -46,7 +46,7 @@ public:
 	void SetFeet();
 	
 	// IK Foot Trace Offset
-	float IKFootTrace(FName Foot);
+	float IKFootTrace(FName Heel, FName Foot);
 	
 private:
 	FName Root;
@@ -55,6 +55,8 @@ private:
 	FName Pelvis;
 	FName RightJointTarget;
 	FName LeftJointTarget;
+	FName RightHeel;
+	FName LeftHeel;
 
 	// Lerp Time
 	float LerpTime;
