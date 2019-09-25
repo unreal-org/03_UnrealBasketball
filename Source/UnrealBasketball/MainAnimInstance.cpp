@@ -37,7 +37,7 @@ void UMainAnimInstance::NativeInitializeAnimation()
     TraceParameters.AddIgnoredActor(Cast<AActor>(PlayerSkeletalMesh->GetOwner()));
     
     //RootLocation = PlayerSkeletalMesh->GetBoneLocation(Root, EBoneSpaces::WorldSpace);      // world space
-    RootLocation = PlayerSkeletalMesh->GetOwner()->GetRootComponent()->GetComponentLocation();
+    FVector RootLocation = PlayerSkeletalMesh->GetOwner()->GetRootComponent()->GetComponentLocation();
     RootLocation.Z = 0;
 
     PelvisRotation = PlayerSkeletalMesh->GetSocketRotation(Pelvis);
@@ -58,9 +58,9 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
     Super::NativeUpdateAnimation(DeltaTimeX);
 
     if (PelvisRotation != PelvisTargetRotation) { TurnBody(DeltaTimeX); }
-    if (RightFootLocation != RightFootTargetLocation) { SetRightFoot(); }
+    if (RightFootLocation != RightFootTargetLocation) { SetRightFoot(); }  // may have to use socket location here
     //SetRightFoot();
-    if (LeftFootLocation != LeftFootTargetLocation) { SetLeftFoot(); }
+    if (LeftFootLocation != LeftFootTargetLocation) { SetLeftFoot(); }   // check to see how often this is being called
     //SetLeftFoot();
 }
 
@@ -101,7 +101,8 @@ void UMainAnimInstance::SetZRotation(float ZThrow)
     PelvisTargetRotation.Roll += 45 * ZThrow;
 }
 
-void UMainAnimInstance::TurnBody(float DeltaTimeX)   // TODO : Rotate Target Joints
+// TODO : Rotate IKFootRoot
+void UMainAnimInstance::TurnBody(float DeltaTimeX)   
 {
     LerpTime = 0;
 
@@ -113,11 +114,77 @@ void UMainAnimInstance::TurnBody(float DeltaTimeX)   // TODO : Rotate Target Joi
     ZRotation = 0;
 }
 
+void UMainAnimInstance::SetFootTargetLocation(FVector AddToDirection)
+{
+    if (!ensure(PlayerSkeletalMesh)) { return; }
+    // if (AddToDirection.Size() == 0) 
+    // { 
+    //     RightFootTargetLocation = PlayerSkeletalMesh->GetSocketLocation(RightFoot);
+    //     LeftFootTargetLocation = PlayerSkeletalMesh->GetSocketLocation(LeftFoot);
+
+    //     return; 
+    // }
+    
+    //if (RightFootFree == false && LeftFootFree == false) { return; }
+
+    // for sideways movement
+    // if (AddToDirection orthogonal to IKFootRoot Forward Direction) then multiply by limited SideMaxReach
+    // otherwise multiply by MaxReach
+    AddToDirection *= MaxReach;
+    FVector RootLocation = PlayerSkeletalMesh->GetOwner()->GetRootComponent()->GetComponentLocation() + AddToDirection;
+
+    if (RightFootFree == true)
+    {
+        FVector TargetLocation = RootLocation + FVector(AddToDirection.Y, -AddToDirection.X, 0).GetClampedToSize2D(0, 20);
+        //FVector TargetLocation = RightFootTargetLocation + AddToDirection;
+        RightFootTargetLocation = TargetLocation;
+        //RightFootFree = false;
+        LeftFootFree = true;
+        return;
+    }
+
+    if (LeftFootFree == true)
+    {
+        FVector TargetLocation = RootLocation + FVector(-AddToDirection.Y, AddToDirection.X, 0).GetClampedToSize2D(0, 20);
+        //FVector TargetLocation = LeftFootTargetLocation + AddToDirection;
+        LeftFootTargetLocation = TargetLocation;
+        //LeftFootFree = false;
+        RightFootFree = true;
+        return;
+    }
+
+    if (RightFootFree == false && LeftFootFree == false)
+    {
+        if ((RootLocation - RightFootLocation).Size() <= (RootLocation - LeftFootLocation).Size())   // Right Foot closer or equal - move Right Foot
+        {
+            FVector TargetLocation = RootLocation + FVector(AddToDirection.Y, -AddToDirection.X, 0).GetClampedToSize2D(0, 20);
+            //FVector TargetLocation = RightFootTargetLocation + AddToDirection;
+            RightFootTargetLocation = TargetLocation;
+            //RightFootFree = false;
+            LeftFootFree = true;
+            return;
+        }
+        else
+        {
+            FVector TargetLocation = RootLocation + FVector(-AddToDirection.Y, AddToDirection.X, 0).GetClampedToSize2D(0, 20);
+            //FVector TargetLocation = LeftFootTargetLocation + AddToDirection;
+            LeftFootTargetLocation = TargetLocation;
+            //LeftFootFree = false;
+            RightFootFree = true;
+            return;
+        }  
+    }
+
+    return;    
+}
+
+// TODO : Interpolate Speed
 void UMainAnimInstance::SetRightFoot()
 {
     // set target foot pos
     RightFootTargetLocation.Z = IKFootTrace(RightFoot);
     RightFootLocation = RightFootTargetLocation;
+    RightFootFree = false;
 }
 
 void UMainAnimInstance::SetLeftFoot()
@@ -125,4 +192,5 @@ void UMainAnimInstance::SetLeftFoot()
     // set target foot pos
     LeftFootTargetLocation.Z = IKFootTrace(LeftFoot);
     LeftFootLocation = LeftFootTargetLocation;
+    LeftFootFree = false;
 }

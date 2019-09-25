@@ -23,9 +23,9 @@ public:
 
 	// Feet
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector RightFootLocation;   // heel - world space
+	FVector RightFootLocation;   // world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector LeftFootLocation;    // heel - world space
+	FVector LeftFootLocation;    // world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector RightJointTargetLocation;   // world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
@@ -35,19 +35,9 @@ public:
 	// Constructor
 	UMainAnimInstance(const FObjectInitializer& ObjectInitializer);
 
-	// Native initialization override point
-	virtual void NativeInitializeAnimation() override;
-	// Tick
-	virtual void NativeUpdateAnimation(float DeltaTimeX) override;
-
-	// Rotates Pelvis
+	// Movement
 	void SetZRotation(float ZThrow);
-	void TurnBody(float DeltaTimeX);
-	void SetRightFoot();
-	void SetLeftFoot();
-	
-	// IK Foot Trace Offset
-	float IKFootTrace(FName Foot);
+	void SetFootTargetLocation(FVector AddToDirection);
 	
 private:
 	//FName Root;
@@ -65,15 +55,29 @@ private:
 	float ZRotation = 0;
 	
 	FRotator PelvisTargetRotation;
-	FVector RootLocation;
 	FVector RightFootTargetLocation;
 	FVector LeftFootTargetLocation;
 
 	// Foot Trace
 	FName TraceTag;
 	FCollisionQueryParams TraceParameters;
+	float IKFootTrace(FName Foot);
+	
+	void TurnBody(float DeltaTimeX);
+	void SetRightFoot();
+	void SetLeftFoot();
+
+	float MaxReach = 5;
+	bool RightFootFree = false;
+	bool LeftFootFree = false;
 	
 protected:
+	// Native initialization override point
+	virtual void NativeInitializeAnimation() override;
+
+	// Tick
+	virtual void NativeUpdateAnimation(float DeltaTimeX) override;
+
 	UPROPERTY(BluePrintReadOnly)
 	USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;
 

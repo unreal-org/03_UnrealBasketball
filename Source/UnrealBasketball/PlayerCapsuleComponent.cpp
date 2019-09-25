@@ -58,7 +58,8 @@ void UPlayerCapsuleComponent::SetJumpRate(float Rate)
     CurrentJumpRate = FMath::Clamp<float>(Rate, 0, 1);
 }
 
-void UPlayerCapsuleComponent::Move()
+// TODO : Set separate Forward and Right vectors for each body angle
+void UPlayerCapsuleComponent::Move() 
 {
     // If CurrentForwardRate and CurrentRightRate == 0 
         // Then Auto place feet to default positions (according to capsule location and body angle)
@@ -68,7 +69,11 @@ void UPlayerCapsuleComponent::Move()
     FVector TotalForceToApply = ForwardForceToApply + RightForceToApply;
     AddForce(TotalForceToApply, NAME_None, true);
 
+    if (!ensure(MainAnimation)) { return; }
+
     // If Capsule moves,
+    // Pass (TotalForceToApply vector / MaxMoveForce) then add (Result * MaxReach) to TargetFootLocation
+    MainAnimation->SetFootTargetLocation(TotalForceToApply/MaxMoveForce);
         // use vector magnitude as amplitude for sine wave (used to calculate foot positions)
         // On PIVOT
             // 1. left stick - closer foot moves towards direction of capsule movement - pass FVector( current forward rate, current right rate, 0)
