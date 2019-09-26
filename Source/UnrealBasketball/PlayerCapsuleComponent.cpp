@@ -59,6 +59,7 @@ void UPlayerCapsuleComponent::SetJumpRate(float Rate)
 }
 
 // TODO : Set separate Forward and Right vectors for each body angle
+// TODO : Clamp TotalForceToApply
 void UPlayerCapsuleComponent::Move() 
 {
     // If CurrentForwardRate and CurrentRightRate == 0 
@@ -73,17 +74,21 @@ void UPlayerCapsuleComponent::Move()
 
     // If Capsule moves,
     // Pass (TotalForceToApply vector / MaxMoveForce) then add (Result * MaxReach) to TargetFootLocation
-    MainAnimation->SetFootTargetLocation(TotalForceToApply/MaxMoveForce);
+    FVector AddToDirection= TotalForceToApply.GetClampedToSize2D(-MaxMoveForce, MaxMoveForce);
+    MainAnimation->SetFootTargetLocation(AddToDirection/MaxMoveForce);
         // use vector magnitude as amplitude for sine wave (used to calculate foot positions)
         // On PIVOT
             // 1. left stick - closer foot moves towards direction of capsule movement - pass FVector( current forward rate, current right rate, 0)
 }
 
+// TODO : Update Feet position when jumping
 void UPlayerCapsuleComponent::Jump()
 {
     AddImpulse(FVector(0, 0, CurrentJumpRate * MaxMoveForce), NAME_None, true);
 }
 
+// TODO : Change angle to direction of right stick
+// TODO : Should be rotating the capsule itself with circular motion on pivot
 void UPlayerCapsuleComponent::Turn(float ZRotation)
 {
     if (!ensure(MainAnimation)) { return; }

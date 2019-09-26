@@ -40,7 +40,7 @@ public:
 	void SetFootTargetLocation(FVector AddToDirection);
 	
 private:
-	//FName Root;
+	FName Root;
 	FName RightFoot;
 	FName LeftFoot;
 	FName Pelvis;
@@ -52,7 +52,6 @@ private:
 	// Lerp Time
 	float LerpTime;
 	float LerpDuration = .5;
-	float ZRotation = 0;
 	
 	FRotator PelvisTargetRotation;
 	FVector RightFootTargetLocation;
@@ -67,8 +66,8 @@ private:
 	void SetRightFoot();
 	void SetLeftFoot();
 
-	float MaxReach = 5;
-	bool RightFootFree = false;
+	float MaxReach = 10;
+	bool RightFootFree = true;
 	bool LeftFootFree = false;
 	
 protected:

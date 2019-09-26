@@ -7,6 +7,7 @@
 #include "HoopzPlayerMovementComponent.generated.h"
 
 class UPlayerCapsuleComponent;  // For Capsule Component Input/Movement
+class USceneComponent;          // For Pivot
 
 /**
  * Controls Hoopz Player Movement:
@@ -25,8 +26,6 @@ public:
 	UFUNCTION(BluePrintCallable, Category = "Setup")      
 	void Initialize(UPlayerCapsuleComponent* PlayerCapsuleComponentToSet);
 	
-	UPlayerCapsuleComponent* PlayerCapsuleComponent = nullptr;
-	
 	///// Capsule Movement
 	UFUNCTION(BluePrintCallable, Category = "Input")
 	void IntendMoveForward(float Throw);
@@ -42,9 +41,21 @@ public:
 	UFUNCTION(BluePrintCallable, Category = "Input")
 	void TurnRight();
 
+private:
+	UPlayerCapsuleComponent* PlayerCapsuleComponent = nullptr;
+	USceneComponent * UpdatedComponent = nullptr;
+	
 	///// Timer
 	float JumpCalledTime = 0;
 	float JumpPressedTime = 0;
 
+	/// Capsule Pivot
+	void Pivot(float DeltaTime);
+	FVector PivotTranslation;
+	FRotator RotationRate = FRotator(0, 0, 45);
+	
+protected:
+	virtual void SetUpdatedComponent(USceneComponent* NewUpdatedComponent) override;
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
  	
 };
