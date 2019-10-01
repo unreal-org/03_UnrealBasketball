@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "MainAnimInstance.h"
+//#include "MainAnimInstance.h"
 
 #include "CoreMinimal.h"
 #include "Components/CapsuleComponent.h"
@@ -49,7 +49,7 @@ private:
 	float CurrentRightRate = 0;
 	float CurrentJumpRate = 0;
 
-	UMainAnimInstance* MainAnimation = nullptr;
+	//UMainAnimInstance* MainAnimation = nullptr;
 
 protected:
 	virtual void BeginPlay() override;

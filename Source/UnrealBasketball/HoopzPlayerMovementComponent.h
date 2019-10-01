@@ -53,6 +53,8 @@ private:
 	void Pivot(float DeltaTime);
 	FVector PivotTranslation;
 	FRotator RotationRate = FRotator(0, 0, 45);
+	// FRotator OldRotation;
+	// FRotator NewRotation;
 	
 protected:
 	virtual void SetUpdatedComponent(USceneComponent* NewUpdatedComponent) override;

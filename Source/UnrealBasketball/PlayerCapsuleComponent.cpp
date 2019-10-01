@@ -24,7 +24,7 @@ void UPlayerCapsuleComponent::BeginPlay()
     Super::BeginPlay();
 
     OnComponentHit.AddDynamic(this, &UPlayerCapsuleComponent::OnHit);
-    MainAnimation = Cast<UMainAnimInstance>(Cast<USkeletalMeshComponent>(GetChildComponent(0))->GetAnimInstance());
+    //MainAnimation = Cast<UMainAnimInstance>(Cast<USkeletalMeshComponent>(GetChildComponent(0))->GetAnimInstance());
 }
 
 void UPlayerCapsuleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -70,12 +70,12 @@ void UPlayerCapsuleComponent::Move()
     FVector TotalForceToApply = ForwardForceToApply + RightForceToApply;
     AddForce(TotalForceToApply, NAME_None, true);
 
-    if (!ensure(MainAnimation)) { return; }
+    //if (!ensure(MainAnimation)) { return; }
 
     // If Capsule moves,
     // Pass (TotalForceToApply vector / MaxMoveForce) then add (Result * MaxReach) to TargetFootLocation
     FVector AddToDirection= TotalForceToApply.GetClampedToSize2D(-MaxMoveForce, MaxMoveForce);
-    MainAnimation->SetFootTargetLocation(AddToDirection/MaxMoveForce);
+    //MainAnimation->SetFootTargetLocation(AddToDirection/MaxMoveForce);
         // use vector magnitude as amplitude for sine wave (used to calculate foot positions)
         // On PIVOT
             // 1. left stick - closer foot moves towards direction of capsule movement - pass FVector( current forward rate, current right rate, 0)
@@ -91,10 +91,10 @@ void UPlayerCapsuleComponent::Jump()
 // TODO : Should be rotating the capsule itself with circular motion on pivot
 void UPlayerCapsuleComponent::Turn(float ZRotation)
 {
-    if (!ensure(MainAnimation)) { return; }
+    //if (!ensure(MainAnimation)) { return; }
 
     // if pivot
         // Calculate root distance from target leg and make circular capsule movement
         
-    MainAnimation->SetZRotation(ZRotation);
+    //MainAnimation->SetZRotation(ZRotation);
 }

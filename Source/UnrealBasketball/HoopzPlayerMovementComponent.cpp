@@ -15,6 +15,9 @@ void UHoopzPlayerMovementComponent::SetUpdatedComponent(USceneComponent* NewUpda
 void UHoopzPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    //if (OldRotation != NewRotation) { Pivot(DeltaTime); }
+    //Pivot(DeltaTime);
 }
 
 void UHoopzPlayerMovementComponent::Initialize(UPlayerCapsuleComponent* PlayerCapsuleComponentToSet)
@@ -66,10 +69,14 @@ void UHoopzPlayerMovementComponent::Pivot(float DeltaTime)
     if (!ensure(UpdatedComponent)) { return; }
 
 	// Compute new rotation
-	const FQuat OldRotation = UpdatedComponent->GetComponentQuat();
-	const FQuat DeltaRotation = (RotationRate * DeltaTime).Quaternion();
-	const FQuat NewRotation = (OldRotation * DeltaRotation);   // Local space
+	// const FQuat OldRotation = UpdatedComponent->GetComponentQuat();
+	// const FQuat DeltaRotation = (RotationRate * DeltaTime).Quaternion();
+	// const FQuat NewRotation = (OldRotation * DeltaRotation);   // Local space
     //const FQuat NewRotation = (DeltaRotation * OldRotation);   // World space
+
+    FRotator OldRotation = UpdatedComponent->GetComponentRotation();
+	//const FRotator DeltaRotation = (RotationRate * DeltaTime).Quaternion();
+	FRotator NewRotation = OldRotation + RotationRate;   // World space
 
 	// Compute new location
 	FVector DeltaLocation = FVector::ZeroVector;
