@@ -58,23 +58,29 @@ void UPlayerCapsuleComponent::SetJumpRate(float Rate)
     CurrentJumpRate = FMath::Clamp<float>(Rate, 0, 1);
 }
 
-// TODO : Set separate Forward and Right vectors for each body angle
-// TODO : Clamp TotalForceToApply
+// TODO : Use Camera Forward and Right Vectors
 void UPlayerCapsuleComponent::Move() 
 {
+    // if (Pivot == true)
+    // {
+    //     FVector TotalForceToApply = -GetForwardVector() * CurrentRightRate * MaxMoveForce;
+    //     AddForce(TotalForceToApply, NAME_None, true);
+    // }
+
     // If CurrentForwardRate and CurrentRightRate == 0 
         // Then Auto place feet to default positions (according to capsule location and body angle)
     
-    FVector ForwardForceToApply = FVector(1, 0, 0) * CurrentForwardRate * MaxMoveForce;
-    FVector RightForceToApply = FVector(0, 1, 0) * CurrentRightRate * MaxMoveForce;
+    FVector ForwardForceToApply = GetRightVector() * CurrentForwardRate * MaxMoveForce;
+    FVector RightForceToApply = -GetForwardVector() * CurrentRightRate * MaxMoveForce;
     FVector TotalForceToApply = ForwardForceToApply + RightForceToApply;
+    TotalForceToApply = TotalForceToApply.GetClampedToSize2D(-MaxMoveForce, MaxMoveForce);
     AddForce(TotalForceToApply, NAME_None, true);
 
     //if (!ensure(MainAnimation)) { return; }
 
     // If Capsule moves,
     // Pass (TotalForceToApply vector / MaxMoveForce) then add (Result * MaxReach) to TargetFootLocation
-    FVector AddToDirection= TotalForceToApply.GetClampedToSize2D(-MaxMoveForce, MaxMoveForce);
+
     //MainAnimation->SetFootTargetLocation(AddToDirection/MaxMoveForce);
         // use vector magnitude as amplitude for sine wave (used to calculate foot positions)
         // On PIVOT

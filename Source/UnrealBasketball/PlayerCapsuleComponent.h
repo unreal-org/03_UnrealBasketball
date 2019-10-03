@@ -49,7 +49,8 @@ private:
 	float CurrentRightRate = 0;
 	float CurrentJumpRate = 0;
 
-	//UMainAnimInstance* MainAnimation = nullptr;
+	bool Pivot = true;
+	FVector PivotAnchor;
 
 protected:
 	virtual void BeginPlay() override;

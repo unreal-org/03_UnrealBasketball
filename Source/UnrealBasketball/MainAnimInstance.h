@@ -9,6 +9,7 @@
 #include "MainAnimInstance.generated.h"
 
 class USkeletalMeshComponent;
+class USceneComponent;
 
 USTRUCT( Blueprintable, BlueprintType )
 struct FMainAnimInstanceProxy : public FAnimInstanceProxy
@@ -28,19 +29,19 @@ public:
     // UPROPERTY(Transient, BlueprintReadWrite, EditAnywhere, Category = "Example")
     // float HorizontalSpeed;
 
-	// Body Angle
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator PelvisRotation;
+	// // Body Angle
+	// UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	// FRotator PelvisRotation;
 
-	// IK Locations
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector RightFootLocation;   // world space
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector LeftFootLocation;    // world space
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector RightJointTargetLocation;   // world space
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector LeftJointTargetLocation;    // world space
+	// // IK Locations
+	// UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	// FVector RightFootLocation;   // world space
+	// UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	// FVector LeftFootLocation;    // world space
+	// UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	// FVector RightJointTargetLocation;   // world space
+	// UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	// FVector LeftJointTargetLocation;    // world space
 
 	// Movement
 	void SetZRotation(float ZThrow);
@@ -55,13 +56,17 @@ private:
 	FName LeftJointTarget = FName(TEXT("joint_target_l"));
 
 	// Lerp Time
-	float LerpTime;
-	float LerpDuration = .5;
+	float PelvisLerpTime;
+	float PelvisLerpDuration = .5;
+	float FootLerpTime;
+	float FootLerpDuration = .3;
 	
 	// Target Positions
 	FRotator PelvisTargetRotation;
 	FVector RightFootTargetLocation;
 	FVector LeftFootTargetLocation;
+	FVector RightJointTargetPos;
+	FVector LeftJointTargetPos;
 
 	// Foot Trace
 	FName TraceTag = FName(TEXT("TraceTag"));;
@@ -69,49 +74,49 @@ private:
 	float IKFootTrace(FName Foot);
 
 	void TurnBody(float DeltaTimeX);
-	void SetRightFoot();
-	void SetLeftFoot();
+	void SetRightFoot(float DeltaTimeX);
+	void SetLeftFoot(float DeltaTimeX);
 
 	float MaxReach = 10;
-	bool RightFootFree = true;
+	bool RightFootFree = false;
 	bool LeftFootFree = false;
 
 protected:
-	virtual void Update(float DeltaSeconds) override;
 	virtual void Initialize(UAnimInstance* InAnimInstance) override;
+	virtual void Update(float DeltaSeconds) override;
+	virtual void PostUpdate(UAnimInstance* InAnimInstance) const override;
 
-	UPROPERTY(BluePrintReadOnly)
 	USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;
-
-	UObject* MainAnimInstance = nullptr;
+	USceneComponent* PlayerCapsuleComponent = nullptr;
+	UMainAnimInstance* MainAnimInstance = nullptr;
 };
 
 /**
  * Controls Upper Body and Passes Feet variables to adjust legs in SubAnimInstance
  */
-UCLASS( transient, Blueprintable, hideCategories = AnimInstance, BlueprintType )
+UCLASS( Transient, Blueprintable, hideCategories = AnimInstance, BlueprintType )
 class UNREALBASKETBALL_API UMainAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 	
 public:
-	// // Body Angle
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	// FRotator PelvisRotation;
-
-	// // Feet
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	// FVector RightFootLocation;   // world space
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	// FVector LeftFootLocation;    // world space
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	// FVector RightJointTargetLocation;   // world space
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	// FVector LeftJointTargetLocation;    // world space
-	
 	// Constructor
 	UMainAnimInstance(const FObjectInitializer& ObjectInitializer);
 
+	// Body Angle
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FRotator PelvisRotation;
+
+	// Feet
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector RightFootLocation;   // world space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector LeftFootLocation;    // world space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector RightJointTargetLocation;   // world space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector LeftJointTargetLocation;    // world space
+	
 	// // Movement
 	// void SetZRotation(float ZThrow);
 	// void SetFootTargetLocation(FVector AddToDirection);
@@ -122,7 +127,6 @@ private:
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "Proxy", meta = (AllowPrivateAccess = "true"))
     FMainAnimInstanceProxy Proxy;
 	
-	// overriden to return custom proxy instance
     virtual FAnimInstanceProxy* CreateAnimInstanceProxy() override { return &Proxy; }
 
     virtual void DestroyAnimInstanceProxy(FAnimInstanceProxy* InProxy) override {}
