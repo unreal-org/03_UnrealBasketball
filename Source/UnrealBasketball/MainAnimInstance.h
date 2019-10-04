@@ -9,6 +9,7 @@
 #include "MainAnimInstance.generated.h"
 
 class USkeletalMeshComponent;
+//class UPlayerCapsuleComponent;
 class USceneComponent;
 
 USTRUCT( Blueprintable, BlueprintType )
@@ -23,28 +24,8 @@ struct FMainAnimInstanceProxy : public FAnimInstanceProxy
     FMainAnimInstanceProxy(UAnimInstance* Instance);
 
 public:
-    // UPROPERTY(Transient, BlueprintReadWrite, EditAnywhere, Category = "Example")
-    // float MovementAngle;
-
-    // UPROPERTY(Transient, BlueprintReadWrite, EditAnywhere, Category = "Example")
-    // float HorizontalSpeed;
-
-	// // Body Angle
-	// UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	// FRotator PelvisRotation;
-
-	// // IK Locations
-	// UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	// FVector RightFootLocation;   // world space
-	// UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	// FVector LeftFootLocation;    // world space
-	// UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	// FVector RightJointTargetLocation;   // world space
-	// UPROPERTY(Transient, EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	// FVector LeftJointTargetLocation;    // world space
-
 	// Movement
-	void SetZRotation(float ZThrow);
+	void SetZRotation();
 	void SetFootTargetLocation(FVector AddToDirection);
 
 private:
@@ -54,12 +35,6 @@ private:
 	FName Pelvis = FName(TEXT("pelvis_socket"));;;
 	FName RightJointTarget = FName(TEXT("joint_target_r"));
 	FName LeftJointTarget = FName(TEXT("joint_target_l"));
-
-	// Lerp Time
-	float PelvisLerpTime;
-	float PelvisLerpDuration = .5;
-	float FootLerpTime;
-	float FootLerpDuration = .3;
 	
 	// Target Positions
 	FRotator PelvisTargetRotation;
@@ -73,9 +48,9 @@ private:
 	FCollisionQueryParams TraceParameters;
 	float IKFootTrace(FName Foot);
 
-	void TurnBody(float DeltaTimeX);
-	void SetRightFoot(float DeltaTimeX);
-	void SetLeftFoot(float DeltaTimeX);
+	//void TurnBody(float DeltaTimeX);
+	//void SetRightFoot(float DeltaTimeX);
+	//void SetLeftFoot(float DeltaTimeX);
 
 	float MaxReach = 10;
 	bool RightFootFree = false;
@@ -117,10 +92,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector LeftJointTargetLocation;    // world space
 	
-	// // Movement
-	// void SetZRotation(float ZThrow);
-	// void SetFootTargetLocation(FVector AddToDirection);
-	
 private:
 	friend struct FMainAnimInstanceProxy;
 
@@ -131,42 +102,27 @@ private:
 
     virtual void DestroyAnimInstanceProxy(FAnimInstanceProxy* InProxy) override {}
 
-	// FName Root;
-	// FName RightFoot;
-	// FName LeftFoot;
-	// FName Pelvis;
-	// FName RightJointTarget;
-	// FName LeftJointTarget;
-	// FName RightHeel;
-	// FName LeftHeel;
+	// Target Locations for Interp / Lerp
+	FVector RightFootInterpTo;
+	FVector LeftFootInterpTo;
+	FRotator PelvisLerpTo;
 
-	// // Lerp Time
-	// float LerpTime;
-	// float LerpDuration = .5;
-	
-	// FRotator PelvisTargetRotation;
-	// FVector RightFootTargetLocation;
-	// FVector LeftFootTargetLocation;
+	// Lerp Time
+	float PelvisLerpTime;
+	float PelvisLerpDuration = .5;
+	float FootLerpTime;
+	float FootLerpDuration = .3;
 
-	// Foot Trace
-	// FName TraceTag;
-	// FCollisionQueryParams TraceParameters;
-	// float IKFootTrace(FName Foot);
-	
-	// void TurnBody(float DeltaTimeX);
-	// void SetRightFoot();
-	// void SetLeftFoot();
-
-	// float MaxReach = 10;
-	// bool RightFootFree = true;
-	// bool LeftFootFree = false;
+	void TurnBody(float DeltaTimeX);
+	void SetRightFoot(float DeltaTimeX);
+	void SetLeftFoot(float DeltaTimeX);
 	
 protected:
 	// Native initialization override point
 	// virtual void NativeInitializeAnimation() override;
 
 	// Tick
-	// virtual void NativeUpdateAnimation(float DeltaTimeX) override;
+	virtual void NativeUpdateAnimation(float DeltaTimeX) override;
 
 	// UPROPERTY(BluePrintReadOnly)
 	// USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;

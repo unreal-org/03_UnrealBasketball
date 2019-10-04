@@ -7,6 +7,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/App.h"
 //#include "Kismet/GameplayStatics.h"
+#include "PlayerCapsuleComponent.h"
+#include "GameFramework/Actor.h"
 
 UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
@@ -17,9 +19,12 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     Super::Initialize(InAnimInstance);
 
     MainAnimInstance = dynamic_cast<UMainAnimInstance*>(GetAnimInstanceObject());
-
+    if (!ensure(MainAnimInstance)) { return; }
     PlayerSkeletalMesh = GetSkelMeshComponent();
     if (!ensure(PlayerSkeletalMesh)) { return; }
+    //PlayerCapsuleComponent = dynamic_cast<UPlayerCapsuleComponent*>(PlayerSkeletalMesh->GetOwner()->GetRootComponent());
+    PlayerCapsuleComponent = PlayerSkeletalMesh->GetOwner()->GetRootComponent();
+    if (!ensure(PlayerCapsuleComponent)) { return; }
 
     // MainAnimInstance = PlayerSkeletalMesh->GetAnimInstance();
 
@@ -27,11 +32,11 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     TraceParameters.AddIgnoredComponent(Cast<UPrimitiveComponent>(PlayerSkeletalMesh));
     TraceParameters.AddIgnoredActor(Cast<AActor>(PlayerSkeletalMesh->GetOwner()));
 
-    PlayerCapsuleComponent = PlayerSkeletalMesh->GetOwner()->GetRootComponent();
     FVector RootLocation = PlayerCapsuleComponent->GetComponentLocation();
     RootLocation.Z = 0;
 
     PelvisTargetRotation = PlayerSkeletalMesh->GetSocketRotation(Root);
+    //PlayerCapsuleComponent->PelvisRotation = PelvisTargetRotation;
     // = PelvisRotation;
 
     RightJointTargetPos = RootLocation + PlayerSkeletalMesh->GetSocketLocation(RightJointTarget);
@@ -46,11 +51,11 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     //LeftFootLocation = LeftFootTargetLocation;
 
     if (!ensure(MainAnimInstance)) { return; }
-    MainAnimInstance->PelvisRotation = PelvisTargetRotation;
+    MainAnimInstance->PelvisLerpTo = PelvisTargetRotation;
     MainAnimInstance->RightJointTargetLocation = RightJointTargetPos;
     MainAnimInstance->LeftJointTargetLocation = LeftJointTargetPos;
-    MainAnimInstance->RightFootLocation = RightFootTargetLocation;
-    MainAnimInstance->LeftFootLocation = LeftFootTargetLocation;
+    MainAnimInstance->RightFootInterpTo = RightFootTargetLocation;
+    MainAnimInstance->LeftFootInterpTo = LeftFootTargetLocation;
 }
 
 void FMainAnimInstanceProxy::Update(float DeltaSeconds)
@@ -58,6 +63,9 @@ void FMainAnimInstanceProxy::Update(float DeltaSeconds)
     // Update internal variables
     if (!ensure(PlayerCapsuleComponent)) { return; }
     //PelvisRotation.Yaw += 1.0f * DeltaSeconds;
+    
+    //SetZRotation();
+    
     if (PlayerCapsuleComponent->GetComponentVelocity().Size() > 0)
     {
         if (RightFootFree == true) { 
@@ -77,6 +85,8 @@ void FMainAnimInstanceProxy::Update(float DeltaSeconds)
             return;
         }
     }
+
+    
     //UE_LOG(LogTemp, Warning, TEXT("%s"), *PlayerCapsuleComponent->GetComponentVelocity().ToString())
 }
 
@@ -85,11 +95,11 @@ void FMainAnimInstanceProxy::PostUpdate(UAnimInstance* InAnimInstance) const
     Super::PostUpdate(InAnimInstance);
 
     if (!ensure(MainAnimInstance)) { return; }
-    MainAnimInstance->PelvisRotation = PelvisTargetRotation;
+    MainAnimInstance->PelvisLerpTo = PelvisTargetRotation;
     MainAnimInstance->RightJointTargetLocation = RightJointTargetPos;
     MainAnimInstance->LeftJointTargetLocation = LeftJointTargetPos;
-    MainAnimInstance->RightFootLocation = RightFootTargetLocation;
-    MainAnimInstance->LeftFootLocation = LeftFootTargetLocation;
+    MainAnimInstance->RightFootInterpTo = RightFootTargetLocation;
+    MainAnimInstance->LeftFootInterpTo = LeftFootTargetLocation;
 }
 
 ///////////////////////// Target Foot Position Calculator /////////////////////////////
@@ -126,22 +136,12 @@ float FMainAnimInstanceProxy::IKFootTrace(FName Foot)
 // TODO : Pass Target Rotations by TArray to void 180 (back turned towards basket) angle
 // TODO : Consider limiting too many turns in given time
 // TODO : add Camera angles for these rotations
-void FMainAnimInstanceProxy::SetZRotation(float ZThrow)
+void FMainAnimInstanceProxy::SetZRotation()
 {
-    PelvisTargetRotation.Yaw += 45 * ZThrow;
-}
-
-// TODO : Rotate IKFootRoot
-// TODO : Consider GetWorld()->GetTime() instead of tick
-void FMainAnimInstanceProxy::TurnBody(float DeltaTimeX)   
-{
-    // PelvisLerpTime = 0;
-
-    // if(PelvisLerpTime < PelvisLerpDuration)
-    // {
-    //     PelvisLerpTime += DeltaTimeX;
-    //     PelvisRotation = FMath::Lerp(PelvisRotation, PelvisTargetRotation, PelvisLerpTime / PelvisLerpDuration);
-    // }
+    //PelvisTargetRotation.Yaw += 45 * ZThrow;
+    if (!ensure(PlayerCapsuleComponent)) { return; }
+    //PelvisTargetRotation.Yaw = PlayerCapsuleComponent->PelvisRotation.Yaw;
+    //UE_LOG(LogTemp, Warning, TEXT("%f"), PelvisTargetRotation.Yaw)
 }
 
 // TODO : Base leg movement on capsule velocity
@@ -225,44 +225,52 @@ void FMainAnimInstanceProxy::SetFootTargetLocation(FVector AddToDirection)
     return;    
 }
 
-// TODO : Interpolate Speed
-void FMainAnimInstanceProxy::SetRightFoot(float DeltaTimeX)
-{
-    //RightJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(RightJointTarget);
-    //RightFootTargetLocation = PlayerSkeletalMesh->GetSocketLocation(RightFoot);
-    // set target foot pos
-    RightFootTargetLocation.Z = IKFootTrace(RightFoot);
-    //RightFootLocation = RightFootTargetLocation;
-    //RightFootFree = false;
 
+////////////////// Main Anim Instance ////////////////////
+void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
+{
+    //if (PelvisRotation != PelvisLerpTo) { TurnBody(DeltaTimeX); }
+    TurnBody(DeltaTimeX);
+    SetRightFoot(DeltaTimeX);
+    SetLeftFoot(DeltaTimeX);
+}
+
+// TODO : Rotate IKFootRoot
+// TODO : Consider GetWorld()->GetTime() instead of tick
+void UMainAnimInstance::TurnBody(float DeltaTimeX)   
+{
+    PelvisLerpTime = 0;
+
+    if(PelvisLerpTime < PelvisLerpDuration)
+    {
+        PelvisLerpTime += DeltaTimeX;
+        PelvisRotation = FMath::Lerp(PelvisRotation, PelvisLerpTo, PelvisLerpTime / PelvisLerpDuration);
+    }
+}
+
+void UMainAnimInstance::SetRightFoot(float DeltaTimeX)
+{
     FootLerpTime = 0;
 
-    // if(FootLerpTime < FootLerpDuration)
-    // {
-    //     FootLerpTime += DeltaTimeX;
-    //     RightFootLocation = FMath::VInterpTo(RightFootLocation, RightFootTargetLocation, DeltaTimeX, FootLerpTime / FootLerpDuration);
-    // }
-    
+    if(FootLerpTime < FootLerpDuration)
+    {
+        FootLerpTime += DeltaTimeX;
+        RightFootLocation = FMath::VInterpTo(RightFootLocation, RightFootInterpTo, DeltaTimeX, FootLerpTime / FootLerpDuration);
+    }
+    // RightFootLocation = RightFootInterpTo;
     // RightFootFree = false;
     // LeftFootFree = true;
 }
 
-void FMainAnimInstanceProxy::SetLeftFoot(float DeltaTimeX)
+void UMainAnimInstance::SetLeftFoot(float DeltaTimeX)
 {
-    //LeftJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(LeftJointTarget);
-    //LeftFootTargetLocation = PlayerSkeletalMesh->GetSocketLocation(LeftFoot);
-    // set target foot pos
-    LeftFootTargetLocation.Z = IKFootTrace(LeftFoot);
-    //LeftFootLocation = LeftFootTargetLocation;
-    //LeftFootFree = false;
+    FootLerpTime = 0;
 
-    // FootLerpTime = 0;
-
-    // if(FootLerpTime < FootLerpDuration)
-    // {
-    //     FootLerpTime += DeltaTimeX;
-    //     LeftFootLocation = FMath::VInterpTo(LeftFootLocation, LeftFootTargetLocation, DeltaTimeX, FootLerpTime / FootLerpDuration);
-    // }
+    if(FootLerpTime < FootLerpDuration)
+    {
+        FootLerpTime += DeltaTimeX;
+        LeftFootLocation = FMath::VInterpTo(LeftFootLocation, LeftFootInterpTo, DeltaTimeX, FootLerpTime / FootLerpDuration);
+    }
 
     // LeftFootFree = false;
     // RightFootFree = true;

@@ -32,7 +32,9 @@ public:
 
 	// Properties
 	UPROPERTY(EditDefaultsOnly)
-	float MaxMoveForce = 750;  
+	float MaxMoveForce = 750;
+
+	FRotator PelvisRotation;
 
 	// TODO : Contstruct and Set Sub Anim Instance Capsule Half Height * Scale.Z Here
 
@@ -49,8 +51,8 @@ private:
 	float CurrentRightRate = 0;
 	float CurrentJumpRate = 0;
 
-	bool Pivot = true;
-	FVector PivotAnchor;
+	// bool Pivot = true;
+	// FVector PivotAnchor;
 
 protected:
 	virtual void BeginPlay() override;
