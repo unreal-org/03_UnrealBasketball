@@ -9,7 +9,7 @@
 #include "MainAnimInstance.generated.h"
 
 class USkeletalMeshComponent;
-//class UPlayerCapsuleComponent;
+class UPlayerCapsuleComponent;
 class USceneComponent;
 
 USTRUCT( Blueprintable, BlueprintType )
@@ -55,6 +55,7 @@ private:
 	float MaxReach = 10;
 	bool RightFootFree = false;
 	bool LeftFootFree = false;
+	bool CanMove = true;
 
 protected:
 	virtual void Initialize(UAnimInstance* InAnimInstance) override;
@@ -62,7 +63,7 @@ protected:
 	virtual void PostUpdate(UAnimInstance* InAnimInstance) const override;
 
 	USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;
-	USceneComponent* PlayerCapsuleComponent = nullptr;
+	UPlayerCapsuleComponent* PlayerCapsuleComponent = nullptr;
 	UMainAnimInstance* MainAnimInstance = nullptr;
 };
 
@@ -93,6 +94,7 @@ public:
 	FVector LeftJointTargetLocation;    // world space
 	
 private:
+	// Anim Instance Proxy
 	friend struct FMainAnimInstanceProxy;
 
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "Proxy", meta = (AllowPrivateAccess = "true"))
@@ -110,8 +112,10 @@ private:
 	// Lerp Time
 	float PelvisLerpTime;
 	float PelvisLerpDuration = .5;
-	float FootLerpTime;
-	float FootLerpDuration = .3;
+	float RightFootLerpTime;
+	float RightFootLerpDuration = .1;
+	float LeftFootLerpTime;
+	float LeftFootLerpDuration = .1;
 
 	void TurnBody(float DeltaTimeX);
 	void SetRightFoot(float DeltaTimeX);
@@ -124,7 +128,5 @@ protected:
 	// Tick
 	virtual void NativeUpdateAnimation(float DeltaTimeX) override;
 
-	// UPROPERTY(BluePrintReadOnly)
-	// USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;
 
 };

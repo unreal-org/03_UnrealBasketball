@@ -99,7 +99,6 @@ void UPlayerCapsuleComponent::Turn(float ZRotation)
 {
     //if (!ensure(MainAnimation)) { return; }
     PelvisRotation.Yaw += ZRotation * 45;
-    UE_LOG(LogTemp, Warning, TEXT("%f"), PelvisRotation.Yaw)
     // if pivot
         // Calculate root distance from target leg and make circular capsule movement
         
