@@ -27,6 +27,8 @@ public:
 	// Movement
 	void SetZRotation();
 	void SetFootTargetLocation(FVector AddToDirection);
+	void UpdateRightFootTargetLocation(float Angle);
+	void UpdateLeftFootTargetLocation(float Angle);
 
 private:
 	FName Root = FName(TEXT("root_socket"));;
@@ -42,6 +44,8 @@ private:
 	FVector LeftFootTargetLocation;
 	FVector RightJointTargetPos;
 	FVector LeftJointTargetPos;
+	FVector RightFootOriginal;
+	FVector LeftFootOriginal;
 
 	// Foot Trace
 	FName TraceTag = FName(TEXT("TraceTag"));;
@@ -52,10 +56,12 @@ private:
 	//void SetRightFoot(float DeltaTimeX);
 	//void SetLeftFoot(float DeltaTimeX);
 
-	float MaxReach = 10;
+	float MaxReach = 30;
 	bool RightFootFree = false;
 	bool LeftFootFree = false;
 	bool CanMove = true;
+	float FootMoveStart;
+	float FootMoveEnd = 1;
 
 protected:
 	virtual void Initialize(UAnimInstance* InAnimInstance) override;

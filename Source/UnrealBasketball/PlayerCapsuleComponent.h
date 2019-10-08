@@ -32,7 +32,7 @@ public:
 
 	// Properties
 	UPROPERTY(EditDefaultsOnly)
-	float MaxMoveForce = 750;
+	float MaxMoveForce = 800;
 
 	FRotator PelvisRotation;
 

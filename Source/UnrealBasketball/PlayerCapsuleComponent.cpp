@@ -69,12 +69,13 @@ void UPlayerCapsuleComponent::Move()
 
     // If CurrentForwardRate and CurrentRightRate == 0 
         // Then Auto place feet to default positions (according to capsule location and body angle)
-    
-    FVector ForwardForceToApply = GetRightVector() * CurrentForwardRate * MaxMoveForce;
-    FVector RightForceToApply = -GetForwardVector() * CurrentRightRate * MaxMoveForce;
-    FVector TotalForceToApply = ForwardForceToApply + RightForceToApply;
-    TotalForceToApply = TotalForceToApply.GetClampedToSize2D(-MaxMoveForce, MaxMoveForce);
-    AddForce(TotalForceToApply, NAME_None, true);
+    if (GetComponentVelocity().Size2D() < 50) {
+        FVector ForwardForceToApply = GetRightVector() * CurrentForwardRate * MaxMoveForce;
+        FVector RightForceToApply = -GetForwardVector() * CurrentRightRate * MaxMoveForce;
+        FVector TotalForceToApply = ForwardForceToApply + RightForceToApply;
+        TotalForceToApply = TotalForceToApply.GetClampedToSize2D(-MaxMoveForce, MaxMoveForce);
+        AddForce(TotalForceToApply, NAME_None, true);
+    }
 
     //if (!ensure(MainAnimation)) { return; }
 
