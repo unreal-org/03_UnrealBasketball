@@ -22,7 +22,8 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     if (!ensure(MainAnimInstance)) { return; }
     PlayerSkeletalMesh = GetSkelMeshComponent();
     if (!ensure(PlayerSkeletalMesh)) { return; }
-    PlayerCapsuleComponent = dynamic_cast<UPlayerCapsuleComponent*>(PlayerSkeletalMesh->GetOwner()->GetRootComponent());
+    //PlayerCapsuleComponent = dynamic_cast<UPlayerCapsuleComponent*>(PlayerSkeletalMesh->GetOwner()->GetRootComponent());
+    PlayerCapsuleComponent =PlayerSkeletalMesh->GetOwner()->FindComponentByClass<UPlayerCapsuleComponent>();
     if (!ensure(PlayerCapsuleComponent)) { return; }
 
     TraceParameters = FCollisionQueryParams(TraceTag, false);
@@ -111,6 +112,7 @@ void FMainAnimInstanceProxy::SetZRotation()
 {
     if (!ensure(PlayerCapsuleComponent)) { return; }
     PelvisTargetRotation.Yaw = PlayerCapsuleComponent->PelvisRotation.Yaw;
+    //SetFootTargetLocation(FVector(1, 1, 1));
 }
 
 ///////////////////////// Target Foot Position Calculator /////////////////////////////

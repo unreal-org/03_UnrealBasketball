@@ -25,8 +25,8 @@ void UHoopzPlayerMovementComponent::Initialize(UPlayerCapsuleComponent* PlayerCa
     PlayerCapsuleComponent = PlayerCapsuleComponentToSet;
 
     if (!ensure(PlayerCapsuleComponent)) { return; }
-    UpdatedComponent = Cast<USceneComponent>(PlayerCapsuleComponent);
-    SetUpdatedComponent(UpdatedComponent);
+    //UpdatedComponent = Cast<USceneComponent>(PlayerCapsuleComponent);
+    //SetUpdatedComponent(UpdatedComponent);
 }
 void UHoopzPlayerMovementComponent::IntendMoveForward(float Throw)
 {
@@ -86,7 +86,6 @@ void UHoopzPlayerMovementComponent::Pivot(float DeltaTime)
 		const FVector NewPivot = NewRotation.RotateVector(PivotTranslation);
 		DeltaLocation = (OldPivot - NewPivot); // ConstrainDirectionToPlane() not necessary because it's done by MoveUpdatedComponent() below.
 	}
-
 
 	const bool bEnableCollision = false;
 	MoveUpdatedComponent(DeltaLocation, NewRotation, bEnableCollision);

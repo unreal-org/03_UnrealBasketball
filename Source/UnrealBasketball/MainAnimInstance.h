@@ -61,7 +61,7 @@ private:
 	bool LeftFootFree = false;
 	bool CanMove = true;
 	float FootMoveStart;
-	float FootMoveEnd = 1;
+	float FootMoveEnd = .7;
 
 protected:
 	virtual void Initialize(UAnimInstance* InAnimInstance) override;

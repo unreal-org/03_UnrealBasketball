@@ -24,7 +24,8 @@ void UPlayerCapsuleComponent::BeginPlay()
     Super::BeginPlay();
 
     OnComponentHit.AddDynamic(this, &UPlayerCapsuleComponent::OnHit);
-    //MainAnimation = Cast<UMainAnimInstance>(Cast<USkeletalMeshComponent>(GetChildComponent(0))->GetAnimInstance());
+    //PivotPoint = GetOwner()->GetRootComponent()->GetChildComponent(1);
+    PivotPoint = GetOwner()->GetRootComponent();
 }
 
 void UPlayerCapsuleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -98,10 +99,34 @@ void UPlayerCapsuleComponent::Jump()
 // TODO : Should be rotating the capsule itself with circular motion on pivot
 void UPlayerCapsuleComponent::Turn(float ZRotation)
 {
-    //if (!ensure(MainAnimation)) { return; }
+    if (!ensure(PivotPoint)) { return; }
     PelvisRotation.Yaw += ZRotation * 45;
+
     // if pivot
-        // Calculate root distance from target leg and make circular capsule movement
-        
-    //MainAnimation->SetZRotation(ZRotation);
+        // Set Pivot Point at pivot foot and rotate capsule around Pivot Point
+    if (Pivot == true)
+    {
+        PivotPoint->SetWorldLocation(PivotAnchor);
+        FVector Radius = GetComponentLocation() - PivotPoint->GetComponentLocation();
+        FVector Rotated = Radius.RotateAngleAxis(ZRotation * 45, FVector(0, 0, 1));
+        FVector NewLocation = PivotAnchor + Rotated;   // New Location
+
+        SetWorldLocation(NewLocation);
+        // FRotator OldRotation = GetComponentRotation();
+        // FRotator NewRotation = OldRotation;
+        // NewRotation.Yaw += ZRotation * 45;
+
+        // FVector PivotTranslation = GetComponentLocation() - PivotAnchor;
+        // FVector DeltaLocation = FVector::ZeroVector;
+        // if (!PivotTranslation.IsZero())
+        // {
+        //     const FVector OldPivot = OldRotation.RotateVector(PivotTranslation);
+        //     const FVector NewPivot = NewRotation.RotateVector(PivotTranslation);
+        //     DeltaLocation = (OldPivot - NewPivot); 
+        // }
+
+        // PivotPoint->MoveComponent(DeltaLocation, NewRotation, EMoveComponentFlags::MOVECOMP_NoFlags);
+        // UE_LOG(LogTemp, Warning, TEXT("%s"), *PivotPoint->GetComponentLocation().ToString())
+        // UE_LOG(LogTemp, Warning, TEXT("%s"), *PivotPoint->GetComponentRotation().ToString())
+    }
 }
