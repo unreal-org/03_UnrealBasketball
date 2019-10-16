@@ -10,7 +10,7 @@
 
 class USkeletalMeshComponent;
 class UPlayerCapsuleComponent;
-class USceneComponent;
+//class USceneComponent;
 
 USTRUCT( Blueprintable, BlueprintType )
 struct FMainAnimInstanceProxy : public FAnimInstanceProxy
@@ -61,7 +61,7 @@ private:
 	bool LeftFootFree = false;
 	bool CanMove = true;
 	float FootMoveStart;
-	float FootMoveEnd = .7;
+	float FootMoveEnd = .5;
 
 protected:
 	virtual void Initialize(UAnimInstance* InAnimInstance) override;

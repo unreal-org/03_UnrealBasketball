@@ -22,8 +22,8 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     if (!ensure(MainAnimInstance)) { return; }
     PlayerSkeletalMesh = GetSkelMeshComponent();
     if (!ensure(PlayerSkeletalMesh)) { return; }
-    //PlayerCapsuleComponent = dynamic_cast<UPlayerCapsuleComponent*>(PlayerSkeletalMesh->GetOwner()->GetRootComponent());
-    PlayerCapsuleComponent =PlayerSkeletalMesh->GetOwner()->FindComponentByClass<UPlayerCapsuleComponent>();
+    PlayerCapsuleComponent = dynamic_cast<UPlayerCapsuleComponent*>(PlayerSkeletalMesh->GetOwner()->GetRootComponent());
+    //PlayerCapsuleComponent = PlayerSkeletalMesh->GetOwner()->FindComponentByClass<UPlayerCapsuleComponent>();
     if (!ensure(PlayerCapsuleComponent)) { return; }
 
     TraceParameters = FCollisionQueryParams(TraceTag, false);

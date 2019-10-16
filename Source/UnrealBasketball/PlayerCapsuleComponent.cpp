@@ -25,7 +25,7 @@ void UPlayerCapsuleComponent::BeginPlay()
 
     OnComponentHit.AddDynamic(this, &UPlayerCapsuleComponent::OnHit);
     //PivotPoint = GetOwner()->GetRootComponent()->GetChildComponent(1);
-    PivotPoint = GetOwner()->GetRootComponent();
+    //PivotPoint = GetOwner()->GetRootComponent();
 }
 
 void UPlayerCapsuleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -70,7 +70,7 @@ void UPlayerCapsuleComponent::Move()
 
     // If CurrentForwardRate and CurrentRightRate == 0 
         // Then Auto place feet to default positions (according to capsule location and body angle)
-    if (GetComponentVelocity().Size2D() < 50) {
+    if (GetComponentVelocity().Size2D() < 100) {
         FVector ForwardForceToApply = GetRightVector() * CurrentForwardRate * MaxMoveForce;
         FVector RightForceToApply = -GetForwardVector() * CurrentRightRate * MaxMoveForce;
         FVector TotalForceToApply = ForwardForceToApply + RightForceToApply;
@@ -99,19 +99,20 @@ void UPlayerCapsuleComponent::Jump()
 // TODO : Should be rotating the capsule itself with circular motion on pivot
 void UPlayerCapsuleComponent::Turn(float ZRotation)
 {
-    if (!ensure(PivotPoint)) { return; }
+    //if (!ensure(PivotPoint)) { return; }
     PelvisRotation.Yaw += ZRotation * 45;
+}
 
     // if pivot
         // Set Pivot Point at pivot foot and rotate capsule around Pivot Point
-    if (Pivot == true)
-    {
-        PivotPoint->SetWorldLocation(PivotAnchor);
-        FVector Radius = GetComponentLocation() - PivotPoint->GetComponentLocation();
-        FVector Rotated = Radius.RotateAngleAxis(ZRotation * 45, FVector(0, 0, 1));
-        FVector NewLocation = PivotAnchor + Rotated;   // New Location
+    // if (Pivot == true)  // DO THIS WITH ANIMATIONS
+    // {
+    //     PivotPoint->SetWorldLocation(PivotAnchor);
+    //     FVector Radius = GetComponentLocation() - PivotPoint->GetComponentLocation();
+    //     FVector Rotated = Radius.RotateAngleAxis(ZRotation * 45, FVector(0, 0, 1));
+    //     FVector NewLocation = PivotAnchor + Rotated;   // New Location
 
-        SetWorldLocation(NewLocation);
+        // SetWorldLocation(NewLocation);
         // FRotator OldRotation = GetComponentRotation();
         // FRotator NewRotation = OldRotation;
         // NewRotation.Yaw += ZRotation * 45;
@@ -127,6 +128,6 @@ void UPlayerCapsuleComponent::Turn(float ZRotation)
 
         // PivotPoint->MoveComponent(DeltaLocation, NewRotation, EMoveComponentFlags::MOVECOMP_NoFlags);
         // UE_LOG(LogTemp, Warning, TEXT("%s"), *PivotPoint->GetComponentLocation().ToString())
-        // UE_LOG(LogTemp, Warning, TEXT("%s"), *PivotPoint->GetComponentRotation().ToString())
-    }
-}
+        // UE_LOG(LogTemp, Warning, TEXT("%s"), *NewLocation.ToString())
+//     }
+// }
