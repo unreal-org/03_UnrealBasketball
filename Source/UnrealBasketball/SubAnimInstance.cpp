@@ -11,6 +11,7 @@
 #include "PlayerCapsuleComponent.h"
 #include "GameFramework/Actor.h"
 
+// TODO : Get Capsule speed from Main Anim Instance
 void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
 {
     Super::Initialize(InAnimInstance);
