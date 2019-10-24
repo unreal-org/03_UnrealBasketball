@@ -34,11 +34,11 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     PelvisTargetRotation = PlayerSkeletalMesh->GetSocketRotation(Root);
     PlayerCapsuleComponent->PelvisRotation = PelvisTargetRotation;
 
-    RightJointTargetPos = RootLocation + PlayerSkeletalMesh->GetSocketLocation(RightJointTarget);
-    LeftJointTargetPos = RootLocation + PlayerSkeletalMesh->GetSocketLocation(LeftJointTarget);
+    RightJointTargetPos = RootLocation + FVector(40, 20, -47); //+ PlayerSkeletalMesh->GetSocketLocation(RightJointTarget);
+    LeftJointTargetPos = RootLocation + FVector(40, -20, -47); //+ PlayerSkeletalMesh->GetSocketLocation(LeftJointTarget);
 
-    RightFootTargetLocation = RootLocation + PlayerSkeletalMesh->GetSocketLocation(RightFoot);
-    LeftFootTargetLocation = RootLocation + PlayerSkeletalMesh->GetSocketLocation(LeftFoot);
+    RightFootTargetLocation = RootLocation + FVector(-5, 17, -87); //+ PlayerSkeletalMesh->GetSocketLocation(RightFoot);
+    LeftFootTargetLocation = RootLocation + FVector(-5, -17, -87); //+ PlayerSkeletalMesh->GetSocketLocation(LeftFoot);
 
     RightFootTargetLocation.Z = IKFootTrace(RightFoot);
     LeftFootTargetLocation.Z = IKFootTrace(LeftFoot);
@@ -57,7 +57,7 @@ void FMainAnimInstanceProxy::Update(float DeltaSeconds)
     if (!ensure(PlayerCapsuleComponent)) { return; }
     if (!ensure(PlayerSkeletalMesh)) { return; }
     
-    SetZRotation();  // Root Rotation
+    SetZRotation();  // Pelvis Rotation
 
     if (CanMove == false && RightFootFree == true) {
         FootMoveStart += DeltaSeconds;
@@ -202,8 +202,8 @@ float FMainAnimInstanceProxy::IKFootTrace(FName Foot)
     FVector FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(Foot);
     FVector RootLocation = PlayerCapsuleComponent->GetComponentLocation();
     
-    FVector StartTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, FootSocketLocation.Z);
-    FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, FootSocketLocation.Z - 90 - 15); // - capsule half height - trace distance;
+    FVector StartTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, RootLocation.Z);
+    FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, RootLocation.Z - 90 - 15); // - capsule half height - trace distance;
 
     FHitResult HitResult(ForceInit);
     
