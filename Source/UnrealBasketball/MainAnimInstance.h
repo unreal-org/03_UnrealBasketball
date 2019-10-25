@@ -18,9 +18,22 @@ public:
 	// Constructor
 	UMainAnimInstance(const FObjectInitializer& ObjectInitializer);
 	
+	// Transition Variables
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	bool HasBall = false;
+
+	// Transition Events
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_ChangeToIdlePivot();
+
 private:
 	// State Machines
-	FAnimNode_StateMachine *MainState;
+	FAnimNode_StateMachine *CurrentState;
+	FName CurrentStateName;
+
+	// State Machine Functions
+	void Pivot();
+	
 
 protected:
 	// Native initialization override point

@@ -24,8 +24,9 @@ void UPlayerCapsuleComponent::BeginPlay()
     Super::BeginPlay();
 
     OnComponentHit.AddDynamic(this, &UPlayerCapsuleComponent::OnHit);
-    //PivotPoint = GetOwner()->GetRootComponent()->GetChildComponent(1);
-    //PivotPoint = GetOwner()->GetRootComponent();
+    PivotComponent = GetOwner()->FindComponentByClass<USceneComponent>();
+    if (!ensure(PivotComponent)) { return; }
+    CapsulePivotBig = dynamic_cast<USplineComponent*>(PivotComponent->GetChildComponent(6));
 }
 
 void UPlayerCapsuleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -37,9 +38,9 @@ void UPlayerCapsuleComponent::OnHit(UPrimitiveComponent* HitComponent, AActor* O
 { 
     Move();
     Jump();
-    CurrentForwardRate = 0;  
-    CurrentRightRate = 0;
-    CurrentJumpRate = 0;
+    // CurrentForwardRate = 0;  
+    // CurrentRightRate = 0;
+    // CurrentJumpRate = 0;
 }
 
 //////////////////////////////// Movement ///////////////////////////////////////
@@ -55,21 +56,73 @@ void UPlayerCapsuleComponent::SetMoveRightRate(float Rate)
 
 void UPlayerCapsuleComponent::SetJumpRate(float Rate)
 {
-    if(GetComponentLocation().Z > CapsuleHalfHeight + 20.1) { return; }    // quick workaround to check if capsul is in air - May have to fix later
+    if(GetComponentLocation().Z > CapsuleHalfHeight + 20.1) { return; }    // TODO: quick workaround to check if capsule is in air - May have to fix later
     CurrentJumpRate = FMath::Clamp<float>(Rate, 0, 1);
 }
 
-// TODO : Use Camera Forward and Right Vectors
+// TODO : 
 void UPlayerCapsuleComponent::Move() 
 {
-    // if (Pivot == true)
-    // {
-    //     FVector TotalForceToApply = -GetForwardVector() * CurrentRightRate * MaxMoveForce;
-    //     AddForce(TotalForceToApply, NAME_None, true);
-    // }
+    if (Pivot == true)
+    {
+        /*
+        if (PivotSet == false)
+            TODO : Move PivotComponent to Capsule Location and align rotation
+        */
 
-    // If CurrentForwardRate and CurrentRightRate == 0 
-        // Then Auto place feet to default positions (according to capsule location and body angle)
+        FVector ForwardForceToApply = GetForwardVector() * CurrentForwardRate;
+        FVector RightForceToApply = GetRightVector() * CurrentRightRate;
+        FVector TotalForceToApply = ForwardForceToApply + RightForceToApply;
+        TotalForceToApply = TotalForceToApply.GetClampedToSize2D(-1, 1);
+
+        if (EstablishPivotFoot == false)
+        { 
+            // TODO : Consider orientation of player on HasBall
+            if (TotalForceToApply.Y >= 0) { PivotFoot = 0; }  // Right Foot
+            if (TotalForceToApply.Y < 0) { PivotFoot = 1; }   // Left Foot
+            EstablishPivotFoot = true;
+        }
+
+        // TODO : Compare to Spline - CapsulePivotBig - FindInputKeyClosestToWorldLocation(FVector WorldLocation)
+        if (!ensure(CapsulePivotBig)) { return; }
+        if (TotalForceToApply.Equals(FVector(1, 0, 0), .3))
+        {
+            PivotPos = 0;
+        }
+        else if (TotalForceToApply.Equals(FVector(cos(45), sin(45), 0), .3))
+        {
+            PivotPos = 1;
+        }
+        else if (TotalForceToApply.Equals(FVector(0, 1, 0), .3))
+        {
+            PivotPos = 2;
+        }
+        else if (TotalForceToApply.Equals(FVector(-cos(45), sin(45), 0), .3))
+        {
+            PivotPos = 3;
+        }
+        else if (TotalForceToApply.Equals(FVector(-1, 0, 0), .3))
+        {
+            PivotPos = 4;
+        }
+        else if (TotalForceToApply.Equals(FVector(-cos(45), -sin(45), 0), .3))
+        {
+            PivotPos = 5;
+        }
+        else if (TotalForceToApply.Equals(FVector(0, -1, 0), .39))
+        {
+            PivotPos = 6;
+        }
+        else if (TotalForceToApply.Equals(FVector(cos(45), -sin(45), 0), .3))
+        {
+            PivotPos = 7;
+        }
+
+        CurrentForwardRate = 0;  
+        CurrentRightRate = 0;
+        return;
+    }
+
     if (GetComponentVelocity().Size2D() < 100) {
         FVector ForwardForceToApply = GetForwardVector() * CurrentForwardRate * MaxMoveForce;
         FVector RightForceToApply = GetRightVector() * CurrentRightRate * MaxMoveForce;
@@ -78,56 +131,21 @@ void UPlayerCapsuleComponent::Move()
         AddForce(TotalForceToApply, NAME_None, true);
     }
 
-    //if (!ensure(MainAnimation)) { return; }
-
-    // If Capsule moves,
-    // Pass (TotalForceToApply vector / MaxMoveForce) then add (Result * MaxReach) to TargetFootLocation
-
-    //MainAnimation->SetFootTargetLocation(AddToDirection/MaxMoveForce);
-        // use vector magnitude as amplitude for sine wave (used to calculate foot positions)
-        // On PIVOT
-            // 1. left stick - closer foot moves towards direction of capsule movement - pass FVector( current forward rate, current right rate, 0)
+    CurrentForwardRate = 0;  
+    CurrentRightRate = 0;
 }
 
 // TODO : Update Feet position when jumping
 void UPlayerCapsuleComponent::Jump()
 {
     AddImpulse(FVector(0, 0, CurrentJumpRate * MaxMoveForce), NAME_None, true);
+    CurrentJumpRate = 0;
 }
 
-// TODO : Change angle to direction of right stick
-// TODO : Should be rotating the capsule itself with circular motion on pivot
+// TODO : Rotate Capsule according to Pivot Splines
+// TODO : Remap to Triangle and Circle
 void UPlayerCapsuleComponent::Turn(float ZRotation)
 {
     //if (!ensure(PivotPoint)) { return; }
     PelvisRotation.Yaw += ZRotation * 45;
 }
-
-    // if pivot
-        // Set Pivot Point at pivot foot and rotate capsule around Pivot Point
-    // if (Pivot == true)  // DO THIS WITH ANIMATIONS
-    // {
-    //     PivotPoint->SetWorldLocation(PivotAnchor);
-    //     FVector Radius = GetComponentLocation() - PivotPoint->GetComponentLocation();
-    //     FVector Rotated = Radius.RotateAngleAxis(ZRotation * 45, FVector(0, 0, 1));
-    //     FVector NewLocation = PivotAnchor + Rotated;   // New Location
-
-        // SetWorldLocation(NewLocation);
-        // FRotator OldRotation = GetComponentRotation();
-        // FRotator NewRotation = OldRotation;
-        // NewRotation.Yaw += ZRotation * 45;
-
-        // FVector PivotTranslation = GetComponentLocation() - PivotAnchor;
-        // FVector DeltaLocation = FVector::ZeroVector;
-        // if (!PivotTranslation.IsZero())
-        // {
-        //     const FVector OldPivot = OldRotation.RotateVector(PivotTranslation);
-        //     const FVector NewPivot = NewRotation.RotateVector(PivotTranslation);
-        //     DeltaLocation = (OldPivot - NewPivot); 
-        // }
-
-        // PivotPoint->MoveComponent(DeltaLocation, NewRotation, EMoveComponentFlags::MOVECOMP_NoFlags);
-        // UE_LOG(LogTemp, Warning, TEXT("%s"), *PivotPoint->GetComponentLocation().ToString())
-        // UE_LOG(LogTemp, Warning, TEXT("%s"), *NewLocation.ToString())
-//     }
-// }

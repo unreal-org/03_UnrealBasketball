@@ -11,15 +11,41 @@ void UMainAnimInstance::NativeInitializeAnimation()
 {
     Super::NativeInitializeAnimation();
 
-    //MainState = 
+    
 }
 
 void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 {
+    /*
+    swtich (CurrentStateIndex)
+    {
+        case 0: // Idle
+            break;
+        case 1: // IdlePivot
+            Pivot();
+            break;
+        default:
+            return;
+    }
+    */
+}
 
+void UMainAnimInstance::AnimNotify_ChangeToIdlePivot()
+{
+    CurrentStateName = FName(TEXT("IdlePivot"));
+}
+
+void UMainAnimInstance::Pivot()
+{
+    /*
+    if not already in position
+        PlayPivotAnimation(PlayerCapsuleComponent->PivotFoot, PlayerCapsuleComponent->PivotPos);
+    */
 }
 
 /*
+if skelmeshcomponent has ball
+pointer to movementcomponent->hasball = true;
 
 if (player has ball) {
     has ball = true;  // trigger trasition state to IdlePivot   ***Also updates HoopzPlayerMovementComponent states***

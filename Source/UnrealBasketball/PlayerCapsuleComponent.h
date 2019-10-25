@@ -8,7 +8,8 @@
 #include "Components/CapsuleComponent.h"
 #include "PlayerCapsuleComponent.generated.h"
 
-//class USceneComponent;
+class USceneComponent;
+class USplineComponent;
 
 /**
  * 
@@ -53,10 +54,14 @@ private:
 	float CurrentRightRate = 0;
 	float CurrentJumpRate = 0;
 
-	// bool Pivot = true;
+	bool Pivot = false;
+	bool EstablishPivotFoot = false;
+	float PivotFoot = 0;   // 0 = left, 1 = right
+	float PivotPos;
 	// FVector PivotAnchor = FVector(0, 0, 0);
 
-	//USceneComponent* PivotPoint = nullptr;
+	USceneComponent* PivotComponent = nullptr;
+	USplineComponent* CapsulePivotBig = nullptr;
 
 protected:
 	virtual void BeginPlay() override;

@@ -20,8 +20,8 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     if (!ensure(SubAnimInstance)) { return; }
     PlayerSkeletalMesh = GetSkelMeshComponent();
     if (!ensure(PlayerSkeletalMesh)) { return; }
-    PlayerCapsuleComponent = dynamic_cast<UPlayerCapsuleComponent*>(PlayerSkeletalMesh->GetOwner()->GetRootComponent());
-    //PlayerCapsuleComponent = PlayerSkeletalMesh->GetOwner()->FindComponentByClass<UPlayerCapsuleComponent>();
+    PlayerCapsuleComponent = dynamic_cast<UPlayerCapsuleComponent*>(PlayerSkeletalMesh->GetOwner()->FindComponentByClass<UPlayerCapsuleComponent>());//->GetRootComponent());
+    //PlayerCapsuleComponent = PlayerSkeletalMesh->GetOwner()->FindComponentByClass<UPlayerCapsuleComponent>();    // For Scene Component
     if (!ensure(PlayerCapsuleComponent)) { return; }
 
     TraceParameters = FCollisionQueryParams(TraceTag, false);
@@ -31,6 +31,7 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     FVector RootLocation = PlayerCapsuleComponent->GetComponentLocation();
     RootLocation.Z = 0;
 
+    // TODO : Initate Pelvis rotated
     PelvisTargetRotation = PlayerSkeletalMesh->GetSocketRotation(Root);
     PlayerCapsuleComponent->PelvisRotation = PelvisTargetRotation;
 

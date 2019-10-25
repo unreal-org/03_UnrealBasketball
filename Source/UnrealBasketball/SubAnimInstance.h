@@ -34,10 +34,10 @@ public:
 	void UpdateLeftFootTargetLocation(float Angle);
 
 private:
-	FName Root = FName(TEXT("root_socket"));;
+	FName Root = FName(TEXT("root_socket"));
 	FName RightFoot = FName(TEXT("foot_target_r"));
 	FName LeftFoot = FName(TEXT("foot_target_l"));
-	FName Pelvis = FName(TEXT("pelvis_socket"));;;
+	FName Pelvis = FName(TEXT("pelvis_socket"));
 	FName RightJointTarget = FName(TEXT("joint_target_r"));
 	FName LeftJointTarget = FName(TEXT("joint_target_l"));
 	
