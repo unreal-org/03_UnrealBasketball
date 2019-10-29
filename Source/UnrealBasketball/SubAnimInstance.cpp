@@ -31,9 +31,10 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     FVector RootLocation = PlayerCapsuleComponent->GetComponentLocation();
     RootLocation.Z = 0;
 
-    // TODO : Initate Pelvis rotated
-    PelvisTargetRotation = PlayerSkeletalMesh->GetSocketRotation(Root);
-    PlayerCapsuleComponent->PelvisRotation = PelvisTargetRotation;
+    IKFootRootTargetRotation = PlayerSkeletalMesh->GetSocketRotation(IKFootRoot);
+
+    PelvisTargetRotation = PlayerSkeletalMesh->GetSocketRotation(Pelvis);
+    //PlayerCapsuleComponent->PelvisRotation = PelvisTargetRotation;
 
     RightJointTargetPos = RootLocation + FVector(40, 20, -47); //+ PlayerSkeletalMesh->GetSocketLocation(RightJointTarget);
     LeftJointTargetPos = RootLocation + FVector(40, -20, -47); //+ PlayerSkeletalMesh->GetSocketLocation(LeftJointTarget);
@@ -110,7 +111,7 @@ void FMainAnimInstanceProxy::PostUpdate(UAnimInstance* InAnimInstance) const
 void FMainAnimInstanceProxy::SetZRotation()
 {
     if (!ensure(PlayerCapsuleComponent)) { return; }
-    PelvisTargetRotation.Yaw = PlayerCapsuleComponent->PelvisRotation.Yaw;
+    //PelvisTargetRotation.Yaw = PlayerCapsuleComponent->PelvisRotation.Yaw;
     //SetFootTargetLocation(FVector(1, 1, 1));
 }
 

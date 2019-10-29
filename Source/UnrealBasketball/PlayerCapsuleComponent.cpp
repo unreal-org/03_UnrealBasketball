@@ -4,6 +4,7 @@
 #include "PlayerCapsuleComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Math/UnrealMathUtility.h"
+#include "Components/SplineComponent.h"
 
 UPlayerCapsuleComponent::UPlayerCapsuleComponent()
 {
@@ -63,60 +64,55 @@ void UPlayerCapsuleComponent::SetJumpRate(float Rate)
 // TODO : 
 void UPlayerCapsuleComponent::Move() 
 {
+    if (CurrentForwardRate == 0 && CurrentRightRate == 0) { return; }
     if (Pivot == true)
     {
         /*
         if (PivotSet == false)
-            TODO : Move PivotComponent to Capsule Location and align rotation
+            if (!ensure(CapsulePivotBig)) { return; }
+            PivotComponent->SetWorldLocation(GetComponentLocation());
+            PivotComponent->SetWorldRotation(GetComponentRotation());
         */
 
-        FVector ForwardForceToApply = GetForwardVector() * CurrentForwardRate;
-        FVector RightForceToApply = GetRightVector() * CurrentRightRate;
+        FVector ForwardForceToApply = GetForwardVector() * CurrentForwardRate * 40;
+        FVector RightForceToApply = GetRightVector() * CurrentRightRate * 40;
         FVector TotalForceToApply = ForwardForceToApply + RightForceToApply;
-        TotalForceToApply = TotalForceToApply.GetClampedToSize2D(-1, 1);
+        TotalForceToApply = TotalForceToApply.GetClampedToSize2D(-40, 40);
+
+        if (!ensure(CapsulePivotBig)) { return; }
+        TotalForceToApply += GetComponentLocation();
+        PivotInputKey = CapsulePivotBig->FindInputKeyClosestToWorldLocation(TotalForceToApply);
 
         if (EstablishPivotFoot == false)
         { 
-            // TODO : Consider orientation of player on HasBall
-            if (TotalForceToApply.Y >= 0) { PivotFoot = 0; }  // Right Foot
-            if (TotalForceToApply.Y < 0) { PivotFoot = 1; }   // Left Foot
-            EstablishPivotFoot = true;
+            if (PivotInputKey < 4) {
+                EstablishPivotFoot = true; 
+                if (PivotInputKey == 0) {
+                    if (abs((CapsulePivotBig->GetWorldLocationAtSplinePoint(1) - TotalForceToApply).Size()) <= abs((CapsulePivotBig->GetWorldLocationAtSplinePoint(7) - TotalForceToApply).Size())) {
+                        PivotFoot = 0;  // Left Foot
+                    } else {
+                        PivotFoot = 1;  // Right Foot
+                    }
+                } else {
+                    PivotFoot = 0;
+                }
+            }
+            if (PivotInputKey >= 4) {
+                EstablishPivotFoot = true; 
+                if (PivotInputKey == 4) {
+                    if (abs((CapsulePivotBig->GetWorldLocationAtSplinePoint(3) - TotalForceToApply).Size()) <= abs((CapsulePivotBig->GetWorldLocationAtSplinePoint(5) - TotalForceToApply).Size())) {
+                        PivotFoot = 0;  // Left Foot
+                    } else {
+                        PivotFoot = 1;  // Right Foot
+                    }
+                } else {
+                    PivotFoot = 1;
+                }
+            }
         }
 
-        // TODO : Compare to Spline - CapsulePivotBig - FindInputKeyClosestToWorldLocation(FVector WorldLocation)
-        if (!ensure(CapsulePivotBig)) { return; }
-        if (TotalForceToApply.Equals(FVector(1, 0, 0), .3))
-        {
-            PivotPos = 0;
-        }
-        else if (TotalForceToApply.Equals(FVector(cos(45), sin(45), 0), .3))
-        {
-            PivotPos = 1;
-        }
-        else if (TotalForceToApply.Equals(FVector(0, 1, 0), .3))
-        {
-            PivotPos = 2;
-        }
-        else if (TotalForceToApply.Equals(FVector(-cos(45), sin(45), 0), .3))
-        {
-            PivotPos = 3;
-        }
-        else if (TotalForceToApply.Equals(FVector(-1, 0, 0), .3))
-        {
-            PivotPos = 4;
-        }
-        else if (TotalForceToApply.Equals(FVector(-cos(45), -sin(45), 0), .3))
-        {
-            PivotPos = 5;
-        }
-        else if (TotalForceToApply.Equals(FVector(0, -1, 0), .39))
-        {
-            PivotPos = 6;
-        }
-        else if (TotalForceToApply.Equals(FVector(cos(45), -sin(45), 0), .3))
-        {
-            PivotPos = 7;
-        }
+        // move capsule and foot to designated spline points - Use Animation Poses
+        
 
         CurrentForwardRate = 0;  
         CurrentRightRate = 0;
@@ -146,6 +142,7 @@ void UPlayerCapsuleComponent::Jump()
 // TODO : Remap to Triangle and Circle
 void UPlayerCapsuleComponent::Turn(float ZRotation)
 {
+    //PivotSet = false;
     //if (!ensure(PivotPoint)) { return; }
-    PelvisRotation.Yaw += ZRotation * 45;
+    //PelvisRotation.Yaw += ZRotation * 45;
 }
