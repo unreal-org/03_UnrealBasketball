@@ -2,6 +2,7 @@
 
 #include "MainAnimInstance.h"
 #include "Animation/AnimNode_StateMachine.h"
+#include "GameFramework/Actor.h"
 
 UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
@@ -10,36 +11,51 @@ UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer
 void UMainAnimInstance::NativeInitializeAnimation()
 {
     Super::NativeInitializeAnimation();
-
     
+    if (!ensure(GetSkelMeshComponent())) { return; }
+    PlayerCapsuleComponent = dynamic_cast<UPlayerCapsuleComponent*>(GetSkelMeshComponent()->GetOwner()->FindComponentByClass<UPlayerCapsuleComponent>());
+    MainState = GetStateMachineInstanceFromName(FName(TEXT("MainState")));
 }
 
 void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 {
-    /*
-    swtich (CurrentStateIndex)
+    switch (CurrentStateIndex)
     {
-        case 0: // Idle
-            break;
+        // case 0: // Idle - play blend
+        //     break;
         case 1: // IdlePivot
             Pivot();
             break;
         default:
             return;
     }
-    */
 }
 
-void UMainAnimInstance::AnimNotify_ChangeToIdlePivot()
+void UMainAnimInstance::AnimNotify_ChangeStateInfo()
 {
-    CurrentStateName = FName(TEXT("IdlePivot"));
+    if (!ensure(MainState)) { return; }
+    CurrentStateName = MainState->GetCurrentStateName();
+    CurrentStateIndex = MainState->GetCurrentState();
 }
 
+// TODO : Play idlepivot animation if idle for more than 5 seconds
+// TODO : Blend between pose animations
 void UMainAnimInstance::Pivot()
 {
+    if (!ensure(CurrentMontage)) { return; }
     /*
-    if not already in position
-        PlayPivotAnimation(PlayerCapsuleComponent->PivotFoot, PlayerCapsuleComponent->PivotPos);
+    if (Anim_Notify signals end of montage) {
+        MontageKey = CapsuleComponent->InputKey
+    }
+    
+    if (PivotFoot == 0 && PivotInputKey > 4) {
+        // return to neutralpos
+    }
+    if (PivotFoot == 1 && PivotInputKey <= 4) {
+        // return to neutral pos
+    }
+    
+    Montage_JumpToSection(FName SectionName, CurrentMontage);
     */
 }
 

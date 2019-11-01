@@ -6,6 +6,9 @@
 #include "Animation/AnimInstance.h"
 #include "MainAnimInstance.generated.h"
 
+class UAnimMontage;
+class UPlayerCapsuleComponent;
+
 /**
  * To be used to play Animations
  */
@@ -24,16 +27,23 @@ public:
 
 	// Transition Events
 	UFUNCTION(BlueprintCallable)
-	void AnimNotify_ChangeToIdlePivot();
+	void AnimNotify_ChangeStateInfo();
+
+	// Montage Reference
+	UPROPERTY(BlueprintReadWrite, Category= "Montage Reference")
+	UAnimMontage* CurrentMontage;
 
 private:
 	// State Machines
-	FAnimNode_StateMachine *CurrentState;
+	FAnimNode_StateMachine *MainState;
 	FName CurrentStateName;
+	int32 CurrentStateIndex;
 
 	// State Machine Functions
 	void Pivot();
-	
+
+	// Capsule Component
+	UPlayerCapsuleComponent* PlayerCapsuleComponent = nullptr;
 
 protected:
 	// Native initialization override point

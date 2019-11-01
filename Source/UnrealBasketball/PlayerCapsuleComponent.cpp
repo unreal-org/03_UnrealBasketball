@@ -8,7 +8,7 @@
 
 UPlayerCapsuleComponent::UPlayerCapsuleComponent()
 {
-    CapsuleHalfHeight = 90.0f;        // Capsule height
+    CapsuleHalfHeight = 95.0f;        // Capsule height
 
     SetSimulatePhysics(true);
     BodyInstance.bLockXRotation = true;     // Lock Capsule Rotations
@@ -61,7 +61,7 @@ void UPlayerCapsuleComponent::SetJumpRate(float Rate)
     CurrentJumpRate = FMath::Clamp<float>(Rate, 0, 1);
 }
 
-// TODO : 
+// TODO : Negate left stick Axis rate when moving back to center
 void UPlayerCapsuleComponent::Move() 
 {
     if (CurrentForwardRate == 0 && CurrentRightRate == 0) { return; }
@@ -85,34 +85,10 @@ void UPlayerCapsuleComponent::Move()
 
         if (EstablishPivotFoot == false)
         { 
-            if (PivotInputKey < 4) {
-                EstablishPivotFoot = true; 
-                if (PivotInputKey == 0) {
-                    if (abs((CapsulePivotBig->GetWorldLocationAtSplinePoint(1) - TotalForceToApply).Size()) <= abs((CapsulePivotBig->GetWorldLocationAtSplinePoint(7) - TotalForceToApply).Size())) {
-                        PivotFoot = 0;  // Left Foot
-                    } else {
-                        PivotFoot = 1;  // Right Foot
-                    }
-                } else {
-                    PivotFoot = 0;
-                }
-            }
-            if (PivotInputKey >= 4) {
-                EstablishPivotFoot = true; 
-                if (PivotInputKey == 4) {
-                    if (abs((CapsulePivotBig->GetWorldLocationAtSplinePoint(3) - TotalForceToApply).Size()) <= abs((CapsulePivotBig->GetWorldLocationAtSplinePoint(5) - TotalForceToApply).Size())) {
-                        PivotFoot = 0;  // Left Foot
-                    } else {
-                        PivotFoot = 1;  // Right Foot
-                    }
-                } else {
-                    PivotFoot = 1;
-                }
-            }
+            if (PivotInputKey <= 4) { PivotFoot = 0; } // Left Foot
+            else { PivotFoot = 1; } // Right Foot
+            EstablishPivotFoot = true;
         }
-
-        // move capsule and foot to designated spline points - Use Animation Poses
-        
 
         CurrentForwardRate = 0;  
         CurrentRightRate = 0;
