@@ -23,7 +23,7 @@ public:
 	
 	// Transition Variables
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
-	bool HasBall = false;
+	bool HasBall = true;
 
 	// Transition Events
 	UFUNCTION(BlueprintCallable)
@@ -41,6 +41,8 @@ private:
 
 	// State Machine Functions
 	void Pivot();
+	int32 MontageKey;
+	bool PivotKey;
 
 	// Capsule Component
 	UPlayerCapsuleComponent* PlayerCapsuleComponent = nullptr;

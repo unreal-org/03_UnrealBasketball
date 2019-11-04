@@ -3,6 +3,7 @@
 #include "MainAnimInstance.h"
 #include "Animation/AnimNode_StateMachine.h"
 #include "GameFramework/Actor.h"
+#include "PlayerCapsuleComponent.h"
 
 UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
@@ -29,6 +30,7 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
         default:
             return;
     }
+    //UE_LOG(LogTemp, Warning, TEXT("%i"), CurrentStateIndex)
 }
 
 void UMainAnimInstance::AnimNotify_ChangeStateInfo()
@@ -43,20 +45,78 @@ void UMainAnimInstance::AnimNotify_ChangeStateInfo()
 void UMainAnimInstance::Pivot()
 {
     if (!ensure(CurrentMontage)) { return; }
-    /*
-    if (Anim_Notify signals end of montage) {
-        MontageKey = CapsuleComponent->InputKey
+    if (!ensure(PlayerCapsuleComponent)) { return; }
+    
+    // if (AnimNotifyState signals end of montage) {
+    //     MontageKey = CapsuleComponent->InputKey
+    //     PivotFoot = CapsuleComponent->PivotFoot
+    // }
+    
+    // UE_LOG(LogTemp, Warning, TEXT("Pivot called."))
+
+    if (PlayerCapsuleComponent->EstablishPivotFoot == false) {
+        //if (!Montage_IsPlaying(CurrentMontage)) {
+            //Montage_Play(CurrentMontage, 1);
+            //Montage_JumpToSection(FName(TEXT("PivotPosNeutralR6L2")), CurrentMontage);
+        //}
+        //UE_LOG(LogTemp, Warning, TEXT("%s"), *Montage_GetCurrentSection(CurrentMontage).ToString())
+
+        // Montage_JumpToSection(FName(TEXT("PivotPosNeutralR6L2")), CurrentMontage);
+        // UE_LOG(LogTemp, Warning, TEXT("%s"), *Montage_GetCurrentSection(CurrentMontage).ToString())  
+
+        return;
+    }
+    else {
+        MontageKey = PlayerCapsuleComponent->PivotInputKey;
+        PivotKey = PlayerCapsuleComponent->PivotFoot;
+        UE_LOG(LogTemp, Warning, TEXT("Pivot Foot Established."))
+    }
+    // UE_LOG(LogTemp, Warning, TEXT("MontageKey : %i"), MontageKey)
+    if (PivotKey == false) { // left foot
+        switch (MontageKey) {
+            case 0: // 
+                Montage_JumpToSection(FName(TEXT("PivotStepLeft0")), CurrentMontage);
+                break;
+            case 1: //
+                Montage_JumpToSection(FName(TEXT("PivotStepLeft1")), CurrentMontage);
+                break;
+            case 2: //
+                Montage_JumpToSection(FName(TEXT("PivotStepLeft2")), CurrentMontage);
+                break;
+            case 3: //
+                Montage_JumpToSection(FName(TEXT("PivotStepLeft3")), CurrentMontage);
+                break;
+            case 4: //
+                Montage_JumpToSection(FName(TEXT("PivotStepLeft4")), CurrentMontage);
+                break;
+            default:
+                Montage_JumpToSection(FName(TEXT("PivotPosNeutralR6L2")), CurrentMontage); // defaultpivotpos
+                return;
+        }
     }
     
-    if (PivotFoot == 0 && PivotInputKey > 4) {
-        // return to neutralpos
+    if (PivotKey == true) { // right foot
+        switch (MontageKey) {
+            case 5: // 
+                Montage_JumpToSection(FName(TEXT("PivotStepRight5")), CurrentMontage);
+                break;
+            case 6: //
+                Montage_JumpToSection(FName(TEXT("PivotStepRight6")), CurrentMontage);
+                break;
+            case 7: //
+                Montage_JumpToSection(FName(TEXT("PivotStepRight7")), CurrentMontage);
+                break;
+            case 8: //
+                Montage_JumpToSection(FName(TEXT("PivotStepRight8")), CurrentMontage);
+                break;
+            case 9: //
+                Montage_JumpToSection(FName(TEXT("PivotStepRight9")), CurrentMontage);
+                break;
+            default:
+                Montage_JumpToSection(FName(TEXT("PivotPosNeutralR6L2")), CurrentMontage); // defaultpivotpos
+                return;
+        }
     }
-    if (PivotFoot == 1 && PivotInputKey <= 4) {
-        // return to neutral pos
-    }
-    
-    Montage_JumpToSection(FName SectionName, CurrentMontage);
-    */
 }
 
 /*
@@ -74,5 +134,4 @@ in pivot state
     pivot foot and capsule will be moved to 'predetermined locations' according to directional input
 
     input commands for turning pivotaxis
-
 */

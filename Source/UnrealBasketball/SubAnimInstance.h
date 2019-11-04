@@ -35,7 +35,8 @@ public:
 	void UpdateLeftFootTargetLocation(float Angle);
 
 private:
-	FName IKFootRoot = FName(TEXT("ik_foot_root"));
+	// TODO : Dont hardcode FNames
+	FName Root = FName(TEXT("root"));
 	FName RightFoot = FName(TEXT("foot_target_r"));
 	FName LeftFoot = FName(TEXT("foot_target_l"));
 	FName Pelvis = FName(TEXT("pelvis_socket"));
@@ -43,7 +44,7 @@ private:
 	FName LeftJointTarget = FName(TEXT("joint_target_l"));
 	
 	// Target Positions
-	FRotator IKFootRootTargetRotation;
+	FRotator RootTargetRotation;
 	FRotator PelvisTargetRotation;
 	FVector RightFootTargetLocation;
 	FVector LeftFootTargetLocation;
@@ -86,7 +87,7 @@ public:
 
 	// Body Angle
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator IKFootRoot;    // world space
+	FRotator Root;    // world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FRotator PelvisRotation;  // world space
 	

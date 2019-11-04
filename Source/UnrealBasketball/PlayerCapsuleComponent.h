@@ -36,8 +36,10 @@ public:
 	// Properties
 	UPROPERTY(EditDefaultsOnly)
 	float MaxMoveForce = 800;
-
-	//FRotator PelvisRotation;
+	
+	int32 PivotInputKey;
+	bool PivotFoot = true;   // false = left, true = right
+	bool EstablishPivotFoot = false;
 
 	// TODO : Contstruct and Set Sub Anim Instance Capsule Half Height * Scale.Z Here
 
@@ -54,12 +56,9 @@ private:
 	float CurrentRightRate = 0;
 	float CurrentJumpRate = 0;
 
-	bool Pivot = false;
+	bool Pivot = true;
 	bool PivotSet = false;
-	bool EstablishPivotFoot = false;
-	float PivotFoot = 0;   // 0 = left, 1 = right
-	float PivotInputKey;
-	// FVector PivotAnchor = FVector(0, 0, 0);
+	
 
 	USceneComponent* PivotComponent = nullptr;
 	USplineComponent* CapsulePivotBig = nullptr;

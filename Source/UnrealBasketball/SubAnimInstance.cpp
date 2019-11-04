@@ -31,7 +31,8 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     FVector RootLocation = PlayerCapsuleComponent->GetComponentLocation();
     RootLocation.Z = 0;
 
-    IKFootRootTargetRotation = PlayerSkeletalMesh->GetSocketRotation(IKFootRoot);
+    RootTargetRotation = PlayerSkeletalMesh->GetSocketRotation(Root);
+    RootTargetRotation.Add(0, 0, 180);
 
     PelvisTargetRotation = PlayerSkeletalMesh->GetSocketRotation(Pelvis);
     //PlayerCapsuleComponent->PelvisRotation = PelvisTargetRotation;
@@ -45,6 +46,7 @@ void FMainAnimInstanceProxy::Initialize(UAnimInstance* InAnimInstance)
     RightFootTargetLocation.Z = IKFootTrace(RightFoot);
     LeftFootTargetLocation.Z = IKFootTrace(LeftFoot);
 
+    SubAnimInstance->Root = RootTargetRotation;
     SubAnimInstance->PelvisLerpTo = PelvisTargetRotation;
     SubAnimInstance->RightJointTargetLocation = RightJointTargetPos;
     SubAnimInstance->LeftJointTargetLocation = LeftJointTargetPos;
@@ -97,6 +99,7 @@ void FMainAnimInstanceProxy::PostUpdate(UAnimInstance* InAnimInstance) const
     Super::PostUpdate(InAnimInstance);
 
     if (!ensure(SubAnimInstance)) { return; }
+    SubAnimInstance->Root = RootTargetRotation;
     SubAnimInstance->PelvisLerpTo = PelvisTargetRotation;
     SubAnimInstance->RightJointTargetLocation = RightJointTargetPos;
     SubAnimInstance->LeftJointTargetLocation = LeftJointTargetPos;
