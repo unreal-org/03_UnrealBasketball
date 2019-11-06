@@ -38,7 +38,6 @@ public:
 	float MaxMoveForce = 800;
 	
 	int32 PivotInputKey;
-	bool PivotFoot = true;   // false = left, true = right
 	bool EstablishPivotFoot = false;
 
 	// TODO : Contstruct and Set Sub Anim Instance Capsule Half Height * Scale.Z Here
@@ -59,7 +58,6 @@ private:
 	bool Pivot = true;
 	bool PivotSet = false;
 	
-
 	USceneComponent* PivotComponent = nullptr;
 	USplineComponent* CapsulePivotBig = nullptr;
 

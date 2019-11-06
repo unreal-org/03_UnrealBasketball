@@ -8,6 +8,7 @@
 
 class UAnimMontage;
 class UPlayerCapsuleComponent;
+class USkeletalMeshComponent;
 
 /**
  * To be used to play Animations
@@ -20,6 +21,19 @@ class UNREALBASKETBALL_API UMainAnimInstance : public UAnimInstance
 public:
 	// Constructor
 	UMainAnimInstance(const FObjectInitializer& ObjectInitializer);
+
+	// Feet
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector RightFootLocation;   // world space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector LeftFootLocation;    // world space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector RightJointTargetLocation;   // world space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector LeftJointTargetLocation;    // world space
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= "JointAngles")
+	bool IK = false;
+
 	
 	// Transition Variables
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
@@ -27,7 +41,7 @@ public:
 
 	// Transition Events
 	UFUNCTION(BlueprintCallable)
-	void AnimNotify_ChangeStateInfo();
+	void AnimNotify_ResetPrevMontageKey();
 
 	// Montage Reference
 	UPROPERTY(BlueprintReadWrite, Category= "Montage Reference")
@@ -42,10 +56,20 @@ private:
 	// State Machine Functions
 	void Pivot();
 	int32 MontageKey;
-	bool PivotKey;
+	int32 PrevMontageKey = -1;
+	bool PivotKey; // false = left, true = right;
+	bool EstablishPivotFoot;
+	bool CanMove = true;
+	FName CurrentPivotPos;
+
+	// Foot Trace
+	FName TraceTag = FName(TEXT("TraceTag"));;
+	FCollisionQueryParams TraceParameters;
+	FVector IKFootTrace(bool PivotKey);
 
 	// Capsule Component
 	UPlayerCapsuleComponent* PlayerCapsuleComponent = nullptr;
+	USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;
 
 protected:
 	// Native initialization override point

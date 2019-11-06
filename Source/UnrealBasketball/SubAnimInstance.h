@@ -36,15 +36,15 @@ public:
 
 private:
 	// TODO : Dont hardcode FNames
-	FName Root = FName(TEXT("root"));
-	FName RightFoot = FName(TEXT("foot_target_r"));
-	FName LeftFoot = FName(TEXT("foot_target_l"));
+	FName IKFootRoot = FName(TEXT("ik_foot_root"));
+	FName RightFoot = FName(TEXT("foot_r"));
+	FName LeftFoot = FName(TEXT("foot_l"));
 	FName Pelvis = FName(TEXT("pelvis_socket"));
 	FName RightJointTarget = FName(TEXT("joint_target_r"));
 	FName LeftJointTarget = FName(TEXT("joint_target_l"));
 	
 	// Target Positions
-	FRotator RootTargetRotation;
+	FRotator IKFootRootTargetRotation;
 	FRotator PelvisTargetRotation;
 	FVector RightFootTargetLocation;
 	FVector LeftFootTargetLocation;
@@ -54,9 +54,9 @@ private:
 	FVector LeftFootOriginal;
 
 	// Foot Trace
-	FName TraceTag = FName(TEXT("TraceTag"));;
-	FCollisionQueryParams TraceParameters;
-	float IKFootTrace(FName Foot);
+	// FName TraceTag = FName(TEXT("TraceTag"));;
+	// FCollisionQueryParams TraceParameters;
+	// float IKFootTrace(FName Foot);
 
 	// Foot Placement Variables
 	float MaxReach = 30;
@@ -87,7 +87,7 @@ public:
 
 	// Body Angle
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator Root;    // world space
+	FRotator IKFootRoot;    // world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FRotator PelvisRotation;  // world space
 	

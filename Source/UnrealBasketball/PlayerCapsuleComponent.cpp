@@ -83,13 +83,6 @@ void UPlayerCapsuleComponent::Move()
         TotalForceToApply += GetComponentLocation();
         PivotInputKey = CapsulePivotBig->FindInputKeyClosestToWorldLocation(TotalForceToApply);
 
-        // if (EstablishPivotFoot == false)
-        // { 
-        //     if (PivotInputKey <= 4) { PivotFoot = false; } // Left Foot
-        //     else { PivotFoot = true; } // Right Foot
-        //     EstablishPivotFoot = true;
-        // }
-
         CurrentForwardRate = 0;  
         CurrentRightRate = 0;
         return;
