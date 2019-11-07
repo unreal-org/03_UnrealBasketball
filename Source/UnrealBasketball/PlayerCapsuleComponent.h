@@ -37,7 +37,7 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	float MaxMoveForce = 800;
 	
-	int32 PivotInputKey;
+	int32 PivotInputKey = -1;   // default -1 to signal Player hasn't moved
 	bool EstablishPivotFoot = false;
 
 	// TODO : Contstruct and Set Sub Anim Instance Capsule Half Height * Scale.Z Here

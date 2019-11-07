@@ -4,6 +4,7 @@
 #include "Animation/AnimNode_StateMachine.h"
 #include "GameFramework/Actor.h"
 #include "PlayerCapsuleComponent.h"
+#include "Animation/AnimNotifyQueue.h"
 
 UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
@@ -41,12 +42,17 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
         default:
             return;
     }
-    //UE_LOG(LogTemp, Warning, TEXT("%i"), CurrentStateIndex)
+
+    // NotifyQueue.AnimNotifies[0].GetNotify()->NotifyStateClass;
+
+    // UE_LOG(LogTemp, Warning, TEXT("%i"), NotifyQueue.AnimNotifies.Num())
+    // UE_LOG(LogTemp, Warning, TEXT("%i"), CurrentStateIndex)
 }
 
 void UMainAnimInstance::AnimNotify_ResetPrevMontageKey()
 {
-    PrevMontageKey = -1;
+    //PrevMontageKey = -1;
+    PrevPoseKey = -1;
 }
 
 // TODO : Play idlepivot animation if idle for more than 5 seconds
@@ -55,15 +61,98 @@ void UMainAnimInstance::Pivot()
 {
     if (!ensure(CurrentMontage)) { return; }
     if (!ensure(PlayerCapsuleComponent)) { return; }
+
+    // Blend Pose by Int
+    if (CanMove == true) {  // CanMove will be changed by PivotAnimNotifyState broadcast
+        PoseKey = PlayerCapsuleComponent->PivotInputKey;
+        if (PoseKey == PrevPoseKey) { return; }
+        PrevPoseKey = PoseKey;   // Set to -1 when Pivot State Exit
+    } 
+    else {
+        if (IK == true)
+        { 
+            if (PivotKey) { LeftFootLocation = IKFootTrace(PivotKey); }
+            else { RightFootLocation = IKFootTrace(PivotKey); }
+        }
+        return; 
+    }
+
+    if (EstablishPivotFoot == false)
+    { 
+        if (PoseKey <= 4) { PivotKey = false; } // Left Foot
+        else { PivotKey = true; } // Right Foot
+        EstablishPivotFoot = true;
+    }
+
+    if (PivotKey == false) { // left foot
+        switch (PoseKey) {
+            case 0: // 
+                CanMove = false;
+                PoseIndex = 17;
+                break;
+            case 1: //
+                CanMove = false;
+                PoseIndex = 18;
+                break;
+            case 2: //
+                CanMove = false;
+                PoseIndex = 19;
+                break;
+            case 3: //
+                CanMove = false;
+                PoseIndex = 20;
+                break;
+            case 4: //
+                CanMove = false;
+                PoseIndex = 21;
+                break;
+            default:
+                // CanMove = false;
+                // Montage_JumpToSection(FName(TEXT("PivotPosNeutralR6L2")), CurrentMontage); // Play Current Pivot Pos by FName CurrentPivotPos
+                return;
+        }
+    }
     
+    if (PivotKey == true) { // right foot
+        switch (PoseKey) {
+            case 5: // 
+                CanMove = false;
+                PoseIndex = 22;
+                break;
+            case 6: //
+                CanMove = false;
+                PoseIndex = 23;
+                break;
+            case 7: //
+                CanMove = false;
+                PoseIndex = 24;
+                break;
+            case 8: //
+                CanMove = false;
+                PoseIndex = 25;
+                break;
+            case 9: //
+                CanMove = false;
+                PoseIndex = 26;
+                break;
+            default:
+                // CanMove = false;
+                // PoseIndex =  // Play Current Pivot Pos by FName CurrentPivotPos
+                return;
+        }
+    }
+
+    /*  TODO: Root Motion from Anim Montage for Network play
     if (!Montage_IsPlaying(CurrentMontage)) {
         Montage_Play(CurrentMontage, 1);
+        Montage_JumpToSection(FName(TEXT("PivotStepLeft0")), CurrentMontage);
+        Montage_JumpToSection(FName(TEXT("PivotPosNeutralR6L2")), CurrentMontage);
     }
         
-    if (CanMove == true) {
+    if (CanMove == true) {  // CanMove will be taken from PivotAnimNotifyState
         MontageKey = PlayerCapsuleComponent->PivotInputKey;
-        PrevMontageKey = MontageKey;   // Set to -1 when Pivot State Exit
         if (MontageKey == PrevMontageKey) { return; }
+        PrevMontageKey = MontageKey;   // Set to -1 when Pivot State Exit
     } 
     else {
         if (IK == true)
@@ -138,6 +227,7 @@ void UMainAnimInstance::Pivot()
                 return;
         }
     }
+    */
 }
 
 FVector UMainAnimInstance::IKFootTrace(bool PivotKey)

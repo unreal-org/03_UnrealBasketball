@@ -47,6 +47,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category= "Montage Reference")
 	UAnimMontage* CurrentMontage;
 
+	// Pivot
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	int32 PoseIndex = 0;
+
 private:
 	// State Machines
 	FAnimNode_StateMachine *MainState;
@@ -56,11 +60,15 @@ private:
 	// State Machine Functions
 	void Pivot();
 	int32 MontageKey;
-	int32 PrevMontageKey = -1;
+	int32 PrevMontageKey = -1;   // default -1
 	bool PivotKey; // false = left, true = right;
 	bool EstablishPivotFoot;
 	bool CanMove = true;
 	FName CurrentPivotPos;
+
+	// Pivot by Pose Blend
+	int32 PoseKey = -1;
+	int32 PrevPoseKey = -1;
 
 	// Foot Trace
 	FName TraceTag = FName(TEXT("TraceTag"));;

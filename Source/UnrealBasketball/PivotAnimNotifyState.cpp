@@ -23,3 +23,8 @@ void UPivotAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSeq
     IK = false;
     CanMove = true;
 }
+
+void UPivotAnimNotifyState::GetAnimInstance()
+{
+    
+}
