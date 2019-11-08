@@ -6,25 +6,15 @@
 
 void UPivotAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration)
 {
-    if (!ensure(MeshComp)) { return; }
-    
-    IK = true;  // AnimScriptInstance = MainAnimInstance;
+    // UE_LOG(LogTemp, Warning, TEXT("NotifyBegin."))
 }
 
 void UPivotAnimNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime)
 {
-    // Do Nothing (for now)
+    // UE_LOG(LogTemp, Warning, TEXT("NotifyTick."))
 }
 
 void UPivotAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-    if (!ensure(MeshComp)) { return; }
-
-    IK = false;
-    CanMove = true;
-}
-
-void UPivotAnimNotifyState::GetAnimInstance()
-{
-    
+    // UE_LOG(LogTemp, Warning, TEXT("NotifyEnd."))
 }

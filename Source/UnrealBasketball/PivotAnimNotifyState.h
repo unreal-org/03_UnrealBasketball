@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS( )
 class UNREALBASKETBALL_API UPivotAnimNotifyState : public UAnimNotifyState
 {
 	GENERATED_BODY()
@@ -21,9 +21,7 @@ public:
 
 	virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 
-	UFUNCTION(BlueprintCallable)
-	void GetAnimInstance();
-
+	
 private:
 	bool IK = false;
 	bool CanMove = true;

@@ -27,7 +27,8 @@ void UPlayerCapsuleComponent::BeginPlay()
     OnComponentHit.AddDynamic(this, &UPlayerCapsuleComponent::OnHit);
     PivotComponent = GetOwner()->FindComponentByClass<USceneComponent>();
     if (!ensure(PivotComponent)) { return; }
-    CapsulePivotBig = dynamic_cast<USplineComponent*>(PivotComponent->GetChildComponent(6));
+    //if (!ensure(PivotComponent->GetChildComponent(1))) { return; }
+    CapsulePivotBig = dynamic_cast<USplineComponent*>(GetChildComponent(1));
 }
 
 void UPlayerCapsuleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -39,9 +40,10 @@ void UPlayerCapsuleComponent::OnHit(UPrimitiveComponent* HitComponent, AActor* O
 { 
     Move();
     Jump();
-    // CurrentForwardRate = 0;  
-    // CurrentRightRate = 0;
+    CurrentForwardRate = 0;  
+    CurrentRightRate = 0;
     // CurrentJumpRate = 0;
+    //UE_LOG(LogTemp, Warning, TEXT("%s"), *PivotComponent.GetReadableName())
 }
 
 //////////////////////////////// Movement ///////////////////////////////////////
@@ -64,7 +66,7 @@ void UPlayerCapsuleComponent::SetJumpRate(float Rate)
 // TODO : Negate left stick Axis rate when moving back to center
 void UPlayerCapsuleComponent::Move() 
 {
-    if (CurrentForwardRate == 0 && CurrentRightRate == 0) { return; }
+    if (abs(CurrentForwardRate) < 0.1 && abs(CurrentRightRate) < 0.1) { return; }
     if (Pivot == true)
     {
         /*
@@ -82,9 +84,10 @@ void UPlayerCapsuleComponent::Move()
         if (!ensure(CapsulePivotBig)) { return; }
         TotalForceToApply += GetComponentLocation();
         PivotInputKey = CapsulePivotBig->FindInputKeyClosestToWorldLocation(TotalForceToApply);
-
-        CurrentForwardRate = 0;  
-        CurrentRightRate = 0;
+        UE_LOG(LogTemp, Warning, TEXT("Input Key %i"), PivotInputKey)
+        
+        //CurrentForwardRate = 0;  
+        //CurrentRightRate = 0;
         return;
     }
 

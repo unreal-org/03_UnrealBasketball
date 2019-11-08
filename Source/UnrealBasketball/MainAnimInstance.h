@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "PivotAnimNotifyState.h"
+
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "MainAnimInstance.generated.h"
@@ -58,7 +60,7 @@ private:
 	int32 CurrentStateIndex;
 
 	// State Machine Functions
-	void Pivot();
+	void Pivot(float DeltaTimeX);
 	int32 MontageKey;
 	int32 PrevMontageKey = -1;   // default -1
 	bool PivotKey; // false = left, true = right;
@@ -69,11 +71,15 @@ private:
 	// Pivot by Pose Blend
 	int32 PoseKey = -1;
 	int32 PrevPoseKey = -1;
+	float PivotDelay = 1;
+	float PivotDelayMax = .5;
+	bool Notified = false;
+	void OnTimerExpire();
 
 	// Foot Trace
 	FName TraceTag = FName(TEXT("TraceTag"));;
 	FCollisionQueryParams TraceParameters;
-	FVector IKFootTrace(bool PivotKey);
+	FVector IKFootTrace(int32 Foot);
 
 	// Capsule Component
 	UPlayerCapsuleComponent* PlayerCapsuleComponent = nullptr;

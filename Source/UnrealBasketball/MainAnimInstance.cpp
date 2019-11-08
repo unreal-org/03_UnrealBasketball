@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "PlayerCapsuleComponent.h"
 #include "Animation/AnimNotifyQueue.h"
+#include "TimerManager.h"
 
 UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
@@ -22,7 +23,10 @@ void UMainAnimInstance::NativeInitializeAnimation()
     TraceParameters.AddIgnoredComponent(Cast<UPrimitiveComponent>(PlayerSkeletalMesh));
     TraceParameters.AddIgnoredActor(Cast<AActor>(PlayerSkeletalMesh->GetOwner()));
 
-     MainState = GetStateMachineInstanceFromName(FName(TEXT("MainState")));
+    MainState = GetStateMachineInstanceFromName(FName(TEXT("MainState")));
+
+    LeftFootLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("foot_l")));
+    RightFootLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("foot_r")));
 }
 
 void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
@@ -37,11 +41,14 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
         // case 0: // Idle - play blend
         //     break;
         case 1: // IdlePivot
-            Pivot();
+            Pivot(DeltaTimeX);
             break;
         default:
             return;
     }
+
+    LeftFootLocation = IKFootTrace(0);
+    RightFootLocation = IKFootTrace(1);
 
     // NotifyQueue.AnimNotifies[0].GetNotify()->NotifyStateClass;
 
@@ -55,27 +62,44 @@ void UMainAnimInstance::AnimNotify_ResetPrevMontageKey()
     PrevPoseKey = -1;
 }
 
+void UMainAnimInstance::OnTimerExpire()
+{
+    CanMove = true;
+    Notified = false;
+    //UE_LOG(LogTemp, Warning, TEXT("Can pivot."))
+}
+
 // TODO : Play idlepivot animation if idle for more than 5 seconds
 // TODO : Create Pivot Anim Nofitiy
-void UMainAnimInstance::Pivot()
+void UMainAnimInstance::Pivot(float DeltaTimeX)
 {
-    if (!ensure(CurrentMontage)) { return; }
+    //if (!ensure(CurrentMontage)) { return; }
     if (!ensure(PlayerCapsuleComponent)) { return; }
 
     // Blend Pose by Int
-    if (CanMove == true) {  // CanMove will be changed by PivotAnimNotifyState broadcast
+    if (CanMove == true) {  // CanMove will be changed by PivotAnimNotifyState broadcast?
         PoseKey = PlayerCapsuleComponent->PivotInputKey;
         if (PoseKey == PrevPoseKey) { return; }
         PrevPoseKey = PoseKey;   // Set to -1 when Pivot State Exit
     } 
     else {
-        if (IK == true)
-        { 
-            if (PivotKey) { LeftFootLocation = IKFootTrace(PivotKey); }
-            else { RightFootLocation = IKFootTrace(PivotKey); }
-        }
+        FTimerHandle Timer;
+	    GetWorld()->GetTimerManager().SetTimer(Timer, this, &UMainAnimInstance::OnTimerExpire, PivotDelay, false);
+
+        // if (NotifyQueue.AnimNotifies.Num() > 0)
+        // { 
+        //     Notified = true;
+        //     UE_LOG(LogTemp, Warning, TEXT("Notified."))
+        //     // if (PivotKey) { LeftFootLocation = IKFootTrace(PivotKey); }
+        //     // else { RightFootLocation = IKFootTrace(PivotKey); }
+        // } else {
+        //     if (Notified == true) {
+                
+        //     }
+        // }
         return; 
     }
+    //UE_LOG(LogTemp, Warning, TEXT("Pivot 2."))
 
     if (EstablishPivotFoot == false)
     { 
@@ -83,8 +107,11 @@ void UMainAnimInstance::Pivot()
         else { PivotKey = true; } // Right Foot
         EstablishPivotFoot = true;
     }
+    //UE_LOG(LogTemp, Warning, TEXT("Pivot Foot Established."))
+
 
     if (PivotKey == false) { // left foot
+        // PoseIndex = 1;
         switch (PoseKey) {
             case 0: // 
                 CanMove = false;
@@ -107,13 +134,14 @@ void UMainAnimInstance::Pivot()
                 PoseIndex = 21;
                 break;
             default:
-                // CanMove = false;
-                // Montage_JumpToSection(FName(TEXT("PivotPosNeutralR6L2")), CurrentMontage); // Play Current Pivot Pos by FName CurrentPivotPos
+                CanMove = false;
+                PoseIndex = 0; // Play Current Pivot Pos by FName CurrentPivotPos
                 return;
         }
     }
     
-    if (PivotKey == true) { // right foot
+    else if (PivotKey == true) { // right foot
+        // PoseIndex = 0;
         switch (PoseKey) {
             case 5: // 
                 CanMove = false;
@@ -136,8 +164,8 @@ void UMainAnimInstance::Pivot()
                 PoseIndex = 26;
                 break;
             default:
-                // CanMove = false;
-                // PoseIndex =  // Play Current Pivot Pos by FName CurrentPivotPos
+                CanMove = false;
+                PoseIndex = 0; // Play Current Pivot Pos by FName CurrentPivotPos
                 return;
         }
     }
@@ -162,96 +190,29 @@ void UMainAnimInstance::Pivot()
         }
         return;
     }
-
-    if (EstablishPivotFoot == false)
-    { 
-        if (MontageKey <= 4) { PivotKey = false; } // Left Foot
-        else { PivotKey = true; } // Right Foot
-        EstablishPivotFoot = true;
-    }
-
-    if (PivotKey == false) { // left foot
-        switch (MontageKey) {
-            case 0: // 
-                CanMove = false;
-                Montage_JumpToSection(FName(TEXT("PivotStepLeft0")), CurrentMontage);
-                break;
-            case 1: //
-                CanMove = false;
-                Montage_JumpToSection(FName(TEXT("PivotStepLeft1")), CurrentMontage);
-                break;
-            case 2: //
-                CanMove = false;
-                Montage_JumpToSection(FName(TEXT("PivotStepLeft2")), CurrentMontage);
-                break;
-            case 3: //
-                CanMove = false;
-                Montage_JumpToSection(FName(TEXT("PivotStepLeft3")), CurrentMontage);
-                break;
-            case 4: //
-                CanMove = false;
-                Montage_JumpToSection(FName(TEXT("PivotStepLeft4")), CurrentMontage);
-                break;
-            default:
-                // CanMove = false;
-                // Montage_JumpToSection(FName(TEXT("PivotPosNeutralR6L2")), CurrentMontage); // Play Current Pivot Pos by FName CurrentPivotPos
-                return;
-        }
-    }
-    
-    if (PivotKey == true) { // right foot
-        switch (MontageKey) {
-            case 5: // 
-                CanMove = false;
-                Montage_JumpToSection(FName(TEXT("PivotStepRight5")), CurrentMontage);
-                break;
-            case 6: //
-                CanMove = false;
-                Montage_JumpToSection(FName(TEXT("PivotStepRight6")), CurrentMontage);
-                break;
-            case 7: //
-                CanMove = false;
-                Montage_JumpToSection(FName(TEXT("PivotStepRight7")), CurrentMontage);
-                break;
-            case 8: //
-                CanMove = false;
-                Montage_JumpToSection(FName(TEXT("PivotStepRight8")), CurrentMontage);
-                break;
-            case 9: //
-                CanMove = false;
-                Montage_JumpToSection(FName(TEXT("PivotStepRight9")), CurrentMontage);
-                break;
-            default:
-                // CanMove = false;
-                // Montage_JumpToSection(FName(TEXT("PivotPosNeutralR6L2")), CurrentMontage); // Play Current Pivot Pos by FName CurrentPivotPos
-                return;
-        }
-    }
     */
 }
 
-FVector UMainAnimInstance::IKFootTrace(bool PivotKey)
+// TODO : Rotate Foot to Match ground
+FVector UMainAnimInstance::IKFootTrace(int32 Foot)
 {
     if (!ensure(PlayerSkeletalMesh)) { return FVector(0, 0, 0); }
     if (!ensure(PlayerCapsuleComponent)) { return FVector(0, 0, 0); }
 
-    FName Foot;
-    if (PivotKey == false)
-    { 
-        Foot = FName(TEXT("foot_l"));
+    FName FootName;
+    if (Foot == 0) { 
+        FootName = FName(TEXT("foot_l"));
         LeftJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_l")));
-    }
-    else
-    { 
-        Foot = FName(TEXT("foot_l"));
+    } else { 
+        FootName = FName(TEXT("foot_r"));
         RightJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_r")));
     } 
 
-    FVector FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(Foot);
+    FVector FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(FootName);
     float CapsuleHalfHeight = PlayerCapsuleComponent->GetUnscaledCapsuleHalfHeight(); // TODO : CapsuleHalfHeight will be variable
     
     FVector StartTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight);
-    FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight - 95 - 15); // - capsule half height - trace distance;
+    FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight - CapsuleHalfHeight - 15); // - capsule half height - trace distance;
 
     FHitResult HitResult(ForceInit);
     
