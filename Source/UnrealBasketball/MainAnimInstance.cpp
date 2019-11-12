@@ -52,12 +52,16 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
     LeftFootLocation = IKFootTrace(0);
     RightFootLocation = IKFootTrace(1);
 
+    if (ensure(HoopzCharacter)) { BasketLocation = HoopzCharacter->BasketLocation;; }
+    
+    
     // NotifyQueue.AnimNotifies[0].GetNotify()->NotifyStateClass;
 
     // UE_LOG(LogTemp, Warning, TEXT("%i"), NotifyQueue.AnimNotifies.Num())
-    // UE_LOG(LogTemp, Warning, TEXT("%i"), CurrentStateIndex)
+    //UE_LOG(LogTemp, Warning, TEXT("%s"), *BasketLocation.ToString())
 }
 
+void UMainAnimInstance::AnimNotify_SetBasketLocation() { if (ensure(HoopzCharacter)) BasketLocation = HoopzCharacter->BasketLocation; }
 void UMainAnimInstance::AnimNotify_ResetPrevMontageKey() { PrevPoseKey = -1; }
 void UMainAnimInstance::AnimNotify_SetPivot()
 { 

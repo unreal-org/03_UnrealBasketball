@@ -49,6 +49,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_SetPivot();
 
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_SetBasketLocation();
+
 	// Montage Reference
 	UPROPERTY(BlueprintReadWrite, Category= "Montage Reference")
 	UAnimMontage* CurrentMontage;
@@ -56,6 +59,10 @@ public:
 	// Pivot
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	int32 PoseIndex = 0;
+
+	// Basket
+	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
+	FVector BasketLocation;
 
 private:
 	// State Machines

@@ -5,6 +5,10 @@
 #include "HoopzCharacterMovementComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SplineComponent.h"
+#include "EngineUtils.h"
+#include "Engine/StaticMeshActor.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values
 AHoopzCharacter::AHoopzCharacter()
@@ -27,6 +31,18 @@ void AHoopzCharacter::BeginPlay()
 
 	HoopzCharacterMovementComponent = Cast<UHoopzCharacterMovementComponent>(GetCharacterMovement());
 	PivotComponent = FindComponentByClass<USplineComponent>();
+	Camera = FindComponentByClass<UCameraComponent>();
+	
+	for (TActorIterator<AStaticMeshActor> It(GetWorld()); It; ++It)
+	{
+		AStaticMeshActor* Mesh = *It;
+		if (Mesh && Mesh->GetName() == FString("Basket"))
+		{
+			Basket = Mesh;
+			BasketLocation = Basket->GetActorLocation();
+			break;
+		}
+	}
 }
 
 // Called every frame
@@ -35,7 +51,7 @@ void AHoopzCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	if (PivotMode == true) { Pivot(); }
-	
+	if (ensure(Camera)) { Camera->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), BasketLocation), false);}
 }
 
 // Called to bind functionality to input

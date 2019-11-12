@@ -15,7 +15,7 @@ void UHoopzCharacterMovementComponent::TickComponent(float DeltaTime, enum ELeve
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    UE_LOG(LogTemp, Warning, TEXT("%i"), *HasRootMotionSources())
+    //UE_LOG(LogTemp, Warning, TEXT("%i"), *HasRootMotionSources())
 }
 
 void UHoopzCharacterMovementComponent::CallFunction()

@@ -8,6 +8,8 @@
 
 class UHoopzCharacterMovementComponent;
 class USplineComponent;
+class AStaticMeshActor;
+class UCameraComponent;
 
 UCLASS()
 class UNREALBASKETBALL_API AHoopzCharacter : public ACharacter
@@ -28,6 +30,8 @@ public:
 	bool PivotMode = false;
 	int32 PivotInputKey = -1;
 
+	FVector BasketLocation;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -41,6 +45,9 @@ protected:
 private:	
 	UHoopzCharacterMovementComponent* HoopzCharacterMovementComponent = nullptr;
 	USplineComponent* PivotComponent = nullptr;
+	AStaticMeshActor* Basket = nullptr;
+	UCameraComponent* Camera = nullptr;
+	
 
 	void Pivot();
 	FVector PivotForward;
