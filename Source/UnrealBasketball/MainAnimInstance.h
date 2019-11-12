@@ -9,8 +9,9 @@
 #include "MainAnimInstance.generated.h"
 
 class UAnimMontage;
-class UPlayerCapsuleComponent;
+class UCapsuleComponent;
 class USkeletalMeshComponent;
+class AHoopzCharacter;
 
 /**
  * To be used to play Animations
@@ -45,6 +46,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_ResetPrevMontageKey();
 
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_SetPivot();
+
 	// Montage Reference
 	UPROPERTY(BlueprintReadWrite, Category= "Montage Reference")
 	UAnimMontage* CurrentMontage;
@@ -71,7 +75,7 @@ private:
 	// Pivot by Pose Blend
 	int32 PoseKey = -1;
 	int32 PrevPoseKey = -1;
-	float PivotDelay = 1;
+	float PivotDelay = .7;
 	float PivotDelayMax = .5;
 	bool Notified = false;
 	void OnTimerExpire();
@@ -82,8 +86,9 @@ private:
 	FVector IKFootTrace(int32 Foot);
 
 	// Capsule Component
-	UPlayerCapsuleComponent* PlayerCapsuleComponent = nullptr;
+	UCapsuleComponent* PlayerCapsuleComponent = nullptr;
 	USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;
+	AHoopzCharacter* HoopzCharacter = nullptr;
 
 protected:
 	// Native initialization override point

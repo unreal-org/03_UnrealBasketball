@@ -6,6 +6,7 @@
 #include "PlayerCapsuleComponent.h"
 #include "Animation/AnimNotifyQueue.h"
 #include "TimerManager.h"
+#include "HoopzCharacter.h"
 
 UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
@@ -14,10 +15,11 @@ UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer
 void UMainAnimInstance::NativeInitializeAnimation()
 {
     Super::NativeInitializeAnimation();
-    PlayerSkeletalMesh = GetSkelMeshComponent();
-
-    if (!ensure(PlayerSkeletalMesh)) { return; }
-    PlayerCapsuleComponent = dynamic_cast<UPlayerCapsuleComponent*>(GetSkelMeshComponent()->GetOwner()->FindComponentByClass<UPlayerCapsuleComponent>());
+    HoopzCharacter = dynamic_cast<AHoopzCharacter*>(GetSkelMeshComponent()->GetOwner());
+    
+    if (!ensure(HoopzCharacter)) { return; }
+    PlayerSkeletalMesh = HoopzCharacter->GetMesh();
+    PlayerCapsuleComponent = HoopzCharacter->FindComponentByClass<UCapsuleComponent>();
 
     TraceParameters = FCollisionQueryParams(TraceTag, false);
     TraceParameters.AddIgnoredComponent(Cast<UPrimitiveComponent>(PlayerSkeletalMesh));
@@ -56,10 +58,12 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
     // UE_LOG(LogTemp, Warning, TEXT("%i"), CurrentStateIndex)
 }
 
-void UMainAnimInstance::AnimNotify_ResetPrevMontageKey()
-{
-    //PrevMontageKey = -1;
-    PrevPoseKey = -1;
+void UMainAnimInstance::AnimNotify_ResetPrevMontageKey() { PrevPoseKey = -1; }
+void UMainAnimInstance::AnimNotify_SetPivot()
+{ 
+    if (!ensure(HoopzCharacter)) { return; }
+    HoopzCharacter->PivotMode = true;
+    // set movementmode
 }
 
 void UMainAnimInstance::OnTimerExpire()
@@ -75,10 +79,12 @@ void UMainAnimInstance::Pivot(float DeltaTimeX)
 {
     //if (!ensure(CurrentMontage)) { return; }
     if (!ensure(PlayerCapsuleComponent)) { return; }
+    if (!ensure(HoopzCharacter)) { return; }
 
     // Blend Pose by Int
     if (CanMove == true) {  // CanMove will be changed by PivotAnimNotifyState broadcast?
-        PoseKey = PlayerCapsuleComponent->PivotInputKey;
+        //PoseKey = PlayerCapsuleComponent->PivotInputKey;
+        PoseKey = HoopzCharacter->PivotInputKey;
         if (PoseKey == PrevPoseKey) { return; }
         PrevPoseKey = PoseKey;   // Set to -1 when Pivot State Exit
     } 
@@ -108,7 +114,6 @@ void UMainAnimInstance::Pivot(float DeltaTimeX)
         EstablishPivotFoot = true;
     }
     //UE_LOG(LogTemp, Warning, TEXT("Pivot Foot Established."))
-
 
     if (PivotKey == false) { // left foot
         // PoseIndex = 1;
