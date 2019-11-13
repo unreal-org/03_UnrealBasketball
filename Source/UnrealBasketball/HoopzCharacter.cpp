@@ -9,6 +9,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 AHoopzCharacter::AHoopzCharacter()
@@ -32,6 +33,7 @@ void AHoopzCharacter::BeginPlay()
 	HoopzCharacterMovementComponent = Cast<UHoopzCharacterMovementComponent>(GetCharacterMovement());
 	PivotComponent = FindComponentByClass<USplineComponent>();
 	Camera = FindComponentByClass<UCameraComponent>();
+	CapsuleComponent = FindComponentByClass<UCapsuleComponent>();
 	
 	for (TActorIterator<AStaticMeshActor> It(GetWorld()); It; ++It)
 	{
@@ -49,9 +51,12 @@ void AHoopzCharacter::BeginPlay()
 void AHoopzCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (PivotMode == true) { Pivot(); }
+	
 	if (ensure(Camera)) { Camera->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), BasketLocation), false);}
+	
+	if (PivotMode == true) { Pivot(); }
+
+	CapsuleDipper();
 }
 
 // Called to bind functionality to input
@@ -61,6 +66,9 @@ void AHoopzCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	PlayerInputComponent->BindAxis("IntendMoveForward", this, &AHoopzCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("IntendMoveRight", this, &AHoopzCharacter::MoveRight);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AHoopzCharacter::JumpPressed);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AHoopzCharacter::JumpReleased);
+
 }
 
 void AHoopzCharacter::MoveForward(float Throw)
@@ -98,4 +106,31 @@ void AHoopzCharacter::Pivot()
 	if (!ensure(PivotComponent)) { return; }
     FVector PivotDirection = GetActorLocation() + PivotForward + PivotRight;
     PivotInputKey = PivotComponent->FindInputKeyClosestToWorldLocation(PivotDirection);
+}
+
+// Todo: Decrease Capsule Half Height
+void AHoopzCharacter::JumpPressed()
+{
+	JumpHeldTime = GetWorld()->GetTimeSeconds();
+	CapsuleDip = true;
+}
+
+void AHoopzCharacter::JumpReleased()
+{
+	JumpHeldTime -= GetWorld()->GetTimeSeconds();
+	if (JumpHeldTime < -.3) { bPressedJump = true; }
+	CapsuleDip = false;
+}
+
+void AHoopzCharacter::CapsuleDipper()
+{
+	if (!ensure(CapsuleComponent)) { return; }
+
+	float Height = CapsuleComponent->GetScaledCapsuleHalfHeight();
+	if (CapsuleDip == true && Height > MinCapsuleHalfHeight) {
+		CapsuleComponent->SetCapsuleHalfHeight(Height + 1, false);
+	} 
+	else if (CapsuleDip == false && Height < MaxCapsuleHalfHeight) {
+		CapsuleComponent->SetCapsuleHalfHeight(Height - 1, false);
+	}
 }

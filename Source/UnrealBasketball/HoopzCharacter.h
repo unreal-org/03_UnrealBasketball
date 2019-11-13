@@ -10,6 +10,7 @@ class UHoopzCharacterMovementComponent;
 class USplineComponent;
 class AStaticMeshActor;
 class UCameraComponent;
+class UCapsuleComponent;
 
 UCLASS()
 class UNREALBASKETBALL_API AHoopzCharacter : public ACharacter
@@ -47,9 +48,19 @@ private:
 	USplineComponent* PivotComponent = nullptr;
 	AStaticMeshActor* Basket = nullptr;
 	UCameraComponent* Camera = nullptr;
+	UCapsuleComponent* CapsuleComponent = nullptr;
 	
 
 	void Pivot();
 	FVector PivotForward;
 	FVector PivotRight;
+
+	void JumpPressed();
+	void JumpReleased();
+	float JumpHeldTime;
+
+	bool CapsuleDip = false;
+	void CapsuleDipper();
+	float MaxCapsuleHalfHeight = 90;
+	float MinCapsuleHalfHeight = 80;
 };
