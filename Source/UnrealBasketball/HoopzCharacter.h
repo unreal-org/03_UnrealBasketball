@@ -24,14 +24,17 @@ public:
 
 	UFUNCTION()
 	void MoveForward(float Throw);
-
 	UFUNCTION()
 	void MoveRight(float Throw);
+	
 
 	bool PivotMode = false;
 	int32 PivotInputKey = -1;
+	int PivotPos = 0;
 
 	FVector BasketLocation;
+
+	bool CanTurn = true;
 
 protected:
 	// Called when the game starts or when spawned
@@ -54,6 +57,8 @@ private:
 	void Pivot();
 	FVector PivotForward;
 	FVector PivotRight;
+	void TurnLeft();
+	void TurnRight();
 
 	void JumpPressed();
 	void JumpReleased();

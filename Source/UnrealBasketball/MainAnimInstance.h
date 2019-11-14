@@ -82,10 +82,15 @@ private:
 	// Pivot by Pose Blend
 	int32 PoseKey = -1;
 	int32 PrevPoseKey = -1;
-	float PivotDelay = .7;
+	float PivotDelay = .5;
 	float PivotDelayMax = .5;
 	bool Notified = false;
 	void OnTimerExpire();
+	int PivotPos = 0;
+	int PrevPivotPos = 0;
+	int DefaultPivotPos = 0;
+	void PivotTurn();
+	void PivotStep();
 
 	// Foot Trace
 	FName TraceTag = FName(TEXT("TraceTag"));;

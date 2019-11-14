@@ -22,7 +22,7 @@ AHoopzCharacter::AHoopzCharacter()
 AHoopzCharacter::AHoopzCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UHoopzCharacterMovementComponent>(AHoopzCharacter::CharacterMovementComponentName))
 {
-	PrimaryActorTick.bCanEverTick = true;;
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
@@ -53,10 +53,9 @@ void AHoopzCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	
 	if (ensure(Camera)) { Camera->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), BasketLocation), false);}
-	
 	if (PivotMode == true) { Pivot(); }
-
 	CapsuleDipper();
+
 }
 
 // Called to bind functionality to input
@@ -68,7 +67,8 @@ void AHoopzCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAxis("IntendMoveRight", this, &AHoopzCharacter::MoveRight);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AHoopzCharacter::JumpPressed);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AHoopzCharacter::JumpReleased);
-
+	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AHoopzCharacter::TurnLeft);
+	PlayerInputComponent->BindAction("TurnRight", IE_Pressed, this, &AHoopzCharacter::TurnRight);
 }
 
 void AHoopzCharacter::MoveForward(float Throw)
@@ -128,9 +128,23 @@ void AHoopzCharacter::CapsuleDipper()
 
 	float Height = CapsuleComponent->GetScaledCapsuleHalfHeight();
 	if (CapsuleDip == true && Height > MinCapsuleHalfHeight) {
-		CapsuleComponent->SetCapsuleHalfHeight(Height + 1, false);
+		CapsuleComponent->SetCapsuleHalfHeight(Height - 1, false);
 	} 
 	else if (CapsuleDip == false && Height < MaxCapsuleHalfHeight) {
-		CapsuleComponent->SetCapsuleHalfHeight(Height - 1, false);
+		CapsuleComponent->SetCapsuleHalfHeight(Height + 1, false);
 	}
+}
+
+void AHoopzCharacter::TurnLeft()
+{
+	if (CanTurn) { PivotPos += 1; }
+	// Set Pivot Component while no rootmotion
+	// Lock temporarily
+}
+
+void AHoopzCharacter::TurnRight()
+{
+	if (CanTurn) { PivotPos -= 1; }
+	// Set Pivot Component while no rootmotion
+	// Lock temporarily
 }
