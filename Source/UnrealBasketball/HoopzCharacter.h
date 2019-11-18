@@ -11,6 +11,10 @@ class USplineComponent;
 class AStaticMeshActor;
 class UCameraComponent;
 class UCapsuleComponent;
+//class USceneComponent;
+
+struct FAttachmentTransformRules;
+struct FDetachmentTransformRules;
 
 UCLASS()
 class UNREALBASKETBALL_API AHoopzCharacter : public ACharacter
@@ -34,7 +38,9 @@ public:
 
 	FVector BasketLocation;
 
-	bool CanTurn = true;
+	bool CanMove = true;
+	bool EstablishPivot = false;
+	bool PivotKey = false;
 
 protected:
 	// Called when the game starts or when spawned
@@ -52,13 +58,26 @@ private:
 	AStaticMeshActor* Basket = nullptr;
 	UCameraComponent* Camera = nullptr;
 	UCapsuleComponent* CapsuleComponent = nullptr;
+	AActor* PivotPoint = nullptr;
 	
+	FAttachmentTransformRules AttachRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
+	FDetachmentTransformRules DetachRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, false);
 
 	void Pivot();
+	void SetPivot(bool PivotKey);
+	bool CanTurn = true;
 	FVector PivotForward;
 	FVector PivotRight;
 	void TurnLeft();
 	void TurnRight();
+	void OnTurnTimerExpire();
+	float TurnDelay = 0.3;
+	float TurnTime = 0;
+	float TurnDuration = 0.3;
+	FRotator TargetPlayerRotation;
+	FRotator PlayerRotation;
+	void TurnLerp(float DeltaTime);
+	bool PivotSet = false;
 
 	void JumpPressed();
 	void JumpReleased();

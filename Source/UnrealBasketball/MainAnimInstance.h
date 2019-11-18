@@ -82,10 +82,10 @@ private:
 	// Pivot by Pose Blend
 	int32 PoseKey = -1;
 	int32 PrevPoseKey = -1;
-	float PivotDelay = .5;
+	float StepDelay = .3;
 	float PivotDelayMax = .5;
 	bool Notified = false;
-	void OnTimerExpire();
+	void OnStepTimerExpire();
 	int PivotPos = 0;
 	int PrevPivotPos = 0;
 	int DefaultPivotPos = 0;
