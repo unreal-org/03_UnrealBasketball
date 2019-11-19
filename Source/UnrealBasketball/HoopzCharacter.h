@@ -11,7 +11,8 @@ class USplineComponent;
 class AStaticMeshActor;
 class UCameraComponent;
 class UCapsuleComponent;
-//class USceneComponent;
+class USceneComponent;
+class UMainAnimInstance;
 
 struct FAttachmentTransformRules;
 struct FDetachmentTransformRules;
@@ -34,11 +35,9 @@ public:
 
 	bool PivotMode = false;
 	int32 PivotInputKey = -1;
-	int PivotPos = 0;
 
 	FVector BasketLocation;
 
-	bool CanMove = true;
 	bool EstablishPivot = false;
 	bool PivotKey = false;
 
@@ -52,6 +51,9 @@ protected:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// On Jumped
+	virtual void OnJumped_Implementation() override;
+
 private:	
 	UHoopzCharacterMovementComponent* HoopzCharacterMovementComponent = nullptr;
 	USplineComponent* PivotComponent = nullptr;
@@ -59,17 +61,22 @@ private:
 	UCameraComponent* Camera = nullptr;
 	UCapsuleComponent* CapsuleComponent = nullptr;
 	AActor* PivotPoint = nullptr;
+	UMainAnimInstance* MainAnimInstance = nullptr;
 	
 	FAttachmentTransformRules AttachRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
 	FDetachmentTransformRules DetachRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, false);
 
+	// Pivot Variables
 	void Pivot();
-	void SetPivot(bool PivotKey);
+	void SetPivot();
+	bool PivotSet = false;
 	bool CanTurn = true;
 	FVector PivotForward;
 	FVector PivotRight;
 	void TurnLeft();
 	void TurnRight();
+
+	// Turn Timer & Lerp
 	void OnTurnTimerExpire();
 	float TurnDelay = 0.3;
 	float TurnTime = 0;
@@ -77,12 +84,13 @@ private:
 	FRotator TargetPlayerRotation;
 	FRotator PlayerRotation;
 	void TurnLerp(float DeltaTime);
-	bool PivotSet = false;
-
+	
+	// Jump
 	void JumpPressed();
 	void JumpReleased();
 	float JumpHeldTime;
 
+	// Capsule height adjust
 	bool CapsuleDip = false;
 	void CapsuleDipper();
 	float MaxCapsuleHalfHeight = 90;

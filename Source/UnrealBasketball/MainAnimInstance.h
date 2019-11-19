@@ -41,6 +41,8 @@ public:
 	// Transition Variables
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	bool HasBall = true;
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	bool Jumped = false;
 
 	// Transition Events
 	UFUNCTION(BlueprintCallable)
@@ -51,6 +53,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_SetBasketLocation();
+
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_PivotToJumpTransition();
 
 	// Montage Reference
 	UPROPERTY(BlueprintReadWrite, Category= "Montage Reference")
@@ -64,32 +69,22 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
 	FVector BasketLocation;
 
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	float IKAlpha = 0.85;
+
 private:
 	// State Machines
 	FAnimNode_StateMachine *MainState;
-	FName CurrentStateName;
-	int32 CurrentStateIndex;
 
 	// State Machine Functions
 	void Pivot(float DeltaTimeX);
-	int32 MontageKey;
 	int32 PrevMontageKey = -1;   // default -1
-	bool PivotKey; // false = left, true = right;
-	bool EstablishPivotFoot;
 	bool CanMove = true;
-	FName CurrentPivotPos;
 
 	// Pivot by Pose Blend
-	int32 PoseKey = -1;
-	int32 PrevPoseKey = -1;
 	float StepDelay = .3;
-	float PivotDelayMax = .5;
-	bool Notified = false;
+	int32 PoseKey = -1;
 	void OnStepTimerExpire();
-	int PivotPos = 0;
-	int PrevPivotPos = 0;
-	int DefaultPivotPos = 0;
-	void PivotTurn();
 	void PivotStep();
 
 	// Foot Trace
@@ -97,10 +92,13 @@ private:
 	FCollisionQueryParams TraceParameters;
 	FVector IKFootTrace(int32 Foot);
 
-	// Capsule Component
+	// Components
 	UCapsuleComponent* PlayerCapsuleComponent = nullptr;
 	USkeletalMeshComponent* PlayerSkeletalMesh = nullptr;
 	AHoopzCharacter* HoopzCharacter = nullptr;
+
+	// Shot Selection
+	void ShotSelection(float DeltaTimeX);
 
 protected:
 	// Native initialization override point

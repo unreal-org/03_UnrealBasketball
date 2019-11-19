@@ -11,6 +11,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/EngineTypes.h"
+#include "MainAnimInstance.h"
 
 // Sets default values
 AHoopzCharacter::AHoopzCharacter()
@@ -35,6 +36,7 @@ void AHoopzCharacter::BeginPlay()
 	PivotComponent = FindComponentByClass<USplineComponent>();
 	Camera = FindComponentByClass<UCameraComponent>();
 	CapsuleComponent = FindComponentByClass<UCapsuleComponent>();
+	MainAnimInstance = dynamic_cast<UMainAnimInstance*>(GetMesh()->GetAnimInstance());
 
 	PlayerRotation = CapsuleComponent->GetComponentRotation();
 	TargetPlayerRotation = PlayerRotation;
@@ -62,6 +64,7 @@ void AHoopzCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
+	// TODO: Make Camera line up behind player and basket
 	if (ensure(Camera)) { Camera->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), BasketLocation), false);}
 	if (PivotMode == true) { Pivot(); }
 	TurnLerp(DeltaTime);
@@ -107,13 +110,6 @@ void AHoopzCharacter::MoveRight(float Throw)
 
 void AHoopzCharacter::Pivot()
 {
-	/*
-	if (PivotSet == false)
-	if (!ensure(CapsulePivotBig)) { return; }
-	PivotComponent->SetWorldLocation(GetComponentLocation());
-	PivotComponent->SetWorldRotation(GetComponentRotation());
-	*/
-
 	if ((PivotForward + PivotRight).Size2D() < 5) { return; }
 	if (!ensure(PivotComponent)) { return; }
     FVector PivotDirection = GetActorLocation() + PivotForward + PivotRight;
@@ -157,11 +153,10 @@ void AHoopzCharacter::CapsuleDipper()
 void AHoopzCharacter::OnTurnTimerExpire()
 {
     CanTurn = true;
-    //HoopzCharacter->CanTurn = true;
-    //Notified = false;
-    //UE_LOG(LogTemp, Warning, TEXT("Can pivot."))
 }
 
+
+// TODO: Implement dribble turn & Post up turn (NULL)
 void AHoopzCharacter::TurnLeft()
 {
 	if (CanTurn) {
@@ -170,15 +165,10 @@ void AHoopzCharacter::TurnLeft()
 		if (PivotMode == true) {
 			if (EstablishPivot == false || PivotSet == false) {
 				PivotSet = true;
-				PivotKey = true;
+				PivotKey = true;  // right moves, plant left
 				EstablishPivot = true;
-				FVector TargetPivotPointLocation = GetMesh()->GetSocketLocation(FName(TEXT("foot_l")));
-				TargetPivotPointLocation.Z = CapsuleComponent->GetScaledCapsuleHalfHeight();
-				PivotPoint->SetActorLocation(TargetPivotPointLocation, false);
-				PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
-				PlayerRotation = PivotPoint->GetActorRotation();
-				TargetPlayerRotation = PlayerRotation;
-				CapsuleComponent->AttachToComponent(PivotPoint->GetRootComponent(), AttachRules);	
+
+				SetPivot();
 			}
 
 			TargetPlayerRotation.Yaw -= 45;
@@ -189,9 +179,7 @@ void AHoopzCharacter::TurnLeft()
 		}
 	}
 	// else {
-    //     FTimerHandle TurnTimer;
-	// 	GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
-	// 	return; 
+    //    
     // }
 	// Set Pivot Component while no rootmotion
 }
@@ -204,15 +192,10 @@ void AHoopzCharacter::TurnRight()
 		if (PivotMode == true) {
 			if (EstablishPivot == false || PivotSet == false) {
 				PivotSet = true;
-				PivotKey = false;
+				PivotKey = false; // left moves, plant right
 				EstablishPivot = true;
-				FVector TargetPivotPointLocation = GetMesh()->GetSocketLocation(FName(TEXT("foot_r")));
-				TargetPivotPointLocation.Z = CapsuleComponent->GetScaledCapsuleHalfHeight();
-				PivotPoint->SetActorLocation(TargetPivotPointLocation, false);
-				PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
-				PlayerRotation = PivotPoint->GetActorRotation();
-				TargetPlayerRotation = PlayerRotation;
-				CapsuleComponent->AttachToComponent(PivotPoint->GetRootComponent(), AttachRules);	
+
+				SetPivot();
 			}
 
 			TargetPlayerRotation.Yaw += 45;
@@ -223,14 +206,27 @@ void AHoopzCharacter::TurnRight()
 		}
 	}
 	// else {
-	
+	//
     // }
 	// Set Pivot Component while no rootmotion
 }
 
-void AHoopzCharacter::SetPivot(bool PivotKey)
+void AHoopzCharacter::SetPivot()
 {
+	// attach component code
+	if (PivotKey == false) {
+		FName Foot = FName(TEXT("foot_r"));
+	} else {
+		FName Foot = FName(TEXT("foot_l"));
+	}
 
+	FVector TargetPivotPointLocation = GetMesh()->GetSocketLocation(Foot);
+	TargetPivotPointLocation.Z = CapsuleComponent->GetScaledCapsuleHalfHeight();
+	PivotPoint->SetActorLocation(TargetPivotPointLocation, false);
+	PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
+	PlayerRotation = PivotPoint->GetActorRotation();
+	TargetPlayerRotation = PlayerRotation;
+	CapsuleComponent->AttachToComponent(PivotPoint->GetRootComponent(), AttachRules);	
 }
 
 void AHoopzCharacter::TurnLerp(float DeltaTime)   
@@ -243,4 +239,18 @@ void AHoopzCharacter::TurnLerp(float DeltaTime)
         PlayerRotation = FMath::Lerp(PlayerRotation, TargetPlayerRotation, TurnTime / TurnDuration);
 		PivotPoint->SetActorRotation(PlayerRotation, ETeleportType::None);
     }
+}
+
+void AHoopzCharacter::OnJumped_Implementation()
+{
+	if (!ensure(MainAnimInstance)) { return; }
+
+	// detach from pivotpoint
+	CapsuleComponent->DetachFromComponent(DetachRules);
+
+	// change animation transition state
+	MainAnimInstance->Jumped = true;
+	PivotInputKey = -1;
+	PivotMode = false;
+
 }

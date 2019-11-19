@@ -34,17 +34,16 @@ void UMainAnimInstance::NativeInitializeAnimation()
 void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 {
     if (!ensure(MainState)) { return; }
-    //CurrentStateName = MainState->GetCurrentStateName();
-    //CurrentStateIndex = MainState->GetCurrentState();
-
-    // switch (CurrentStateIndex)
+   
     switch (MainState->GetCurrentState())
     {
-        // case 0: // Idle - play blend
-        //     break;
+        case 0: // Idle
+            break;
         case 1: // IdlePivot
             Pivot(DeltaTimeX);
             break;
+        case 4: // Jump (Ball)
+            ShotSelection(DeltaTimeX);
         default:
             return;
     }
@@ -52,75 +51,44 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
     LeftFootLocation = IKFootTrace(0);
     RightFootLocation = IKFootTrace(1);
 
-    if (ensure(HoopzCharacter)) { BasketLocation = HoopzCharacter->BasketLocation;; }
-    
-    
-    // NotifyQueue.AnimNotifies[0].GetNotify()->NotifyStateClass;
+    if (ensure(HoopzCharacter)) { BasketLocation = HoopzCharacter->BasketLocation; }
 
-    // UE_LOG(LogTemp, Warning, TEXT("%i"), NotifyQueue.AnimNotifies.Num())
     // float Temp = (PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("foot_l"))) + PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("root")))).Size();
     // UE_LOG(LogTemp, Warning, TEXT("%f"), Temp)   // *** 27.64 ***
-    // UE_LOG(LogTemp, Warning, TEXT("Capsule Location: %s"), *PlayerCapsuleComponent->GetComponentLocation().ToString())
 
 }
 
 void UMainAnimInstance::AnimNotify_SetBasketLocation() { if (ensure(HoopzCharacter)) BasketLocation = HoopzCharacter->BasketLocation; }
-void UMainAnimInstance::AnimNotify_ResetPrevMontageKey() { PrevPoseKey = -1; }
+void UMainAnimInstance::AnimNotify_ResetPrevMontageKey() {  }
 void UMainAnimInstance::AnimNotify_SetPivot()
 { 
     if (!ensure(HoopzCharacter)) { return; }
     HoopzCharacter->PivotMode = true;
-    HoopzCharacter->PivotPos = 0;
-    PivotPos = 0;
     // set movementmode
+}
+void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
+{
+    PoseIndex = 0;
+    // adjust IKFoot blend alpha
 }
 
 void UMainAnimInstance::OnStepTimerExpire()
 {
     CanMove = true;
-    //HoopzCharacter->CanTurn = true;
-    //Notified = false;
-    //UE_LOG(LogTemp, Warning, TEXT("Can pivot."))
 }
 
-// TODO : Play idlepivot animation if idle for more than 5 seconds
-// TODO : Create Pivot Anim Nofitiy
+// TODO : Play idlepivot animation if idle for more than 5 seconds?
 void UMainAnimInstance::Pivot(float DeltaTimeX)
 {
-    //if (!ensure(CurrentMontage)) { return; }
-    if (!ensure(PlayerCapsuleComponent)) { return; }
     if (!ensure(HoopzCharacter)) { return; }
 
     // Blend Pose by Int
-    if (CanMove == true) {  // CanMove will be changed by PivotAnimNotifyState broadcast?
-        // PivotPos = HoopzCharacter->PivotPos;
-        // if (PivotPos != PrevPivotPos) {
-        //     PrevPivotPos = PivotPos;
-        //     if (EstablishPivotFoot == false) { //} && HoopzCharacter->EstablishPivot == false) {
-        //         EstablishPivotFoot = true;
-        //         HoopzCharacter->EstablishPivot = true;
-        //         if (PivotPos < 0) { PivotKey = false; }
-        //         else { PivotKey = true; }
-        //     }
-
-        //     // CanMove = false;
-        //     PivotTurn();
-        // }
-        // if (HoopzCharacter->CanTurn == false) {
-        //     PivotTurn();
-        // }
+    if (CanMove == true) {
+        // To disable concurrent turn & step
 
         if (CanMove == true) {
             PoseKey = HoopzCharacter->PivotInputKey;
             if (HoopzCharacter->EstablishPivot == true) {
-                // PrevPoseKey = PoseKey;   // Set to -1 when Pivot State Exit
-                // if (HoopzCharacter->EstablishPivot == false) {
-                //     EstablishPivotFoot = true;
-                //     HoopzCharacter->EstablishPivot = true;
-                //     if (PoseKey <= 4) { PivotKey = false; } // Left Foot
-                //     else { PivotKey = true; } // Right Foot    
-                // }
-
                 PivotStep();
             }
         }
@@ -131,7 +99,7 @@ void UMainAnimInstance::Pivot(float DeltaTimeX)
         return; 
     }
 
-    /*  TODO: Root Motion from Anim Montage for Network play
+    /*  TODO: Root Motion from Anim Montage for Network play?
     if (!Montage_IsPlaying(CurrentMontage)) {
         Montage_Play(CurrentMontage, 1);
         Montage_JumpToSection(FName(TEXT("PivotStepLeft0")), CurrentMontage);
@@ -142,8 +110,8 @@ void UMainAnimInstance::Pivot(float DeltaTimeX)
 
 void UMainAnimInstance::PivotStep()
 {
-    if (HoopzCharacter->PivotKey == false) { // left foot
-        CanMove = false;
+    CanMove = false;
+    if (HoopzCharacter->PivotKey == false) { // left foot moves
         switch (PoseKey) {
             case 0: // 
                 PoseIndex = 17;
@@ -161,13 +129,12 @@ void UMainAnimInstance::PivotStep()
                 PoseIndex = 21;
                 break;
             default:
-                PoseIndex = DefaultPivotPos;
+                PoseIndex = 0;
                 return;   
         }
     }
     
-    else { // right foot
-        CanMove = false;
+    else { // right foot moves
         switch (PoseKey) {
             case 5: // 
                 PoseIndex = 22;
@@ -185,111 +152,9 @@ void UMainAnimInstance::PivotStep()
                 PoseIndex = 26;
                 break;
             default:
-                PoseIndex = DefaultPivotPos;
+                PoseIndex = 0;
                 return;
         }
-    }
-}
-
-// TODO: Consider turning/moving the Capsule to Pivot
-void UMainAnimInstance::PivotTurn()
-{
-    if (HoopzCharacter->PivotKey == false) {  // left foot
-        CanMove = false;
-
-        // int TempIndex = PivotPos % 8; // Play Current Pivot Pos
-        // switch (TempIndex) {
-        //     case 0: // 
-        //         PoseIndex = 0;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 1: //
-        //     case -7:
-        //         PoseIndex = 15;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 2: //
-        //     case -6:
-        //         PoseIndex = 14;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 3: //
-        //     case -5:
-        //         PoseIndex = 13;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 4: //
-        //     case -4:
-        //         PoseIndex = 12;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 5: //
-        //     case -3:
-        //         PoseIndex = 11;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 6: //
-        //     case -2:
-        //         PoseIndex = 10;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 7: //
-        //     case -1:
-        //         PoseIndex = 16;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     default:
-        //         return;
-        // }
-        return;
-    }
-    else if (HoopzCharacter->PivotKey == true) { // right foot
-        CanMove = false;
-        // int TempIndex = PivotPos % 8; // Play Current Pivot Pos
-        // switch (TempIndex) {
-        //     case 0: // 
-        //         PoseIndex = 0;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 1: //
-        //     case -7:
-        //         PoseIndex = 4;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 2: //
-        //     case -6:
-        //         PoseIndex = 3;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 3: //
-        //     case -5:
-        //         PoseIndex = 9;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 4: //
-        //     case -4:
-        //         PoseIndex = 8;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 5: //
-        //     case -3:
-        //         PoseIndex = 7;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 6: //
-        //     case -2:
-        //         PoseIndex = 6;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     case 7: //
-        //     case -1:
-        //         PoseIndex = 5;
-        //         //DefaultPivotPos = PoseIndex;
-        //         break;
-        //     default:
-        //         return;
-        // }
-        return;
     }
 }
 
@@ -316,10 +181,7 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot)
 
     FHitResult HitResult(ForceInit);
     
-    // if (!ensure(SubAnimInstance)) { return 0; }
-    // if (!ensure(SubAnimInstance->GetWorld())) { return 0; }
-    // bool HitConfirm = SubAnimInstance->GetWorld()->LineTraceSingleByChannel(
-    bool HitConfirm = GetWorld()->LineTraceSingleByChannel(
+    bool HitConfirm = GetWorld()->LineTraceSingleByChannel(   // Line trace for feet
             HitResult,
             StartTrace,
             EndTrace,
@@ -333,4 +195,9 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot)
     }
     
     return FVector(0, 0, 0);
+}
+
+void UMainAnimInstance::ShotSelection(float DeltaTimeX)
+{
+    //UE_LOG(LogTemp, Warning, TEXT("%i"), MainState->GetCurrentState())
 }
