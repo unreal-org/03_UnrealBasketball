@@ -7,6 +7,7 @@
 #include "Animation/AnimNotifyQueue.h"
 #include "TimerManager.h"
 #include "HoopzCharacter.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
@@ -35,15 +36,16 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 {
     if (!ensure(MainState)) { return; }
    
+    //UE_LOG(LogTemp, Warning, TEXT("%i"), MainState->GetCurrentState())
     switch (MainState->GetCurrentState())
     {
-        case 0: // Idle
-            break;
+        // case 0: // Idle
+        //     break;
         case 1: // IdlePivot
-            Pivot(DeltaTimeX);
+            Pivot();
             break;
         case 4: // Jump (Ball)
-            ShotSelection(DeltaTimeX);
+            WhileJumped(DeltaTimeX);
         default:
             return;
     }
@@ -64,12 +66,36 @@ void UMainAnimInstance::AnimNotify_SetPivot()
 { 
     if (!ensure(HoopzCharacter)) { return; }
     HoopzCharacter->PivotMode = true;
-    // set movementmode
+    IKAlpha = 0.85;
 }
 void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
 {
-    PoseIndex = 0;
-    // adjust IKFoot blend alpha
+    PivotPoseIndex = 0;
+    ShotPoseIndex = 0;
+    IKAlpha = 0.25;
+}
+
+// TODO: Check for falling - loop falling animation - character Falling();
+void UMainAnimInstance::WhileJumped(float DeltaTimeX)
+{
+    if (HoopzCharacter->CanChangeShot) {   // TODO: When can I stop checking ensure?
+        ShotPoseIndex = HoopzCharacter->ShotKey;
+        if (ShotPoseIndex != 0) {
+            HoopzCharacter->CanChangeShot = false;
+            // HasBall = false;
+        }  
+    }
+    
+    // Turn Capsule Towards Basket
+    FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
+    FRotator TargetCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
+    CapsuleTurnTime = 0;
+    if (CapsuleTurnTime < CapsuleTurnDuration)
+    {
+        CapsuleTurnTime += DeltaTimeX;
+        CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / CapsuleTurnDuration);
+		PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
+    }
 }
 
 void UMainAnimInstance::OnStepTimerExpire()
@@ -78,7 +104,7 @@ void UMainAnimInstance::OnStepTimerExpire()
 }
 
 // TODO : Play idlepivot animation if idle for more than 5 seconds?
-void UMainAnimInstance::Pivot(float DeltaTimeX)
+void UMainAnimInstance::Pivot()
 {
     if (!ensure(HoopzCharacter)) { return; }
 
@@ -114,22 +140,22 @@ void UMainAnimInstance::PivotStep()
     if (HoopzCharacter->PivotKey == false) { // left foot moves
         switch (PoseKey) {
             case 0: // 
-                PoseIndex = 17;
+                PivotPoseIndex = 17;
                 break;
             case 1: //
-                PoseIndex = 18;
+                PivotPoseIndex = 18;
                 break;
             case 2: //
-                PoseIndex = 19;
+                PivotPoseIndex = 19;
                 break;
             case 3: //
-                PoseIndex = 20;
+                PivotPoseIndex = 20;
                 break;
             case 4: //
-                PoseIndex = 21;
+                PivotPoseIndex = 21;
                 break;
             default:
-                PoseIndex = 0;
+                PivotPoseIndex = 0;
                 return;   
         }
     }
@@ -137,22 +163,22 @@ void UMainAnimInstance::PivotStep()
     else { // right foot moves
         switch (PoseKey) {
             case 5: // 
-                PoseIndex = 22;
+                PivotPoseIndex = 22;
                 break;
             case 6: //
-                PoseIndex = 23;
+                PivotPoseIndex = 23;
                 break;
             case 7: //
-                PoseIndex = 24;
+                PivotPoseIndex = 24;
                 break;
             case 8: //
-                PoseIndex = 25;
+                PivotPoseIndex = 25;
                 break;
             case 9: //
-                PoseIndex = 26;
+                PivotPoseIndex = 26;
                 break;
             default:
-                PoseIndex = 0;
+                PivotPoseIndex = 0;
                 return;
         }
     }
@@ -197,7 +223,3 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot)
     return FVector(0, 0, 0);
 }
 
-void UMainAnimInstance::ShotSelection(float DeltaTimeX)
-{
-    //UE_LOG(LogTemp, Warning, TEXT("%i"), MainState->GetCurrentState())
-}

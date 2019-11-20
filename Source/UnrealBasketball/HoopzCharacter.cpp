@@ -41,6 +41,8 @@ void AHoopzCharacter::BeginPlay()
 	PlayerRotation = CapsuleComponent->GetComponentRotation();
 	TargetPlayerRotation = PlayerRotation;
 
+	//LandedDelegate.AddDynamic(this, &AHoopzCharacter::JumpLanded);
+
 	for (TActorIterator<AStaticMeshActor> It(GetWorld()); It; ++It)
 	{
 		AStaticMeshActor* Mesh = *It;
@@ -64,7 +66,8 @@ void AHoopzCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	// TODO: Make Camera line up behind player and basket
+	// TODO: Make Camera Spring Arm line up behind player and basket - USpringArmComponent /////////////////////////////////////////////////////
+
 	if (ensure(Camera)) { Camera->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), BasketLocation), false);}
 	if (PivotMode == true) { Pivot(); }
 	TurnLerp(DeltaTime);
@@ -84,6 +87,7 @@ void AHoopzCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AHoopzCharacter::JumpReleased);
 	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AHoopzCharacter::TurnLeft);
 	PlayerInputComponent->BindAction("TurnRight", IE_Pressed, this, &AHoopzCharacter::TurnRight);
+	PlayerInputComponent->BindAction("DashOrShot", IE_Pressed, this, &AHoopzCharacter::DashOrShot);
 }
 
 void AHoopzCharacter::MoveForward(float Throw)
@@ -112,6 +116,7 @@ void AHoopzCharacter::Pivot()
 {
 	if ((PivotForward + PivotRight).Size2D() < 5) { return; }
 	if (!ensure(PivotComponent)) { return; }
+	
     FVector PivotDirection = GetActorLocation() + PivotForward + PivotRight;
     PivotInputKey = PivotComponent->FindInputKeyClosestToWorldLocation(PivotDirection);
 
@@ -123,7 +128,7 @@ void AHoopzCharacter::Pivot()
 	}
 }
 
-// Todo: Decrease Capsule Half Height
+// Todo: Implement while moving one leg jumps
 void AHoopzCharacter::JumpPressed()
 {
 	JumpHeldTime = GetWorld()->GetTimeSeconds();
@@ -213,11 +218,11 @@ void AHoopzCharacter::TurnRight()
 
 void AHoopzCharacter::SetPivot()
 {
-	// attach component code
+	FName Foot;
 	if (PivotKey == false) {
-		FName Foot = FName(TEXT("foot_r"));
+		Foot = FName(TEXT("foot_r"));
 	} else {
-		FName Foot = FName(TEXT("foot_l"));
+		Foot = FName(TEXT("foot_l"));
 	}
 
 	FVector TargetPivotPointLocation = GetMesh()->GetSocketLocation(Foot);
@@ -245,6 +250,8 @@ void AHoopzCharacter::OnJumped_Implementation()
 {
 	if (!ensure(MainAnimInstance)) { return; }
 
+	Jumped = true;
+
 	// detach from pivotpoint
 	CapsuleComponent->DetachFromComponent(DetachRules);
 
@@ -252,5 +259,29 @@ void AHoopzCharacter::OnJumped_Implementation()
 	MainAnimInstance->Jumped = true;
 	PivotInputKey = -1;
 	PivotMode = false;
+}
+void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 
+	if (!ensure(MainAnimInstance)) { return; }
+	MainAnimInstance->Jumped = false;
+	Jumped = false;
+	PivotMode = true;
+	CanChangeShot = true;
+	ShotKey = 0;
+	EstablishPivot = false;
+	PivotSet = false;
+	PivotKey = false;
+}
+
+void AHoopzCharacter::DashOrShot()
+{
+	if (Jumped == true)
+	{
+		ShotKey = 1;
+	}
+	else {
+		// dash
+	}
 }

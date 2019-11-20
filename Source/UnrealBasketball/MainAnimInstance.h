@@ -15,6 +15,7 @@ class AHoopzCharacter;
 
 /**
  * To be used to play Animations
+ * TODO : Apply Physics Constraints
  */
 UCLASS( Transient, Blueprintable, hideCategories = AnimInstance, BlueprintType )
 class UNREALBASKETBALL_API UMainAnimInstance : public UAnimInstance
@@ -63,7 +64,11 @@ public:
 
 	// Pivot
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
-	int32 PoseIndex = 0;
+	int32 PivotPoseIndex = 0;
+	// Shot
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	int32 ShotPoseIndex = 0;
+
 
 	// Basket
 	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
@@ -77,7 +82,7 @@ private:
 	FAnimNode_StateMachine *MainState;
 
 	// State Machine Functions
-	void Pivot(float DeltaTimeX);
+	void Pivot();
 	int32 PrevMontageKey = -1;   // default -1
 	bool CanMove = true;
 
@@ -98,7 +103,9 @@ private:
 	AHoopzCharacter* HoopzCharacter = nullptr;
 
 	// Shot Selection
-	void ShotSelection(float DeltaTimeX);
+	void WhileJumped(float DeltaTimeX);
+	float CapsuleTurnTime = 0;
+	float CapsuleTurnDuration = 0.15;
 
 protected:
 	// Native initialization override point

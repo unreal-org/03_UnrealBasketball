@@ -33,13 +33,16 @@ public:
 	void MoveRight(float Throw);
 	
 
-	bool PivotMode = false;
+	bool PivotMode = true;
 	int32 PivotInputKey = -1;
 
 	FVector BasketLocation;
 
 	bool EstablishPivot = false;
 	bool PivotKey = false;
+
+	int32 ShotKey = 0;
+	bool CanChangeShot = true;
 
 protected:
 	// Called when the game starts or when spawned
@@ -53,6 +56,9 @@ protected:
 
 	// On Jumped
 	virtual void OnJumped_Implementation() override;
+
+	// On Landed
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
 
 private:	
 	UHoopzCharacterMovementComponent* HoopzCharacterMovementComponent = nullptr;
@@ -85,14 +91,21 @@ private:
 	FRotator PlayerRotation;
 	void TurnLerp(float DeltaTime);
 	
-	// Jump
+	// Jump (x)
 	void JumpPressed();
 	void JumpReleased();
 	float JumpHeldTime;
+	bool Jumped = false;
 
 	// Capsule height adjust
 	bool CapsuleDip = false;
 	void CapsuleDipper();
 	float MaxCapsuleHalfHeight = 90;
 	float MinCapsuleHalfHeight = 80;
+
+	// Face Button
+	void DashOrShot();
+	void LayUp();
+	void Dunk();
+	void Floater();
 };
