@@ -39,8 +39,8 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
     //UE_LOG(LogTemp, Warning, TEXT("%i"), MainState->GetCurrentState())
     switch (MainState->GetCurrentState())
     {
-        // case 0: // Idle
-        //     break;
+        case 0: // Idle
+            break;
         case 1: // IdlePivot
             Pivot();
             break;
@@ -60,18 +60,31 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 
 }
 
-void UMainAnimInstance::AnimNotify_SetBasketLocation() { if (ensure(HoopzCharacter)) BasketLocation = HoopzCharacter->BasketLocation; }
 void UMainAnimInstance::AnimNotify_ResetPrevMontageKey() {  }
+void UMainAnimInstance::AnimNotify_SetBasketLocation()
+{
+    if (!ensure(HoopzCharacter)) { return; }
+    BasketLocation = HoopzCharacter->BasketLocation;
+    HoopzCharacter->PivotMode = false;
+    HoopzCharacter->bUseControllerRotationYaw = true;
+	HoopzCharacter->SpringArm->bInheritYaw = false;
+    IKAlpha = 0.9;
+}
 void UMainAnimInstance::AnimNotify_SetPivot()
 { 
     if (!ensure(HoopzCharacter)) { return; }
     HoopzCharacter->PivotMode = true;
+    HoopzCharacter->bUseControllerRotationYaw = false;
+	HoopzCharacter->SpringArm->bInheritYaw = true;
     IKAlpha = 0.85;
 }
 void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
 {
     PivotPoseIndex = 0;
     ShotPoseIndex = 0;
+    HoopzCharacter->PivotMode = false;
+    HoopzCharacter->bUseControllerRotationYaw = true;
+	HoopzCharacter->SpringArm->bInheritYaw = false;
     IKAlpha = 0.25;
 }
 
@@ -82,19 +95,22 @@ void UMainAnimInstance::WhileJumped(float DeltaTimeX)
         ShotPoseIndex = HoopzCharacter->ShotKey;
         if (ShotPoseIndex != 0) {
             HoopzCharacter->CanChangeShot = false;
-            // HasBall = false;
+            // HasBall = false;  *** commented out for testing ***
         }  
     }
     
+
     // Turn Capsule Towards Basket
-    FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
-    FRotator TargetCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
-    CapsuleTurnTime = 0;
-    if (CapsuleTurnTime < CapsuleTurnDuration)
-    {
-        CapsuleTurnTime += DeltaTimeX;
-        CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / CapsuleTurnDuration);
-		PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
+    if (HoopzCharacter->PivotDetached == true) {
+        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
+        FRotator TargetCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
+        CapsuleTurnTime = 0;
+        if (CapsuleTurnTime < CapsuleTurnDuration)
+        {
+            CapsuleTurnTime += DeltaTimeX;
+            CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / CapsuleTurnDuration);
+            PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
+        }
     }
 }
 

@@ -13,6 +13,7 @@ class UCameraComponent;
 class UCapsuleComponent;
 class USceneComponent;
 class UMainAnimInstance;
+class USpringArmComponent;
 
 struct FAttachmentTransformRules;
 struct FDetachmentTransformRules;
@@ -40,6 +41,7 @@ public:
 
 	bool EstablishPivot = false;
 	bool PivotKey = false;
+	bool PivotDetached = true;
 
 	int32 ShotKey = 0;
 	bool CanChangeShot = true;
@@ -68,6 +70,7 @@ private:
 	UCapsuleComponent* CapsuleComponent = nullptr;
 	AActor* PivotPoint = nullptr;
 	UMainAnimInstance* MainAnimInstance = nullptr;
+	USpringArmComponent* SpringArm = nullptr;
 	
 	FAttachmentTransformRules AttachRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
 	FDetachmentTransformRules DetachRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, false);
@@ -108,4 +111,12 @@ private:
 	void LayUp();
 	void Dunk();
 	void Floater();
+
+	// Spring Arm
+	FVector SpringArmTarget;
+	// void SpringArmLerp(float DeltaTime);
+	// float SpringArmTurnTime = 0;
+	// float SpringArmTurnDuration = 0.2;
+	// FRotator SpringArmRotation;
+	// FRotator TargetSpringArmRotation;
 };

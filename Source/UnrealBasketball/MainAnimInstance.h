@@ -41,7 +41,7 @@ public:
 	
 	// Transition Variables
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
-	bool HasBall = true;
+	bool HasBall = false;
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	bool Jumped = false;
 

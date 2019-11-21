@@ -12,6 +12,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Engine/EngineTypes.h"
 #include "MainAnimInstance.h"
+#include "GameFramework/SpringArmComponent.h"
 
 // Sets default values
 AHoopzCharacter::AHoopzCharacter()
@@ -37,10 +38,13 @@ void AHoopzCharacter::BeginPlay()
 	Camera = FindComponentByClass<UCameraComponent>();
 	CapsuleComponent = FindComponentByClass<UCapsuleComponent>();
 	MainAnimInstance = dynamic_cast<UMainAnimInstance*>(GetMesh()->GetAnimInstance());
+	SpringArm = FindComponentByClass<USpringArmComponent>();
 
 	PlayerRotation = CapsuleComponent->GetComponentRotation();
 	TargetPlayerRotation = PlayerRotation;
-
+	// SpringArmRotation = SpringArm->GetComponentRotation();
+	// TargetSpringArmRotation = SpringArmRotation;
+	
 	//LandedDelegate.AddDynamic(this, &AHoopzCharacter::JumpLanded);
 
 	for (TActorIterator<AStaticMeshActor> It(GetWorld()); It; ++It)
@@ -49,6 +53,8 @@ void AHoopzCharacter::BeginPlay()
 		if (Mesh && Mesh->GetName() == FString("Basket")) {
 			Basket = Mesh;
 			BasketLocation = Basket->GetActorLocation();
+			SpringArmTarget = BasketLocation;
+			SpringArmTarget.Z = 68;
 		}
 	}
 
@@ -66,10 +72,13 @@ void AHoopzCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	// TODO: Make Camera Spring Arm line up behind player and basket - USpringArmComponent /////////////////////////////////////////////////////
+	// TODO: Fix Jerk
 
 	if (ensure(Camera)) { Camera->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), BasketLocation), false);}
+	if (ensure(SpringArm)) { SpringArm->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(SpringArm->GetComponentLocation(), SpringArmTarget), false); }
+
 	if (PivotMode == true) { Pivot(); }
+
 	TurnLerp(DeltaTime);
 	CapsuleDipper();
 
@@ -83,11 +92,14 @@ void AHoopzCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	PlayerInputComponent->BindAxis("IntendMoveForward", this, &AHoopzCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("IntendMoveRight", this, &AHoopzCharacter::MoveRight);
+
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AHoopzCharacter::JumpPressed);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AHoopzCharacter::JumpReleased);
 	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AHoopzCharacter::TurnLeft);
 	PlayerInputComponent->BindAction("TurnRight", IE_Pressed, this, &AHoopzCharacter::TurnRight);
 	PlayerInputComponent->BindAction("DashOrShot", IE_Pressed, this, &AHoopzCharacter::DashOrShot);
+	PlayerInputComponent->BindAction("Floater", IE_Pressed, this, &AHoopzCharacter::Floater);
+
 }
 
 void AHoopzCharacter::MoveForward(float Throw)
@@ -138,7 +150,15 @@ void AHoopzCharacter::JumpPressed()
 void AHoopzCharacter::JumpReleased()
 {
 	JumpHeldTime -= GetWorld()->GetTimeSeconds();
-	if (JumpHeldTime < -.3) { bPressedJump = true; }
+	if (JumpHeldTime < -.3) {
+		if (PivotMode == true) {
+			CapsuleComponent->DetachFromComponent(DetachRules); // detach from pivotpoint
+			// bUseControllerRotationYaw = true;
+			// SpringArm->bInheritYaw = false;
+			PivotDetached = true;
+		}
+		bPressedJump = true;
+	}
 	CapsuleDip = false;
 }
 
@@ -231,7 +251,10 @@ void AHoopzCharacter::SetPivot()
 	PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
 	PlayerRotation = PivotPoint->GetActorRotation();
 	TargetPlayerRotation = PlayerRotation;
-	CapsuleComponent->AttachToComponent(PivotPoint->GetRootComponent(), AttachRules);	
+	CapsuleComponent->AttachToComponent(PivotPoint->GetRootComponent(), AttachRules);
+	// HoopzCharacter->bUseControllerRotationYaw = false;
+	// HoopzCharacter->SpringArm->bInheritYaw = true;
+	PivotDetached = false;
 }
 
 void AHoopzCharacter::TurnLerp(float DeltaTime)   
@@ -246,19 +269,29 @@ void AHoopzCharacter::TurnLerp(float DeltaTime)
     }
 }
 
+// void AHoopzCharacter::SpringArmLerp(float DeltaTime)   
+// {
+//     SpringArmTurnTime = 0;
+// 	TargetSpringArmRotation = UKismetMathLibrary::FindLookAtRotation(SpringArm->GetComponentLocation(), SpringArmTarget);
+
+//     if (SpringArmTurnTime < SpringArmTurnDuration)
+//     {
+//         SpringArmTurnTime += DeltaTime;
+//         SpringArmRotation = FMath::Lerp(SpringArmRotation, TargetSpringArmRotation, SpringArmTurnTime / SpringArmTurnDuration);
+// 		SpringArm->SetWorldRotation(SpringArmRotation, false);
+//     }
+// }
+
 void AHoopzCharacter::OnJumped_Implementation()
 {
 	if (!ensure(MainAnimInstance)) { return; }
 
 	Jumped = true;
 
-	// detach from pivotpoint
-	CapsuleComponent->DetachFromComponent(DetachRules);
-
 	// change animation transition state
 	MainAnimInstance->Jumped = true;
 	PivotInputKey = -1;
-	PivotMode = false;
+	//PivotMode = false;
 }
 void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
@@ -267,7 +300,7 @@ void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint
 	if (!ensure(MainAnimInstance)) { return; }
 	MainAnimInstance->Jumped = false;
 	Jumped = false;
-	PivotMode = true;
+	PivotMode = true;  // if HasBall
 	CanChangeShot = true;
 	ShotKey = 0;
 	EstablishPivot = false;
@@ -284,4 +317,14 @@ void AHoopzCharacter::DashOrShot()
 	else {
 		// dash
 	}
+}
+
+void AHoopzCharacter::Floater()
+{
+	if (MainAnimInstance->HasBall == true) {
+		MainAnimInstance->HasBall = false;
+	} else {
+		MainAnimInstance->HasBall = true;
+	}
+	
 }
