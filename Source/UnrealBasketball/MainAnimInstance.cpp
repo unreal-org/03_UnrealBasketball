@@ -66,16 +66,12 @@ void UMainAnimInstance::AnimNotify_SetBasketLocation()
     if (!ensure(HoopzCharacter)) { return; }
     BasketLocation = HoopzCharacter->BasketLocation;
     HoopzCharacter->PivotMode = false;
-    HoopzCharacter->bUseControllerRotationYaw = true;
-	HoopzCharacter->SpringArm->bInheritYaw = false;
     IKAlpha = 0.9;
 }
 void UMainAnimInstance::AnimNotify_SetPivot()
 { 
     if (!ensure(HoopzCharacter)) { return; }
     HoopzCharacter->PivotMode = true;
-    HoopzCharacter->bUseControllerRotationYaw = false;
-	HoopzCharacter->SpringArm->bInheritYaw = true;
     IKAlpha = 0.85;
 }
 void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
@@ -83,8 +79,6 @@ void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
     PivotPoseIndex = 0;
     ShotPoseIndex = 0;
     HoopzCharacter->PivotMode = false;
-    HoopzCharacter->bUseControllerRotationYaw = true;
-	HoopzCharacter->SpringArm->bInheritYaw = false;
     IKAlpha = 0.25;
 }
 
@@ -95,15 +89,18 @@ void UMainAnimInstance::WhileJumped(float DeltaTimeX)
         ShotPoseIndex = HoopzCharacter->ShotKey;
         if (ShotPoseIndex != 0) {
             HoopzCharacter->CanChangeShot = false;
-            // HasBall = false;  *** commented out for testing ***
-        }  
+            // HasBall = false;  // after shot
+        }
     }
     
 
     // Turn Capsule Towards Basket
     if (HoopzCharacter->PivotDetached == true) {
         FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
-        FRotator TargetCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
+        FRotator TargetCapsuleRotation = CapsuleRotation;
+        FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
+        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw;
+        
         CapsuleTurnTime = 0;
         if (CapsuleTurnTime < CapsuleTurnDuration)
         {

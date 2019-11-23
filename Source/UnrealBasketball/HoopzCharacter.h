@@ -34,7 +34,7 @@ public:
 	void MoveRight(float Throw);
 	
 
-	bool PivotMode = true;
+	bool PivotMode = false;
 	int32 PivotInputKey = -1;
 
 	FVector BasketLocation;
@@ -73,7 +73,7 @@ private:
 	USpringArmComponent* SpringArm = nullptr;
 	
 	FAttachmentTransformRules AttachRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
-	FDetachmentTransformRules DetachRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, false);
+	FDetachmentTransformRules DetachRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true);
 
 	// Pivot Variables
 	void Pivot();
@@ -105,6 +105,7 @@ private:
 	void CapsuleDipper();
 	float MaxCapsuleHalfHeight = 90;
 	float MinCapsuleHalfHeight = 80;
+	FVector CapsuleTarget;
 
 	// Face Button
 	void DashOrShot();
@@ -114,9 +115,9 @@ private:
 
 	// Spring Arm
 	FVector SpringArmTarget;
-	// void SpringArmLerp(float DeltaTime);
-	// float SpringArmTurnTime = 0;
-	// float SpringArmTurnDuration = 0.2;
-	// FRotator SpringArmRotation;
-	// FRotator TargetSpringArmRotation;
+	void SpringArmLerp(float DeltaTime);
+	float SpringArmTurnTime = 0;
+	float SpringArmTurnDuration = 0.2;
+	FRotator SpringArmRotation;
+	FRotator TargetSpringArmRotation;
 };
