@@ -78,7 +78,7 @@ void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
 {
     PivotPoseIndex = 0;
     ShotPoseIndex = 0;
-    HoopzCharacter->PivotMode = false;
+    //HoopzCharacter->PivotMode = false;
     IKAlpha = 0.25;
 }
 
@@ -94,8 +94,8 @@ void UMainAnimInstance::WhileJumped(float DeltaTimeX)
     }
     
 
-    // Turn Capsule Towards Basket
-    if (HoopzCharacter->PivotDetached == true) {
+    //Turn Capsule Towards Basket
+    if (HoopzCharacter) {
         FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
         FRotator TargetCapsuleRotation = CapsuleRotation;
         FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);

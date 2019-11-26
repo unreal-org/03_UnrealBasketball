@@ -77,10 +77,7 @@ void AHoopzCharacter::Tick(float DeltaTime)
 
 	//if (ensure(Camera)) { Camera->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), BasketLocation), false);}
 	if (ensure(SpringArm)) { SpringArmLerp(DeltaTime); }
-	if (ensure(CapsuleComponent) && PivotMode == false) {
-		CapsuleTarget.Z = CapsuleComponent->GetScaledCapsuleHalfHeight();
-		CapsuleComponent->SetWorldRotation(UKismetMathLibrary::FindLookAtRotation(CapsuleComponent->GetComponentLocation(), CapsuleTarget), false);
-	}
+	if (ensure(CapsuleComponent) && PivotMode == false) { CapsuleLerp(DeltaTime); }
 
 
 	if (PivotMode == true) { Pivot(); }
@@ -88,7 +85,7 @@ void AHoopzCharacter::Tick(float DeltaTime)
 	TurnLerp(DeltaTime);
 	CapsuleDipper();
 
-
+	//UE_LOG(LogTemp, Warning, TEXT("Capsule location: %s"), *CapsuleComponent->GetComponentLocation().ToString())
 }
 
 // Called to bind functionality to input
@@ -166,6 +163,7 @@ void AHoopzCharacter::JumpReleased()
 		// bUseControllerRotationYaw = false;
 		// SpringArm->bInheritYaw = true;
 		bPressedJump = true;
+		//PivotMode = false;
 	}
 	CapsuleDip = false;
 }
@@ -205,6 +203,7 @@ void AHoopzCharacter::TurnLeft()
 			}
 
 			TargetPlayerRotation.Yaw -= 45;
+			//CapsuleComponent->SetWorldLocationAndRotation(CapsuleComponent->GetComponentLocation() + FVector(15, 15, 0), CapsuleComponent->GetComponentRotation() + FRotator(0, 45, 0), false);
 		}
 		FTimerHandle TurnTimer;
 		GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
@@ -288,6 +287,20 @@ void AHoopzCharacter::SpringArmLerp(float DeltaTime)
     }
 }
 
+void AHoopzCharacter::CapsuleLerp(float DeltaTime)
+{
+    CapsuleTurnTime = 0;
+	CapsuleTarget.Z = CapsuleComponent->GetScaledCapsuleHalfHeight();
+	TargetCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(CapsuleComponent->GetComponentLocation(), CapsuleTarget);
+
+    if (CapsuleTurnTime < CapsuleTurnDuration)
+    {
+        CapsuleTurnTime += DeltaTime;
+        CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / CapsuleTurnDuration);
+		CapsuleComponent->SetWorldRotation(CapsuleRotation, false);
+    }
+}
+
 void AHoopzCharacter::OnJumped_Implementation()
 {
 	if (!ensure(MainAnimInstance)) { return; }
@@ -306,7 +319,7 @@ void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint
 	if (!ensure(MainAnimInstance)) { return; }
 	MainAnimInstance->Jumped = false;
 	Jumped = false;
-	PivotMode = true;  // if HasBall
+	PivotMode = true;  // if HasBall - currently true for testing
 	CanChangeShot = true;
 	ShotKey = 0;
 	EstablishPivot = false;
