@@ -30,16 +30,18 @@ void UMainAnimInstance::NativeInitializeAnimation()
 
     LeftFootLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("foot_l")));
     RightFootLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("foot_r")));
+
+    BasketLocation = FVector(419, 0 , 168);
 }
 
 void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 {
     if (!ensure(MainState)) { return; }
    
-    //UE_LOG(LogTemp, Warning, TEXT("%i"), MainState->GetCurrentState())
     switch (MainState->GetCurrentState())
     {
         case 0: // Idle
+            Idle(DeltaTimeX);
             break;
         case 1: // IdlePivot
             Pivot();
@@ -53,8 +55,6 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
     LeftFootLocation = IKFootTrace(0);
     RightFootLocation = IKFootTrace(1);
 
-    if (ensure(HoopzCharacter)) { BasketLocation = HoopzCharacter->BasketLocation; }
-
     // float Temp = (PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("foot_l"))) + PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("root")))).Size();
     // UE_LOG(LogTemp, Warning, TEXT("%f"), Temp)   // *** 27.64 ***
 
@@ -64,7 +64,6 @@ void UMainAnimInstance::AnimNotify_ResetPrevMontageKey() {  }
 void UMainAnimInstance::AnimNotify_SetBasketLocation()
 {
     if (!ensure(HoopzCharacter)) { return; }
-    BasketLocation = HoopzCharacter->BasketLocation;
     HoopzCharacter->PivotMode = false;
     IKAlpha = 0.9;
 }
@@ -78,8 +77,25 @@ void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
 {
     PivotPoseIndex = 0;
     ShotPoseIndex = 0;
-    //HoopzCharacter->PivotMode = false;
     IKAlpha = 0.25;
+}
+
+void UMainAnimInstance::Idle(float DeltaTimeX)
+{
+    if (HoopzCharacter) {
+        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
+        FRotator TargetCapsuleRotation = CapsuleRotation;
+        FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
+        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw;
+        
+        CapsuleTurnTime = 0;
+        if (CapsuleTurnTime < CapsuleTurnDuration)
+        {
+            CapsuleTurnTime += DeltaTimeX;
+            CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / 0.05);
+            PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
+        }
+    }
 }
 
 // TODO: Check for falling - loop falling animation - character Falling();
@@ -89,11 +105,10 @@ void UMainAnimInstance::WhileJumped(float DeltaTimeX)
         ShotPoseIndex = HoopzCharacter->ShotKey;
         if (ShotPoseIndex != 0) {
             HoopzCharacter->CanChangeShot = false;
-            // HasBall = false;  // after shot
+            HasBall = false;  // after shot
         }
     }
     
-
     //Turn Capsule Towards Basket
     if (HoopzCharacter) {
         FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();

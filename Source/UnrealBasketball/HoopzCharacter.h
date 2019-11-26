@@ -106,11 +106,6 @@ private:
 	float MaxCapsuleHalfHeight = 90;
 	float MinCapsuleHalfHeight = 80;
 	FVector CapsuleTarget;
-	void CapsuleLerp(float DeltaTime);
-	float CapsuleTurnTime = 0;
-	float CapsuleTurnDuration = 0.2;
-	FRotator CapsuleRotation;
-	FRotator TargetCapsuleRotation;
 
 	// Face Button
 	void DashOrShot();
@@ -125,4 +120,8 @@ private:
 	float SpringArmTurnDuration = 0.2;
 	FRotator SpringArmRotation;
 	FRotator TargetSpringArmRotation;
+
+	// Testing
+	void TogglePivot();
+	void ToggleOffense();
 };

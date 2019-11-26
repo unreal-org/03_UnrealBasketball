@@ -69,6 +69,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	int32 ShotPoseIndex = 0;
 
+	// Basket
+	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
+	bool Offense = false;
 
 	// Basket
 	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
@@ -80,6 +83,9 @@ public:
 private:
 	// State Machines
 	FAnimNode_StateMachine *MainState;
+
+	// Idle
+	void Idle(float DeltaTimeX);
 
 	// State Machine Functions
 	void Pivot();
