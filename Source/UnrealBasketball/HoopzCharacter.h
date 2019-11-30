@@ -46,6 +46,9 @@ public:
 	int32 ShotKey = 0;
 	bool CanChangeShot = true;
 
+	float ThrowX;
+	float ThrowY;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

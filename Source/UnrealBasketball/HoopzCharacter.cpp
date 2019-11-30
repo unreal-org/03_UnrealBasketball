@@ -74,11 +74,8 @@ void AHoopzCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	
 	if (ensure(SpringArm)) { SpringArmLerp(DeltaTime); }
-
 	if (PivotMode == true) { Pivot(); }
-
 	TurnLerp(DeltaTime);
-
 	CapsuleDipper();
 
 	//UE_LOG(LogTemp, Warning, TEXT("Capsule location: %s"), *CapsuleComponent->GetComponentLocation().ToString())
@@ -106,6 +103,7 @@ void AHoopzCharacter::MoveForward(float Throw)
 {
 	// FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
 	FVector Direction = Camera->GetForwardVector();
+	ThrowX = Throw;
 
 	if (PivotMode == true) {
         PivotForward = Direction * Throw * 40;
@@ -118,6 +116,7 @@ void AHoopzCharacter::MoveRight(float Throw)
 {
 	// FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
 	FVector Direction = Camera->GetRightVector();
+	ThrowY = Throw;
 
 	if (PivotMode == true) {
         PivotRight = Direction * Throw * 40;
@@ -328,8 +327,8 @@ void AHoopzCharacter::TogglePivot()
 void AHoopzCharacter::ToggleOffense()
 {
 	if (MainAnimInstance->Offense == true) {
-		MainAnimInstance->Offense = true;
-	} else {
 		MainAnimInstance->Offense = false;
+	} else {
+		MainAnimInstance->Offense = true;
 	}
 }

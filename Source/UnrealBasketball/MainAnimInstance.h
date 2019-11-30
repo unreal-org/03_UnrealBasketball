@@ -47,14 +47,11 @@ public:
 
 	// Transition Events
 	UFUNCTION(BlueprintCallable)
-	void AnimNotify_ResetPrevMontageKey();
-
+	void AnimNotify_IdleOffense();
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_SetPivot();
-
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_SetBasketLocation();
-
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_PivotToJumpTransition();
 
@@ -69,9 +66,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	int32 ShotPoseIndex = 0;
 
-	// Basket
+	// Offense Transition & Variables
 	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
 	bool Offense = false;
+	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
+	float ThrowX;
+	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
+	float ThrowY;
 
 	// Basket
 	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
@@ -112,6 +113,9 @@ private:
 	void WhileJumped(float DeltaTimeX);
 	float CapsuleTurnTime = 0;
 	float CapsuleTurnDuration = 0.15;
+
+	// Idle Offense
+	void IdleOffense(float DeltaTimeX);
 
 protected:
 	// Native initialization override point

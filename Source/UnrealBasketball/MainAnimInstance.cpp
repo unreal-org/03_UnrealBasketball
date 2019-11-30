@@ -38,6 +38,8 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 {
     if (!ensure(MainState)) { return; }
    
+    // UE_LOG(LogTemp, Warning, TEXT("%i"), MainState->GetCurrentState())
+
     switch (MainState->GetCurrentState())
     {
         case 0: // Idle
@@ -48,6 +50,9 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
             break;
         case 4: // Jump (Ball)
             WhileJumped(DeltaTimeX);
+        case 6: // IdleOffense
+            IdleOffense(DeltaTimeX);
+            break;
         default:
             return;
     }
@@ -60,7 +65,10 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 
 }
 
-void UMainAnimInstance::AnimNotify_ResetPrevMontageKey() {  }
+void UMainAnimInstance::AnimNotify_IdleOffense() 
+{  
+    IKAlpha = 0.25;
+}
 void UMainAnimInstance::AnimNotify_SetBasketLocation()
 {
     if (!ensure(HoopzCharacter)) { return; }
@@ -80,8 +88,33 @@ void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
     IKAlpha = 0.25;
 }
 
+void UMainAnimInstance::IdleOffense(float DeltaTimeX)
+{
+    ThrowX = HoopzCharacter->ThrowY * 100;
+    ThrowY = HoopzCharacter->ThrowX * 100;
+
+    UE_LOG(LogTemp, Warning, TEXT("%f : %f"), ThrowX, ThrowY)
+
+     // Turn Capsule Towards Basket
+    if (HoopzCharacter) {
+        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
+        FRotator TargetCapsuleRotation = CapsuleRotation;
+        FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
+        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw;
+        
+        CapsuleTurnTime = 0;
+        if (CapsuleTurnTime < CapsuleTurnDuration)
+        {
+            CapsuleTurnTime += DeltaTimeX;
+            CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / 0.05);
+            PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
+        }
+    }
+}
+
 void UMainAnimInstance::Idle(float DeltaTimeX)
 {
+    // Turn Capsule Towards Basket
     if (HoopzCharacter) {
         FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
         FRotator TargetCapsuleRotation = CapsuleRotation;
@@ -109,7 +142,7 @@ void UMainAnimInstance::WhileJumped(float DeltaTimeX)
         }
     }
     
-    //Turn Capsule Towards Basket
+    // Turn Capsule Towards Basket
     if (HoopzCharacter) {
         FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
         FRotator TargetCapsuleRotation = CapsuleRotation;
