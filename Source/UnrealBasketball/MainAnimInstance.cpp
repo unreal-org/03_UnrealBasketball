@@ -67,7 +67,7 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 
 void UMainAnimInstance::AnimNotify_IdleOffense() 
 {  
-    IKAlpha = 0.25;
+    IKAlpha = 0.85;
 }
 void UMainAnimInstance::AnimNotify_SetBasketLocation()
 {
