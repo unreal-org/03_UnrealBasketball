@@ -38,7 +38,7 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 {
     if (!ensure(MainState)) { return; }
    
-    // UE_LOG(LogTemp, Warning, TEXT("%i"), MainState->GetCurrentState())
+    // UE_LOG(LogTemp, Warning, TEXT("%s"), *PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("foot_l"))).ToString())
 
     switch (MainState->GetCurrentState())
     {
@@ -67,7 +67,7 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 
 void UMainAnimInstance::AnimNotify_IdleOffense() 
 {  
-    IKAlpha = 0.85;
+    IKAlpha = 0.9;
 }
 void UMainAnimInstance::AnimNotify_SetBasketLocation()
 {
@@ -79,7 +79,7 @@ void UMainAnimInstance::AnimNotify_SetPivot()
 { 
     if (!ensure(HoopzCharacter)) { return; }
     HoopzCharacter->PivotMode = true;
-    IKAlpha = 0.85;
+    IKAlpha = 0.9;
 }
 void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
 {
@@ -90,10 +90,8 @@ void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
 
 void UMainAnimInstance::IdleOffense(float DeltaTimeX)
 {
-    ThrowX = HoopzCharacter->ThrowY * 100;
-    ThrowY = HoopzCharacter->ThrowX * 100;
-
-    UE_LOG(LogTemp, Warning, TEXT("%f : %f"), ThrowX, ThrowY)
+    ThrowX = HoopzCharacter->ThrowY * 80;
+    ThrowY = HoopzCharacter->ThrowX * 80;
 
      // Turn Capsule Towards Basket
     if (HoopzCharacter) {
@@ -112,6 +110,7 @@ void UMainAnimInstance::IdleOffense(float DeltaTimeX)
     }
 }
 
+// TODO: Have different look modes
 void UMainAnimInstance::Idle(float DeltaTimeX)
 {
     // Turn Capsule Towards Basket
@@ -131,7 +130,8 @@ void UMainAnimInstance::Idle(float DeltaTimeX)
     }
 }
 
-// TODO: Check for falling - loop falling animation - character Falling();
+// TODO: On landing play landed animation
+// TODO: Have different jumps for different modes & different look modes (basket, ball, free)
 void UMainAnimInstance::WhileJumped(float DeltaTimeX)
 {
     if (HoopzCharacter->CanChangeShot) {   // TODO: When can I stop checking ensure?
@@ -245,26 +245,28 @@ void UMainAnimInstance::PivotStep()
     }
 }
 
-// TODO : Rotate Foot to Match ground
+// TODO : Ragdoll IK
 FVector UMainAnimInstance::IKFootTrace(int32 Foot)
 {
     if (!ensure(PlayerSkeletalMesh)) { return FVector(0, 0, 0); }
     if (!ensure(PlayerCapsuleComponent)) { return FVector(0, 0, 0); }
 
     FName FootName;
-    if (Foot == 0) { 
+    if (Foot == 0) {
         FootName = FName(TEXT("foot_l"));
         LeftJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_l")));
+
+        // TODO: Foot Placement - Return if foot is inactive
     } else { 
         FootName = FName(TEXT("foot_r"));
         RightJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_r")));
     } 
 
     FVector FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(FootName);
-    float CapsuleHalfHeight = PlayerCapsuleComponent->GetUnscaledCapsuleHalfHeight(); // TODO : CapsuleHalfHeight will be variable
+    float CapsuleHalfHeight = PlayerCapsuleComponent->GetUnscaledCapsuleHalfHeight();
     
     FVector StartTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight);
-    FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight - CapsuleHalfHeight - 15); // - capsule half height - trace distance;
+    FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight - CapsuleHalfHeight - 15); // 15 = trace distance;
 
     FHitResult HitResult(ForceInit);
     
@@ -274,13 +276,26 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot)
             EndTrace,
             ECollisionChannel::ECC_Visibility,
             TraceParameters);
+
     if (HitConfirm)
     {
         if (!ensure(HitResult.GetActor())) { return FVector(0, 0, 0); }
-        FootSocketLocation.Z = (HitResult.Location - HitResult.TraceEnd).Size() - 15 + 13.47; // FootOffset
+
+        // FootOffset Z
+        FootSocketLocation.Z = (HitResult.Location - HitResult.TraceEnd).Size() - 15 + 13.47;
+
+        // Use X & Y for Foot Rotation
+        if (Foot == 0) { 
+        LeftFootRotation.Roll = UKismetMathLibrary::DegAtan2(HitResult.Normal.Y, HitResult.Normal.Z);
+        LeftFootRotation.Pitch = UKismetMathLibrary::DegAtan2(HitResult.Normal.X, HitResult.Normal.Z);
+        } else { 
+        RightFootRotation.Roll = UKismetMathLibrary::DegAtan2(HitResult.Normal.Y, HitResult.Normal.Z);
+        RightFootRotation.Pitch = UKismetMathLibrary::DegAtan2(HitResult.Normal.X, HitResult.Normal.Z);
+        } 
+
         return FootSocketLocation; 
     }
     
-    return FVector(0, 0, 0);
+    return FootSocketLocation;  // else - don't offset
 }
 

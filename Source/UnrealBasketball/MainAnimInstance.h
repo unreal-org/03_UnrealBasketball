@@ -32,6 +32,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector LeftFootLocation;    // world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FRotator RightFootRotation;   // world space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FRotator LeftFootRotation;    // world space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector RightJointTargetLocation;   // world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector LeftJointTargetLocation;    // world space
