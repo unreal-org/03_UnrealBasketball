@@ -54,7 +54,7 @@ void AHoopzCharacter::BeginPlay()
 			Basket = Target;
 			BasketLocation = Basket->GetActorLocation();
 			SpringArmTarget = BasketLocation;
-			SpringArmTarget.Z = 100;
+			SpringArmTarget.Z = 90;
 			CapsuleTarget = BasketLocation;
 		}
 	}
@@ -312,6 +312,8 @@ void AHoopzCharacter::DashOrShot()
 	}
 }
 
+
+///////////// Testing ////////////////
 void AHoopzCharacter::TogglePivot()
 {
 	if (MainAnimInstance->HasBall == true) {

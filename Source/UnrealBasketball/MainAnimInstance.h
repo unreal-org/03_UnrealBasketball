@@ -96,12 +96,17 @@ private:
 	void Pivot();
 	int32 PrevMontageKey = -1;   // default -1
 	bool CanMove = true;
+	bool FootPlanted = false;
 
 	// Pivot by Pose Blend
 	float StepDelay = .3;
 	int32 PoseKey = -1;
+	int32 PrevPoseKey = -1;
 	void OnStepTimerExpire();
 	void PivotStep();
+	FVector PivotAnchorLocation;
+	FVector PivotLeftFootLocation;
+	FVector PivotRightFootLocation;
 
 	// Foot Trace
 	FName TraceTag = FName(TEXT("TraceTag"));;
