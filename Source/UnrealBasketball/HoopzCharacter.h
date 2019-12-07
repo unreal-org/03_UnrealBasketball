@@ -49,6 +49,9 @@ public:
 	float ThrowX;
 	float ThrowY;
 
+	// Change Capsule Half Height Access
+	void SetCapsuleHalfHeight(float value);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

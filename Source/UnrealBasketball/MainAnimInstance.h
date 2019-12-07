@@ -93,13 +93,13 @@ private:
 	void Idle(float DeltaTimeX);
 
 	// State Machine Functions
-	void Pivot();
+	void Pivot(float DeltaTimeX);
 	int32 PrevMontageKey = -1;   // default -1
 	bool CanMove = true;
 	bool FootPlanted = false;
 
 	// Pivot by Pose Blend
-	float StepDelay = .3;
+	float StepDelay = 0.2;
 	int32 PoseKey = -1;
 	int32 PrevPoseKey = -1;
 	void OnStepTimerExpire();
@@ -107,11 +107,21 @@ private:
 	FVector PivotAnchorLocation;
 	FVector PivotLeftFootLocation;
 	FVector PivotRightFootLocation;
+	float CapsuleInterpTime = 0;
+	float CapsuleInterpDuration = .2;
+	void PivotInterp(float DeltaTimeX, FVector NewLocation);
+	FVector NewStepLocation; // 
+	FVector NewFootLocation;
+	FVector OffFootLocation;
+	//FVector NewLeftFootLocation;
+	//FVector NewRightFootLocation;
+	float PivotTime = 0;
+	float PivotDuration = .2;
 
 	// Foot Trace
 	FName TraceTag = FName(TEXT("TraceTag"));;
 	FCollisionQueryParams TraceParameters;
-	FVector IKFootTrace(int32 Foot);
+	FVector IKFootTrace(int32 Foot, float DeltaTimeX);
 
 	// Components
 	UCapsuleComponent* PlayerCapsuleComponent = nullptr;

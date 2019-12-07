@@ -106,7 +106,7 @@ void AHoopzCharacter::MoveForward(float Throw)
 	ThrowX = Throw;
 
 	if (PivotMode == true) {
-        PivotForward = Direction * Throw * 40;
+        PivotForward = Direction * Throw * 60;
 	} else {
 		AddMovementInput(Direction, Throw, false);
 	}
@@ -119,7 +119,7 @@ void AHoopzCharacter::MoveRight(float Throw)
 	ThrowY = Throw;
 
 	if (PivotMode == true) {
-        PivotRight = Direction * Throw * 40;
+        PivotRight = Direction * Throw * 60;
 	} else {
 		AddMovementInput(Direction, Throw, false);
 	}
@@ -161,6 +161,11 @@ void AHoopzCharacter::JumpReleased()
 	CapsuleDip = false;
 }
 
+void AHoopzCharacter::SetCapsuleHalfHeight(float value)
+{
+	MaxCapsuleHalfHeight = value;
+}
+
 void AHoopzCharacter::CapsuleDipper()
 {
 	if (!ensure(CapsuleComponent)) { return; }
@@ -171,6 +176,9 @@ void AHoopzCharacter::CapsuleDipper()
 	} 
 	else if (CapsuleDip == false && Height < MaxCapsuleHalfHeight) {
 		CapsuleComponent->SetCapsuleHalfHeight(Height + 1, false);
+	}
+	else if (CapsuleDip == false && Height > MaxCapsuleHalfHeight) {
+		CapsuleComponent->SetCapsuleHalfHeight(Height - 1, false);
 	}
 }
 
