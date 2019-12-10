@@ -41,7 +41,7 @@ public:
 
 	bool EstablishPivot = false;
 	bool PivotKey = false;
-	bool PivotDetached = true;
+	bool PivotAttached = true;
 
 	int32 ShotKey = 0;
 	bool CanChangeShot = true;
@@ -51,6 +51,10 @@ public:
 
 	// Change Capsule Half Height Access
 	void SetCapsuleHalfHeight(float value);
+
+	bool PivotTurn = false;
+	bool PivotTurnLeft = false;
+	bool PivotTurnRight = false;
 
 protected:
 	// Called when the game starts or when spawned

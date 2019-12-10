@@ -99,24 +99,26 @@ private:
 	bool FootPlanted = false;
 
 	// Pivot by Pose Blend
-	float StepDelay = 0.2;
+	float StepDelay = 0.3;
 	int32 PoseKey = -1;
 	int32 PrevPoseKey = -1;
 	void OnStepTimerExpire();
 	void PivotStep();
-	FVector PivotAnchorLocation;
-	FVector PivotLeftFootLocation;
-	FVector PivotRightFootLocation;
-	float CapsuleInterpTime = 0;
-	float CapsuleInterpDuration = .2;
-	void PivotInterp(float DeltaTimeX, FVector NewLocation);
-	FVector NewStepLocation; // 
-	FVector NewFootLocation;
-	FVector OffFootLocation;
-	//FVector NewLeftFootLocation;
-	//FVector NewRightFootLocation;
-	float PivotTime = 0;
-	float PivotDuration = .2;
+	FVector CapsuleAnchorLocation;
+	FVector CapsuleAnchorRotation;
+	FVector PivotLeftFootAnchor;
+	FVector PivotRightFootAnchor;
+	float PivotInterpTime = 0;
+	float PivotInterpDuration = .3;
+	void PivotInterp(float DeltaTimeX);
+	FVector NewCapsuleLocation;
+	FVector NewCapsuleRotation;
+	FVector NewOffFootLocation;
+	FVector OffFootAnchor;
+	FVector NewLeftFootLocation;
+	FVector NewRightFootLocation;
+
+	//bool PivotTurn = false;
 
 	// Foot Trace
 	FName TraceTag = FName(TEXT("TraceTag"));;
