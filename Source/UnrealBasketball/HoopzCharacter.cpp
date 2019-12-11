@@ -68,10 +68,8 @@ void AHoopzCharacter::BeginPlay()
 	}
 
 	// Access to Pivot Turn Spline Components
-	TArray<USplineComponent*> SplinePoints;
-	PivotPoint->GetComponents<USplineComponent>(SplinePoints);
-	CapsulePivotPoints = SplinePoints[0];
-	FootPivotPoints = SplinePoints[1];
+	FootPivotPoints = dynamic_cast<USplineComponent*>(PivotPoint->GetRootComponent()->GetChildComponent(0));
+	CapsulePivotPoints = dynamic_cast<USplineComponent*>(PivotPoint->GetRootComponent()->GetChildComponent(1));
 }
 
 // Called every frame
@@ -81,10 +79,11 @@ void AHoopzCharacter::Tick(float DeltaTime)
 	
 	if (ensure(SpringArm)) { SpringArmLerp(DeltaTime); }
 	if (PivotMode == true) { Pivot(); }
-	TurnLerp(DeltaTime);
+	//TurnLerp(DeltaTime);
 	CapsuleDipper();
 
-	//UE_LOG(LogTemp, Warning, TEXT("Capsule location: %s"), *CapsuleComponent->GetComponentLocation().ToString())
+	// UE_LOG(LogTemp, Warning, TEXT("Capsule spline name is : %s"), *CapsulePivotPoints->GetName())
+	// UE_LOG(LogTemp, Warning, TEXT("Foot spline name is : %s"), *FootPivotPoints->GetName())
 }
 
 // Called to bind functionality to input
@@ -143,10 +142,9 @@ void AHoopzCharacter::Pivot()
 	{
 		if (PivotInputKey <= 4) { PivotKey = false; } // Left Foot
 		else { PivotKey = true; } // Right Foot
+		SetPivot();
 		EstablishPivot = true;
 		PivotSet = true;
-
-		SetPivot();
 	}
 }
 
@@ -170,9 +168,10 @@ void AHoopzCharacter::JumpReleased()
 	CapsuleDip = false;
 }
 
-void AHoopzCharacter::SetCapsuleHalfHeight(float value)
+void AHoopzCharacter::SetCapsuleHalfHeight(float MaxValue, float MinValue)
 {
-	MaxCapsuleHalfHeight = value;
+	MaxCapsuleHalfHeight = MaxValue;
+	MinCapsuleHalfHeight = MinValue;
 }
 
 void AHoopzCharacter::CapsuleDipper()
@@ -197,7 +196,8 @@ void AHoopzCharacter::OnTurnTimerExpire()
 }
 
 
-// TODO: Implement dribble turn & Post up turn (NULL)
+// TODO : Implement dribble turn & Post up turn (NULL)
+// TODO : Fix Multiple Input Problem
 void AHoopzCharacter::TurnLeft()
 {
 	if (CanTurn) {
@@ -205,11 +205,10 @@ void AHoopzCharacter::TurnLeft()
 		
 		if (PivotMode == true) {
 			if (EstablishPivot == false || PivotSet == false) {
-				PivotSet = true;
 				PivotKey = true;  // right moves, plant left
-				EstablishPivot = true;
-
 				SetPivot();
+				PivotSet = true;
+				EstablishPivot = true;
 			}
 
 			PlayerRotation.Yaw -= 45;
@@ -217,8 +216,8 @@ void AHoopzCharacter::TurnLeft()
 			PivotTurn = true;
 			PivotTurnLeft = true;
 		}
-		FTimerHandle TurnTimer;
-		GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
+		// FTimerHandle TurnTimer;
+		// GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
 		return; 
 	}
 	// else {
@@ -234,11 +233,10 @@ void AHoopzCharacter::TurnRight()
 
 		if (PivotMode == true) {
 			if (EstablishPivot == false || PivotSet == false) {
-				PivotSet = true;
 				PivotKey = false; // left moves, plant right
-				EstablishPivot = true;
-
 				SetPivot();
+				PivotSet = true;  // remove?
+				EstablishPivot = true;
 			}
 
 			PlayerRotation.Yaw += 45;
@@ -246,8 +244,8 @@ void AHoopzCharacter::TurnRight()
 			PivotTurn = true;
 			PivotTurnRight = true;
 		}
-		FTimerHandle TurnTimer;
-		GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
+		// FTimerHandle TurnTimer;
+		// GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
 		return; 
 	}
 	// else {
@@ -259,33 +257,33 @@ void AHoopzCharacter::TurnRight()
 void AHoopzCharacter::SetPivot()
 {
 	FName Foot;
-	if (PivotKey == false) {
+	if (PivotKey == false) {  // Left moves, Plant Right
 		Foot = FName(TEXT("foot_r"));
 	} else {
 		Foot = FName(TEXT("foot_l"));
 	}
 
 	FVector CapsulePivotTurnAnchor = GetMesh()->GetSocketLocation(Foot);
-	CapsulePivotTurnAnchor.Z = CapsuleComponent->GetScaledCapsuleHalfHeight();
+	//CapsulePivotTurnAnchor.Z = 0;
 	PivotPoint->SetActorLocation(CapsulePivotTurnAnchor, false);
-	// PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
-	PlayerRotation = CapsuleComponent->GetComponentRotation();
+	PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
+	PlayerRotation = PivotPoint->GetActorRotation();
 	// TargetPlayerRotation = PlayerRotation;
 	// CapsuleComponent->AttachToComponent(PivotPoint->GetRootComponent(), AttachRules);
 	PivotAttached = true;
 }
 
-void AHoopzCharacter::TurnLerp(float DeltaTime)   
-{
-    TurnTime = 0;
+// void AHoopzCharacter::TurnLerp(float DeltaTime)   
+// {
+//     TurnTime = 0;
 
-    if (TurnTime < TurnDuration)
-    {
-        TurnTime += DeltaTime;
-        PlayerRotation = FMath::Lerp(PlayerRotation, TargetPlayerRotation, TurnTime / TurnDuration);
-		PivotPoint->SetActorRotation(PlayerRotation, ETeleportType::None);
-    }
-}
+//     if (TurnTime < TurnDuration)
+//     {
+//         TurnTime += DeltaTime;
+//         PlayerRotation = FMath::Lerp(PlayerRotation, TargetPlayerRotation, TurnTime / TurnDuration);
+// 		PivotPoint->SetActorRotation(PlayerRotation, ETeleportType::None);
+//     }
+// }
 
 void AHoopzCharacter::SpringArmLerp(float DeltaTime)   
 {

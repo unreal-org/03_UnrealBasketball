@@ -12,6 +12,7 @@ class UAnimMontage;
 class UCapsuleComponent;
 class USkeletalMeshComponent;
 class AHoopzCharacter;
+class USplineComponent;
 
 /**
  * To be used to play Animations
@@ -105,18 +106,20 @@ private:
 	void OnStepTimerExpire();
 	void PivotStep();
 	//FVector CapsuleAnchorLocation;
-	FVector CapsuleAnchorRotation;
+	FRotator CapsuleAnchorRotation;
 	FVector PivotLeftFootAnchor;
 	FVector PivotRightFootAnchor;
 	float PivotInterpTime = 0;
 	float PivotInterpDuration = .3;
 	void PivotInterp(float DeltaTimeX);
 	FVector NewCapsuleLocation;
-	FVector NewCapsuleRotation;
+	FRotator NewCapsuleRotation;
 	FVector NewOffFootLocation;
 	//FVector OffFootAnchor;
 	FVector NewLeftFootLocation;
 	FVector NewRightFootLocation;
+	// USplineComponent* CapsulePivotPoints = nullptr;
+	// USplineComponent* FootPivotPoints = nullptr;
 
 	//bool PivotTurn = false;
 

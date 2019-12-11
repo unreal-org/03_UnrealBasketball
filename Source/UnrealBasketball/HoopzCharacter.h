@@ -50,13 +50,15 @@ public:
 	float ThrowY;
 
 	// Change Capsule Half Height Access
-	void SetCapsuleHalfHeight(float value);
+	void SetCapsuleHalfHeight(float MaxValue, float MinValue);
 
+	bool CanTurn = true;
 	bool PivotTurn = false;
 	bool PivotTurnLeft = false;
 	bool PivotTurnRight = false;
 	FRotator PlayerRotation;
 
+	AActor* PivotPoint = nullptr;
 	USplineComponent* CapsulePivotPoints = nullptr;
 	USplineComponent* FootPivotPoints = nullptr;
 
@@ -84,8 +86,6 @@ private:
 	UCapsuleComponent* CapsuleComponent = nullptr;
 	UMainAnimInstance* MainAnimInstance = nullptr;
 	USpringArmComponent* SpringArm = nullptr;
-
-	AActor* PivotPoint = nullptr;
 	
 	FAttachmentTransformRules AttachRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
 	FDetachmentTransformRules DetachRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true);
@@ -94,18 +94,17 @@ private:
 	void Pivot();
 	void SetPivot();
 	bool PivotSet = false;
-	bool CanTurn = true;
 	FVector PivotForward;
 	FVector PivotRight;
 	void TurnLeft();
 	void TurnRight();
 
-	// Turn Timer & Lerp
+	// Turn Timer
 	void OnTurnTimerExpire();
 	float TurnDelay = 0.3;
-	float TurnTime = 0;
-	float TurnDuration = 0.3;
-	void TurnLerp(float DeltaTime);
+	//float TurnTime = 0;
+	//float TurnDuration = 0.3;
+	//void TurnLerp(float DeltaTime);
 	
 	// Jump (x)
 	void JumpPressed();

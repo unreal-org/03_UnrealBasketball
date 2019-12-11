@@ -8,6 +8,7 @@
 #include "TimerManager.h"
 #include "HoopzCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/SplineComponent.h"
 
 UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
@@ -68,6 +69,7 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 void UMainAnimInstance::AnimNotify_IdleOffense() 
 {
     FootPlanted = false;
+    HoopzCharacter->SetCapsuleHalfHeight(90, 80);
     IKAlpha = 0.9;
 }
 void UMainAnimInstance::AnimNotify_SetBasketLocation()
@@ -77,12 +79,12 @@ void UMainAnimInstance::AnimNotify_SetBasketLocation()
     FootPlanted = false;
     IKAlpha = 0.9;
 }
-void UMainAnimInstance::AnimNotify_SetPivot()
+void UMainAnimInstance::AnimNotify_SetPivot()   // TODO : lower Capsule height
 { 
     if (!ensure(HoopzCharacter)) { return; }
     HoopzCharacter->PivotMode = true;
     FootPlanted = false;
-    // lower Capsule height
+    HoopzCharacter->SetCapsuleHalfHeight(80, 75);
     IKAlpha = 1;
 }
 void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
@@ -90,6 +92,7 @@ void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
     FootPlanted = false;
     PivotPoseIndex = 0;
     ShotPoseIndex = 0;
+    HoopzCharacter->SetCapsuleHalfHeight(90, 80);
     IKAlpha = 0.25;
 }
 
@@ -173,9 +176,11 @@ void UMainAnimInstance::WhileJumped(float DeltaTimeX)
 void UMainAnimInstance::OnStepTimerExpire()
 {
     CanMove = true;
+    HoopzCharacter->CanTurn = true;
 }
 
 // TODO : Play idlepivot animation if idle for more than 5 seconds?
+// TODO : Check for Collisions on PivotStep & PivotTurn
 void UMainAnimInstance::Pivot(float DeltaTimeX)
 {
     if (!ensure(HoopzCharacter)) { return; }
@@ -185,7 +190,7 @@ void UMainAnimInstance::Pivot(float DeltaTimeX)
     if (CanMove == true) {
         // Pivot Turn
         if (HoopzCharacter->PivotTurn == true) {
-            HoopzCharacter->PivotTurn == false;
+            HoopzCharacter->PivotTurn = false;
             if (HoopzCharacter->PivotAttached == true) {
                 // Achor Planted Foot Location
                 if (FootPlanted == false) 
@@ -202,22 +207,22 @@ void UMainAnimInstance::Pivot(float DeltaTimeX)
                 if (HoopzCharacter->PivotKey == false) {   // Right Foot Planted
                     if (HoopzCharacter->PivotTurnRight == true) {        
                         CapsuleAnchorRotation = HoopzCharacter->PlayerRotation;
-                        HoopzCharacter->PivotTurnRight == false;
+                        HoopzCharacter->PivotTurnRight = false;
                     }
                     if (HoopzCharacter->PivotTurnLeft == true) {
                         CapsuleAnchorRotation = HoopzCharacter->PlayerRotation;
-                        HoopzCharacter->PivotTurnLeft == false;
+                        HoopzCharacter->PivotTurnLeft = false;
                     }
                 }
                 else  // Left Foot Planted
                 {
                     if (HoopzCharacter->PivotTurnRight == true) {;
                         CapsuleAnchorRotation = HoopzCharacter->PlayerRotation;
-                        HoopzCharacter->PivotTurnRight == false;
+                        HoopzCharacter->PivotTurnRight = false;
                     }
                     if (HoopzCharacter->PivotTurnLeft == true) {
                         CapsuleAnchorRotation = HoopzCharacter->PlayerRotation;
-                        HoopzCharacter->PivotTurnLeft == false;
+                        HoopzCharacter->PivotTurnLeft = false;
                     }
                 }
 
@@ -272,17 +277,20 @@ void UMainAnimInstance::PivotInterp(float DeltaTimeX)
     FVector FootLocation;
     FName Foot;
     if (HoopzCharacter->PivotKey == false) { // left foot moves
-        FootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_l");
+        FootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_l");  // TODO : Change to Previous FootLocation
     } else {
         FootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_r");
     }
+
+    NewCapsuleLocation.Z = PlayerCapsuleComponent->GetScaledCapsuleHalfHeight();
 
     if (PivotInterpTime < PivotInterpDuration)
     {
         PivotInterpTime += DeltaTimeX;
         CapsuleLocation = FMath::VInterpTo(CapsuleLocation, NewCapsuleLocation, DeltaTimeX, 7);
-        CapsuleRotation = FMath::Lerp(CapsuleRotation, NewCapsuleRotation, PivotInterpTime / PivotInterpDuration);
+        CapsuleRotation = FMath::Lerp(CapsuleRotation, NewCapsuleRotation, PivotInterpTime / 0.15);   // speed up lerp
         PlayerCapsuleComponent->SetWorldLocation(CapsuleLocation, false);
+        PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
 
         if (HoopzCharacter->PivotKey == false) { // left foot moves
             FootLocation = FMath::VInterpTo(FootLocation, NewOffFootLocation, DeltaTimeX, 7);
@@ -304,39 +312,33 @@ void UMainAnimInstance::PivotStep()
     PrevPoseKey = PoseKey;
     if (!ensure(PlayerCapsuleComponent)) { return; }
     if (!ensure(HoopzCharacter)) { return; }
+    //if (!ensure(CapsulePivotPoints)) { return; }
+    //if (!ensure(FootPivotPoints)) { return; }
+
+    NewCapsuleRotation = HoopzCharacter->PlayerRotation;
     if (HoopzCharacter->PivotKey == false) { // left foot moves
         switch (PoseKey) {
             case 0: // Left - Forward
-            {
                 // Move Capsule and Off Foot to New Location
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(1);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(1);
                 break;
-            }
             case 1: // Left - Forward Left
-            {
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(2);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(2);
                 break;
-            }
             case 2: // Left - Left
-            {
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(3);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(3);
                 break;
-            }
             case 3: // Left - Back Left
-            {
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(4);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(4);
                 break;
-            }
             case 4: // Left - Back
-            {
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(5);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(5);
                 break;
-            }
             default: // Idle Pivot
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(0);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(0);
@@ -347,35 +349,25 @@ void UMainAnimInstance::PivotStep()
     else { // right foot moves
         switch (PoseKey) {
             case 5: // Right - Back
-            {
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(6);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(6);
                 break;
-            }
             case 6: // Right - Back Right
-            {
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(7);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(7);
                 break;
-            }
             case 7: // Right - Right
-            {
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(8);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(8);
                 break;
-            }
             case 8: // Right - Forward Right
-            {
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(9);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(9);
                 break;
-            }
             case 9: // Right - Forward
-            {
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(10);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(10);
                 break;
-            }
             default: // Idle Pivot
                 NewCapsuleLocation = HoopzCharacter->CapsulePivotPoints->GetWorldLocationAtSplinePoint(11);
                 NewOffFootLocation = HoopzCharacter->FootPivotPoints->GetWorldLocationAtSplinePoint(11);
@@ -400,10 +392,10 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot, float DeltaTimeX)
 
         // return Pivot Location if Pivot Mode - else foot location
         if (FootPlanted == true)  {
-            if (HoopzCharacter->PivotKey == true) {  // Left Foot Moves
-                FootSocketLocation = PivotLeftFootAnchor;
-            } else {
+            if (HoopzCharacter->PivotKey == false) {  // Left Foot Moves, Right Plants
                 FootSocketLocation = NewLeftFootLocation;
+            } else {
+                FootSocketLocation = PivotLeftFootAnchor;
             }
         } else {
             FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(FootName);
@@ -415,10 +407,10 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot, float DeltaTimeX)
         RightJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_r")));
 
         if (FootPlanted == true)  {
-            if (HoopzCharacter->PivotKey == false) {  // Right Foot Moves
-                FootSocketLocation = PivotRightFootAnchor;
-            } else {
+            if (HoopzCharacter->PivotKey == true) {  // Right Foot Moves
                 FootSocketLocation = NewRightFootLocation;
+            } else {
+                FootSocketLocation = PivotRightFootAnchor;
             }
         } else {
             FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(FootName);
