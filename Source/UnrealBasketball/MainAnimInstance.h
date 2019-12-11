@@ -104,7 +104,7 @@ private:
 	int32 PrevPoseKey = -1;
 	void OnStepTimerExpire();
 	void PivotStep();
-	FVector CapsuleAnchorLocation;
+	//FVector CapsuleAnchorLocation;
 	FVector CapsuleAnchorRotation;
 	FVector PivotLeftFootAnchor;
 	FVector PivotRightFootAnchor;
@@ -114,7 +114,7 @@ private:
 	FVector NewCapsuleLocation;
 	FVector NewCapsuleRotation;
 	FVector NewOffFootLocation;
-	FVector OffFootAnchor;
+	//FVector OffFootAnchor;
 	FVector NewLeftFootLocation;
 	FVector NewRightFootLocation;
 

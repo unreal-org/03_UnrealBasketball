@@ -41,7 +41,7 @@ void AHoopzCharacter::BeginPlay()
 	SpringArm = FindComponentByClass<USpringArmComponent>();
 
 	PlayerRotation = CapsuleComponent->GetComponentRotation();
-	TargetPlayerRotation = PlayerRotation;
+	//TargetPlayerRotation = PlayerRotation;
 	SpringArmRotation = SpringArm->GetComponentRotation();
 	TargetSpringArmRotation = SpringArmRotation;
 	
@@ -63,9 +63,15 @@ void AHoopzCharacter::BeginPlay()
 	{
 		AActor* Target = *It;
 		if (Target && Target->GetName() == FString("PivotPoint")) {
-			PivotPoint = Target;  // Start Here Tomorrow
+			PivotPoint = Target;  
 		}
 	}
+
+	// Access to Pivot Turn Spline Components
+	TArray<USplineComponent*> SplinePoints;
+	PivotPoint->GetComponents<USplineComponent>(SplinePoints);
+	CapsulePivotPoints = SplinePoints[0];
+	FootPivotPoints = SplinePoints[1];
 }
 
 // Called every frame
@@ -138,6 +144,9 @@ void AHoopzCharacter::Pivot()
 		if (PivotInputKey <= 4) { PivotKey = false; } // Left Foot
 		else { PivotKey = true; } // Right Foot
 		EstablishPivot = true;
+		PivotSet = true;
+
+		SetPivot();
 	}
 }
 
@@ -154,7 +163,7 @@ void AHoopzCharacter::JumpReleased()
 	if (JumpHeldTime < -.3) {
 		if (PivotSet == true) {
 			// CapsuleComponent->DetachFromComponent(DetachRules); // detach from pivotpoint
-			PivotAttached = true;
+			PivotAttached = false;
 		}
 		bPressedJump = true;
 	}
@@ -203,7 +212,9 @@ void AHoopzCharacter::TurnLeft()
 				SetPivot();
 			}
 
-			// TargetPlayerRotation.Yaw -= 45;
+			PlayerRotation.Yaw -= 45;
+			PivotPoint->SetActorRotation(PlayerRotation, ETeleportType::None);
+			PivotTurn = true;
 			PivotTurnLeft = true;
 		}
 		FTimerHandle TurnTimer;
@@ -222,7 +233,6 @@ void AHoopzCharacter::TurnRight()
 		CanTurn = false;
 
 		if (PivotMode == true) {
-			PivotTurn = true;
 			if (EstablishPivot == false || PivotSet == false) {
 				PivotSet = true;
 				PivotKey = false; // left moves, plant right
@@ -231,9 +241,10 @@ void AHoopzCharacter::TurnRight()
 				SetPivot();
 			}
 
-			// TargetPlayerRotation.Yaw += 45;
+			PlayerRotation.Yaw += 45;
+			PivotPoint->SetActorRotation(PlayerRotation, ETeleportType::None);
+			PivotTurn = true;
 			PivotTurnRight = true;
-
 		}
 		FTimerHandle TurnTimer;
 		GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
@@ -257,11 +268,11 @@ void AHoopzCharacter::SetPivot()
 	FVector CapsulePivotTurnAnchor = GetMesh()->GetSocketLocation(Foot);
 	CapsulePivotTurnAnchor.Z = CapsuleComponent->GetScaledCapsuleHalfHeight();
 	PivotPoint->SetActorLocation(CapsulePivotTurnAnchor, false);
-	PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
-	// PlayerRotation = PivotPoint->GetActorRotation();
+	// PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
+	PlayerRotation = CapsuleComponent->GetComponentRotation();
 	// TargetPlayerRotation = PlayerRotation;
 	// CapsuleComponent->AttachToComponent(PivotPoint->GetRootComponent(), AttachRules);
-	   PivotAttached = false;
+	PivotAttached = true;
 }
 
 void AHoopzCharacter::TurnLerp(float DeltaTime)   

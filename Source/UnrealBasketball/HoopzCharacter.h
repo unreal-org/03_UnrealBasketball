@@ -55,6 +55,10 @@ public:
 	bool PivotTurn = false;
 	bool PivotTurnLeft = false;
 	bool PivotTurnRight = false;
+	FRotator PlayerRotation;
+
+	USplineComponent* CapsulePivotPoints = nullptr;
+	USplineComponent* FootPivotPoints = nullptr;
 
 protected:
 	// Called when the game starts or when spawned
@@ -78,9 +82,10 @@ private:
 	AStaticMeshActor* Basket = nullptr;
 	UCameraComponent* Camera = nullptr;
 	UCapsuleComponent* CapsuleComponent = nullptr;
-	AActor* PivotPoint = nullptr;
 	UMainAnimInstance* MainAnimInstance = nullptr;
 	USpringArmComponent* SpringArm = nullptr;
+
+	AActor* PivotPoint = nullptr;
 	
 	FAttachmentTransformRules AttachRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
 	FDetachmentTransformRules DetachRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true);
@@ -100,8 +105,6 @@ private:
 	float TurnDelay = 0.3;
 	float TurnTime = 0;
 	float TurnDuration = 0.3;
-	FRotator TargetPlayerRotation;
-	FRotator PlayerRotation;
 	void TurnLerp(float DeltaTime);
 	
 	// Jump (x)
