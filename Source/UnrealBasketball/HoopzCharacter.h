@@ -112,6 +112,9 @@ private:
 	float JumpHeldTime;
 	bool Jumped = false;
 
+	// Dribble (R2) - *** NOTE : There is an option for Right Trigger to be an Axis ***
+	void Dribble();
+
 	// Capsule
 	bool CapsuleDip = false;
 	void CapsuleDipper();

@@ -49,6 +49,8 @@ public:
 	bool HasBall = false;
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	bool Jumped = false;
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	bool Dribble = false;
 
 	// Transition Events
 	UFUNCTION(BlueprintCallable)
@@ -56,9 +58,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_SetPivot();
 	UFUNCTION(BlueprintCallable)
-	void AnimNotify_SetBasketLocation();
+	void AnimNotify_IdleEntry();
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_PivotToJumpTransition();
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_OnDribble();
 
 	// Montage Reference
 	UPROPERTY(BlueprintReadWrite, Category= "Montage Reference")
@@ -86,6 +90,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	float IKAlpha = 0.85;
 
+	// Pivot
+	bool FootPlanted = false;
+
 private:
 	// State Machines
 	FAnimNode_StateMachine *MainState;
@@ -97,10 +104,9 @@ private:
 	void Pivot(float DeltaTimeX);
 	int32 PrevMontageKey = -1;   // default -1
 	bool CanMove = true;
-	bool FootPlanted = false;
 
 	// Pivot by Pose Blend
-	float StepDelay = 0.3;
+	float StepDelay = 0.3;    // TODO : Tweak to fix multiple input pivot turn
 	int32 PoseKey = -1;
 	int32 PrevPoseKey = -1;
 	void OnStepTimerExpire();
@@ -120,6 +126,9 @@ private:
 	FVector NewRightFootLocation;
 	// USplineComponent* CapsulePivotPoints = nullptr;
 	// USplineComponent* FootPivotPoints = nullptr;
+	FVector FirstStepLeftFootLocation;
+	FVector FirstStepRightFootLocation;
+	bool FirstStep = true;
 
 	//bool PivotTurn = false;
 

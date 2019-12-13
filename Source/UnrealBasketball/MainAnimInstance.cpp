@@ -39,7 +39,7 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 {
     if (!ensure(MainState)) { return; }
    
-    // UE_LOG(LogTemp, Warning, TEXT("%s"), *PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("foot_l"))).ToString())
+    // UE_LOG(LogTemp, Warning, TEXT("%i"), MainState->GetCurrentState())
 
     switch (MainState->GetCurrentState())
     {
@@ -49,8 +49,12 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
         case 1: // IdlePivot
             Pivot(DeltaTimeX);
             break;
+        case 3: // Dribble
+            IdleOffense(DeltaTimeX);
+            break;
         case 4: // Jump (Ball)
             WhileJumped(DeltaTimeX);
+            break;
         case 6: // IdleOffense
             IdleOffense(DeltaTimeX);
             break;
@@ -68,32 +72,99 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 
 void UMainAnimInstance::AnimNotify_IdleOffense() 
 {
+    FirstStep = true;
     FootPlanted = false;
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
     IKAlpha = 0.9;
 }
-void UMainAnimInstance::AnimNotify_SetBasketLocation()
+void UMainAnimInstance::AnimNotify_IdleEntry()
 {
     if (!ensure(HoopzCharacter)) { return; }
-    HoopzCharacter->PivotMode = false;
+    // To Pivot
+    CanMove = false;
+    HoopzCharacter->CanTurn = false;
+    //HasBall = false;
+    // ThrowX = 0;
+    // ThrowY = 0;
     FootPlanted = false;
+    //FirstStep = true;
+    // FirstStepLeftFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
+    // FirstStepRightFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_r");
+    HoopzCharacter->PivotMode = false;
+    HoopzCharacter->EstablishPivot = false;
+    HoopzCharacter->PivotAttached = false;
+    
+    
+    // To Offense (no ball)
+    Offense = false;
+    HoopzCharacter->SetCapsuleHalfHeight(90, 80);
     IKAlpha = 0.9;
 }
 void UMainAnimInstance::AnimNotify_SetPivot()   // TODO : lower Capsule height
 { 
     if (!ensure(HoopzCharacter)) { return; }
-    HoopzCharacter->PivotMode = true;
+
+    NewCapsuleLocation = PlayerCapsuleComponent->GetComponentLocation();
+    NewCapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
+    if (HoopzCharacter->PivotKey == false) { // left foot moves
+        NewOffFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
+    } else {
+        NewOffFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_r");
+    }
+
+    CanMove = false;
+    HoopzCharacter->CanTurn = false;
+    HoopzCharacter->PivotInputKey = -1;
     FootPlanted = false;
+    FirstStep = true;
+    // FirstStepLeftFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
+    // FirstStepRightFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
+    HoopzCharacter->PivotMode = true;
+    HoopzCharacter->EstablishPivot = false;
+    HoopzCharacter->PivotAttached = false;
+    
+    Dribble = false;
     HoopzCharacter->SetCapsuleHalfHeight(80, 75);
     IKAlpha = 1;
 }
 void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
 {
+    if (!ensure(HoopzCharacter)) { return; }
+    CanMove = false;
+    HoopzCharacter->CanTurn = false;
+    // ThrowX = 0;
+    // ThrowY = 0;
     FootPlanted = false;
-    PivotPoseIndex = 0;
+    //FirstStep = true;
+    // FirstStepLeftFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
+    // FirstStepRightFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_r");
+    HoopzCharacter->PivotMode = false;
+    HoopzCharacter->EstablishPivot = false;
+    HoopzCharacter->PivotAttached = false;
+    
+    Dribble = false;
     ShotPoseIndex = 0;
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
     IKAlpha = 0.25;
+}
+void UMainAnimInstance::AnimNotify_OnDribble()
+{
+    if (!ensure(HoopzCharacter)) { return; }
+    // ThrowX = 0;
+    // ThrowY = 0;
+    CanMove = false;
+    HoopzCharacter->CanTurn = false;
+    FootPlanted = false;
+    //FirstStep = true;
+    // FirstStepLeftFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
+    // FirstStepRightFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_r");
+    HoopzCharacter->PivotMode = false;
+    HoopzCharacter->EstablishPivot = false;
+    HoopzCharacter->PivotAttached = false;
+    
+    Dribble = true;
+    HoopzCharacter->SetCapsuleHalfHeight(90, 80);
+    IKAlpha = 0.9;
 }
 
 void UMainAnimInstance::IdleOffense(float DeltaTimeX)
@@ -181,6 +252,7 @@ void UMainAnimInstance::OnStepTimerExpire()
 
 // TODO : Play idlepivot animation if idle for more than 5 seconds?
 // TODO : Check for Collisions on PivotStep & PivotTurn
+// TODO : Fix Multiple pivot input
 void UMainAnimInstance::Pivot(float DeltaTimeX)
 {
     if (!ensure(HoopzCharacter)) { return; }
@@ -197,11 +269,16 @@ void UMainAnimInstance::Pivot(float DeltaTimeX)
                 {
                     if (HoopzCharacter->PivotKey == false) { // Plant Right Foot
                         PivotRightFootAnchor = PlayerSkeletalMesh->GetSocketLocation("foot_r");   // TODO : Toggle Foot IK
+                        FirstStepLeftFootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_l");
                     } else {  // Plant Left Foot
                         PivotLeftFootAnchor = PlayerSkeletalMesh->GetSocketLocation("foot_l");
+                        FirstStepRightFootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_r");
                     }
                     FootPlanted = true;
                 }
+
+                CanMove = false;
+                HoopzCharacter->CanTurn = false;
 
                 // Set New Anchors - Capsule Rotation & OffFoot
                 if (HoopzCharacter->PivotKey == false) {   // Right Foot Planted
@@ -227,7 +304,7 @@ void UMainAnimInstance::Pivot(float DeltaTimeX)
                 }
 
                 // Turn - Set NewCapsuleRotation & Call Pivot Step w/ PrevPoseKey
-                CanMove = false;
+                // CanMove = false;
                 NewCapsuleRotation = CapsuleAnchorRotation;
                 PoseKey = PrevPoseKey;
                 PivotStep();
@@ -237,18 +314,20 @@ void UMainAnimInstance::Pivot(float DeltaTimeX)
 
         // Pivot Step
         if (CanMove == true) {
-            PoseKey = HoopzCharacter->PivotInputKey;
             if (HoopzCharacter->EstablishPivot == true) {
                 // Achor Planted Foot Location & Initial Capsule Location
                 if (FootPlanted == false) {
                     if (HoopzCharacter->PivotKey == false) { // Plant Right Foot
                         PivotRightFootAnchor = PlayerSkeletalMesh->GetSocketLocation("foot_r");   // TODO : Toggle Foot IK
+                        FirstStepLeftFootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_l");
                     } else {  // Plant Left Foot
                         PivotLeftFootAnchor = PlayerSkeletalMesh->GetSocketLocation("foot_l");
+                        FirstStepRightFootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_r");
                     }
                     FootPlanted = true;
                 }
 
+                PoseKey = HoopzCharacter->PivotInputKey;
                 if (PoseKey != PrevPoseKey) { PivotStep(); }
             }
         }
@@ -276,10 +355,21 @@ void UMainAnimInstance::PivotInterp(float DeltaTimeX)
     FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
     FVector FootLocation;
     FName Foot;
+    
     if (HoopzCharacter->PivotKey == false) { // left foot moves
-        FootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_l");  // TODO : Change to Previous FootLocation
+        if (FootPlanted && FirstStep) {
+            FootLocation = FirstStepLeftFootLocation;
+            FirstStep = false;
+        } else {
+            FootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_l");  // TODO : Change to Previous FootLocation
+        }
     } else {
-        FootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_r");
+        if (FootPlanted && FirstStep) {
+            FootLocation = FirstStepRightFootLocation;
+            FirstStep = false;
+        } else {
+            FootLocation = PlayerSkeletalMesh->GetSocketLocation("foot_r");
+        }
     }
 
     NewCapsuleLocation.Z = PlayerCapsuleComponent->GetScaledCapsuleHalfHeight();
@@ -309,6 +399,7 @@ void UMainAnimInstance::PivotInterp(float DeltaTimeX)
 void UMainAnimInstance::PivotStep()
 {
     CanMove = false;
+    //HoopzCharacter->CanTurn = false;
     PrevPoseKey = PoseKey;
     if (!ensure(PlayerCapsuleComponent)) { return; }
     if (!ensure(HoopzCharacter)) { return; }

@@ -99,9 +99,10 @@ void AHoopzCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AHoopzCharacter::TurnLeft);
 	PlayerInputComponent->BindAction("TurnRight", IE_Pressed, this, &AHoopzCharacter::TurnRight);
 	PlayerInputComponent->BindAction("DashOrShot", IE_Pressed, this, &AHoopzCharacter::DashOrShot);
+	PlayerInputComponent->BindAction("Dribble", IE_Pressed, this, &AHoopzCharacter::Dribble);
 	PlayerInputComponent->BindAction("TogglePivot", IE_Pressed, this, &AHoopzCharacter::TogglePivot);
 	PlayerInputComponent->BindAction("ToggleOffense", IE_Pressed, this, &AHoopzCharacter::ToggleOffense);
-
+	
 }
 
 void AHoopzCharacter::MoveForward(float Throw)
@@ -228,7 +229,7 @@ void AHoopzCharacter::TurnLeft()
 
 void AHoopzCharacter::TurnRight()
 {
-	if (CanTurn) {
+	if (CanTurn == true) {
 		CanTurn = false;
 
 		if (PivotMode == true) {
@@ -244,14 +245,12 @@ void AHoopzCharacter::TurnRight()
 			PivotTurn = true;
 			PivotTurnRight = true;
 		}
-		// FTimerHandle TurnTimer;
-		// GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
-		return; 
 	}
-	// else {
-	//
-    // }
-	// Set Pivot Component while no rootmotion
+	else {
+		FTimerHandle TurnTimer;
+		GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
+		return; 
+    }
 }
 
 void AHoopzCharacter::SetPivot()
@@ -270,6 +269,7 @@ void AHoopzCharacter::SetPivot()
 	PlayerRotation = PivotPoint->GetActorRotation();
 	// TargetPlayerRotation = PlayerRotation;
 	// CapsuleComponent->AttachToComponent(PivotPoint->GetRootComponent(), AttachRules);
+	MainAnimInstance->FootPlanted = false;
 	PivotAttached = true;
 }
 
@@ -307,6 +307,8 @@ void AHoopzCharacter::OnJumped_Implementation()
 	// change animation transition state
 	MainAnimInstance->Jumped = true;
 }
+
+// CAlled on Landing
 void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
@@ -314,12 +316,15 @@ void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint
 	if (!ensure(MainAnimInstance)) { return; }
 	MainAnimInstance->Jumped = false;
 	Jumped = false;
-	PivotMode = false;  // if !HasBall
+	if (MainAnimInstance->HasBall == true) { PivotMode = true; }
+	else { PivotMode = false; }
 	CanChangeShot = true;
 	ShotKey = 0;
 	EstablishPivot = false;
 	PivotSet = false;
 	PivotKey = false;
+	PivotInputKey = -1;
+	PivotAttached = false;
 }
 
 void AHoopzCharacter::DashOrShot()
@@ -330,6 +335,15 @@ void AHoopzCharacter::DashOrShot()
 	}
 	else {
 		// dash
+	}
+}
+
+void AHoopzCharacter::Dribble()
+{
+	if (MainAnimInstance->Dribble == true) {
+		MainAnimInstance->Dribble = false;
+	} else {
+		MainAnimInstance->Dribble = true;
 	}
 }
 
