@@ -60,7 +60,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_IdleEntry();
 	UFUNCTION(BlueprintCallable)
-	void AnimNotify_PivotToJumpTransition();
+	void AnimNotify_IdleJump();
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_OnDribble();
 
@@ -111,7 +111,6 @@ private:
 	int32 PrevPoseKey = -1;
 	void OnStepTimerExpire();
 	void PivotStep();
-	//FVector CapsuleAnchorLocation;
 	FRotator CapsuleAnchorRotation;
 	FVector PivotLeftFootAnchor;
 	FVector PivotRightFootAnchor;
@@ -121,16 +120,11 @@ private:
 	FVector NewCapsuleLocation;
 	FRotator NewCapsuleRotation;
 	FVector NewOffFootLocation;
-	//FVector OffFootAnchor;
 	FVector NewLeftFootLocation;
 	FVector NewRightFootLocation;
-	// USplineComponent* CapsulePivotPoints = nullptr;
-	// USplineComponent* FootPivotPoints = nullptr;
 	FVector FirstStepLeftFootLocation;
 	FVector FirstStepRightFootLocation;
 	bool FirstStep = true;
-
-	//bool PivotTurn = false;
 
 	// Foot Trace
 	FName TraceTag = FName(TEXT("TraceTag"));;
@@ -149,6 +143,9 @@ private:
 
 	// Idle Offense
 	void IdleOffense(float DeltaTimeX);
+
+	// Dribble
+	void IdleDribble(float DeltaTimeX);
 
 protected:
 	// Native initialization override point

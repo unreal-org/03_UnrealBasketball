@@ -50,7 +50,7 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
             Pivot(DeltaTimeX);
             break;
         case 3: // Dribble
-            IdleOffense(DeltaTimeX);
+            IdleDribble(DeltaTimeX);
             break;
         case 4: // Jump (Ball)
             WhileJumped(DeltaTimeX);
@@ -70,8 +70,9 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 
 }
 
-void UMainAnimInstance::AnimNotify_IdleOffense() 
+void UMainAnimInstance::AnimNotify_IdleOffense()
 {
+    HoopzCharacter->CurrentState = 6;
     FirstStep = true;
     FootPlanted = false;
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
@@ -80,21 +81,14 @@ void UMainAnimInstance::AnimNotify_IdleOffense()
 void UMainAnimInstance::AnimNotify_IdleEntry()
 {
     if (!ensure(HoopzCharacter)) { return; }
+    HoopzCharacter->CurrentState = 0;
     // To Pivot
     CanMove = false;
-    HoopzCharacter->CanTurn = false;
-    //HasBall = false;
-    // ThrowX = 0;
-    // ThrowY = 0;
+    HoopzCharacter->CanTurn = true;
     FootPlanted = false;
-    //FirstStep = true;
-    // FirstStepLeftFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
-    // FirstStepRightFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_r");
     HoopzCharacter->PivotMode = false;
     HoopzCharacter->EstablishPivot = false;
     HoopzCharacter->PivotAttached = false;
-    
-    
     // To Offense (no ball)
     Offense = false;
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
@@ -103,22 +97,17 @@ void UMainAnimInstance::AnimNotify_IdleEntry()
 void UMainAnimInstance::AnimNotify_SetPivot()   // TODO : lower Capsule height
 { 
     if (!ensure(HoopzCharacter)) { return; }
-
+    HoopzCharacter->CurrentState = 1;
     NewCapsuleLocation = PlayerCapsuleComponent->GetComponentLocation();
-    NewCapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
-    if (HoopzCharacter->PivotKey == false) { // left foot moves
-        NewOffFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
-    } else {
-        NewOffFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_r");
-    }
-
+    FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
+    NewCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw + HoopzCharacter->TotalRotation.Yaw;
+    if (HoopzCharacter->PivotKey == false) { NewOffFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l"); } // left foot moves
+    else {NewOffFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_r"); }
     CanMove = false;
-    HoopzCharacter->CanTurn = false;
+    HoopzCharacter->CanTurn = true;
     HoopzCharacter->PivotInputKey = -1;
     FootPlanted = false;
     FirstStep = true;
-    // FirstStepLeftFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
-    // FirstStepRightFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
     HoopzCharacter->PivotMode = true;
     HoopzCharacter->EstablishPivot = false;
     HoopzCharacter->PivotAttached = false;
@@ -127,21 +116,17 @@ void UMainAnimInstance::AnimNotify_SetPivot()   // TODO : lower Capsule height
     HoopzCharacter->SetCapsuleHalfHeight(80, 75);
     IKAlpha = 1;
 }
-void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
+void UMainAnimInstance::AnimNotify_IdleJump()
 {
     if (!ensure(HoopzCharacter)) { return; }
+    HoopzCharacter->CurrentState = 4;
+    HoopzCharacter->TotalRotation.Yaw = 0;
     CanMove = false;
-    HoopzCharacter->CanTurn = false;
-    // ThrowX = 0;
-    // ThrowY = 0;
+    HoopzCharacter->CanTurn = true;
     FootPlanted = false;
-    //FirstStep = true;
-    // FirstStepLeftFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
-    // FirstStepRightFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_r");
     HoopzCharacter->PivotMode = false;
     HoopzCharacter->EstablishPivot = false;
     HoopzCharacter->PivotAttached = false;
-    
     Dribble = false;
     ShotPoseIndex = 0;
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
@@ -150,18 +135,13 @@ void UMainAnimInstance::AnimNotify_PivotToJumpTransition()
 void UMainAnimInstance::AnimNotify_OnDribble()
 {
     if (!ensure(HoopzCharacter)) { return; }
-    // ThrowX = 0;
-    // ThrowY = 0;
+    HoopzCharacter->CurrentState = 3;
     CanMove = false;
-    HoopzCharacter->CanTurn = false;
+    HoopzCharacter->CanTurn = true;
     FootPlanted = false;
-    //FirstStep = true;
-    // FirstStepLeftFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
-    // FirstStepRightFootLocation = PlayerSkeletalMesh->GetSocketLocation("ik_foot_r");
     HoopzCharacter->PivotMode = false;
     HoopzCharacter->EstablishPivot = false;
     HoopzCharacter->PivotAttached = false;
-    
     Dribble = true;
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
     IKAlpha = 0.9;
@@ -169,15 +149,41 @@ void UMainAnimInstance::AnimNotify_OnDribble()
 
 void UMainAnimInstance::IdleOffense(float DeltaTimeX)
 {
+    if (!ensure(HoopzCharacter)) { return; }
+
     ThrowX = HoopzCharacter->ThrowY * 65;
     ThrowY = HoopzCharacter->ThrowX * 65;
 
      // Turn Capsule Towards Basket
     if (HoopzCharacter) {
-        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
+        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();  
         FRotator TargetCapsuleRotation = CapsuleRotation;
         FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
-        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw;
+        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw + HoopzCharacter->TotalRotation.Yaw;
+        
+        CapsuleTurnTime = 0;
+        if (CapsuleTurnTime < CapsuleTurnDuration)
+        {
+            CapsuleTurnTime += DeltaTimeX;
+            CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / 0.05);
+            PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
+        }
+    }
+}
+
+void UMainAnimInstance::IdleDribble(float DeltaTimeX)
+{
+    if (!ensure(HoopzCharacter)) { return; }
+
+    ThrowX = HoopzCharacter->ThrowY * 65;
+    ThrowY = HoopzCharacter->ThrowX * 65;
+
+     // Turn Capsule Towards Basket
+    if (HoopzCharacter) {
+        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();  
+        FRotator TargetCapsuleRotation = CapsuleRotation;
+        FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
+        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw + HoopzCharacter->TotalRotation.Yaw;
         
         CapsuleTurnTime = 0;
         if (CapsuleTurnTime < CapsuleTurnDuration)

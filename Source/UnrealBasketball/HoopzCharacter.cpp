@@ -76,13 +76,37 @@ void AHoopzCharacter::BeginPlay()
 void AHoopzCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+
+	// switch (CurrentState)
+    // {
+    //     case 0: // Idle
+            
+    //         break;
+    //     case 1: // IdlePivot
+	// 		if (!ensure(SpringArm)) { SpringArmLerp(DeltaTime); }
+	// 		Pivot();
+    //         break;
+    //     case 3: // Dribble
+            
+    //         break;
+    //     case 4: // Jump (Ball)
+            
+    //         break;
+    //     case 6: // IdleOffense
+    //         // spring arm static at rotation key
+	// 		if (!ensure(SpringArm)) { SpringArmLerp(DeltaTime); }
+    //         break;
+    //     default:
+    //         return;
+    // }
+
 	if (ensure(SpringArm)) { SpringArmLerp(DeltaTime); }
-	if (PivotMode == true) { Pivot(); }
-	//TurnLerp(DeltaTime);
+
+	Pivot();
+
 	CapsuleDipper();
 
-	// UE_LOG(LogTemp, Warning, TEXT("Capsule spline name is : %s"), *CapsulePivotPoints->GetName())
+	UE_LOG(LogTemp, Warning, TEXT("Current State : %i"), CurrentState)
 	// UE_LOG(LogTemp, Warning, TEXT("Foot spline name is : %s"), *FootPivotPoints->GetName())
 }
 
@@ -108,6 +132,8 @@ void AHoopzCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 void AHoopzCharacter::MoveForward(float Throw)
 {
 	// FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
+	if (CurrentState == 0) { return; }
+
 	FVector Direction = Camera->GetForwardVector();
 	ThrowX = Throw;
 
@@ -121,6 +147,8 @@ void AHoopzCharacter::MoveForward(float Throw)
 void AHoopzCharacter::MoveRight(float Throw)
 {
 	// FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
+	if (CurrentState == 0) { return; }
+
 	FVector Direction = Camera->GetRightVector();
 	ThrowY = Throw;
 
@@ -152,12 +180,16 @@ void AHoopzCharacter::Pivot()
 // Todo: Implement while moving one leg jumps
 void AHoopzCharacter::JumpPressed()
 {
+	if (CurrentState == 0) { return; }
+
 	JumpHeldTime = GetWorld()->GetTimeSeconds();
 	CapsuleDip = true;
 }
 
 void AHoopzCharacter::JumpReleased()
 {
+	if (CurrentState == 0) { return; }
+
 	JumpHeldTime -= GetWorld()->GetTimeSeconds();
 	if (JumpHeldTime < -.3) {
 		if (PivotSet == true) {
@@ -201,6 +233,8 @@ void AHoopzCharacter::OnTurnTimerExpire()
 // TODO : Fix Multiple Input Problem
 void AHoopzCharacter::TurnLeft()
 {
+	if (CurrentState == 0) { return; }
+
 	if (CanTurn) {
 		CanTurn = false;
 		
@@ -216,19 +250,29 @@ void AHoopzCharacter::TurnLeft()
 			PivotPoint->SetActorRotation(PlayerRotation, ETeleportType::None);
 			PivotTurn = true;
 			PivotTurnLeft = true;
+			
+			//return; 
 		}
-		// FTimerHandle TurnTimer;
-		// GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
-		return; 
+
+		else {   // for dribble
+			TotalRotation.Yaw -= 45;
+
+			// FTimerHandle TurnTimer;
+			// GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
+			// return; 
+		}
 	}
-	// else {
-    //    
-    // }
-	// Set Pivot Component while no rootmotion
+	//else {
+		FTimerHandle TurnTimer;
+		GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
+		return; 
+    //}
 }
 
 void AHoopzCharacter::TurnRight()
 {
+	if (CurrentState == 0) { return; }
+
 	if (CanTurn == true) {
 		CanTurn = false;
 
@@ -244,13 +288,23 @@ void AHoopzCharacter::TurnRight()
 			PivotPoint->SetActorRotation(PlayerRotation, ETeleportType::None);
 			PivotTurn = true;
 			PivotTurnRight = true;
+			
+			//return;
+		}
+
+		else {
+			TotalRotation.Yaw += 45;
+
+			// FTimerHandle TurnTimer;
+			// GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
+			// return; 
 		}
 	}
-	else {
+	//else {
 		FTimerHandle TurnTimer;
 		GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
 		return; 
-    }
+    //}
 }
 
 void AHoopzCharacter::SetPivot()
@@ -263,33 +317,25 @@ void AHoopzCharacter::SetPivot()
 	}
 
 	FVector CapsulePivotTurnAnchor = GetMesh()->GetSocketLocation(Foot);
-	//CapsulePivotTurnAnchor.Z = 0;
 	PivotPoint->SetActorLocation(CapsulePivotTurnAnchor, false);
 	PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
 	PlayerRotation = PivotPoint->GetActorRotation();
-	// TargetPlayerRotation = PlayerRotation;
-	// CapsuleComponent->AttachToComponent(PivotPoint->GetRootComponent(), AttachRules);
 	MainAnimInstance->FootPlanted = false;
 	PivotAttached = true;
 }
 
-// void AHoopzCharacter::TurnLerp(float DeltaTime)   
-// {
-//     TurnTime = 0;
-
-//     if (TurnTime < TurnDuration)
-//     {
-//         TurnTime += DeltaTime;
-//         PlayerRotation = FMath::Lerp(PlayerRotation, TargetPlayerRotation, TurnTime / TurnDuration);
-// 		PivotPoint->SetActorRotation(PlayerRotation, ETeleportType::None);
-//     }
-// }
-
 void AHoopzCharacter::SpringArmLerp(float DeltaTime)   
 {
     SpringArmTurnTime = 0;
-	TargetSpringArmRotation = UKismetMathLibrary::FindLookAtRotation(SpringArm->GetComponentLocation(), SpringArmTarget);
+	// if (CurrentState == 6) { 
+	// 	TargetSpringArmRotation = UKismetMathLibrary::FindLookAtRotation(SpringArm->GetComponentLocation(), SpringArmTarget);
+	// 	TargetSpringArmRotation.Yaw += TotalRotation.Yaw;
+	// } else {
+	// 	TargetSpringArmRotation = UKismetMathLibrary::FindLookAtRotation(SpringArm->GetComponentLocation(), SpringArmTarget);
+	// }
 
+	TargetSpringArmRotation = UKismetMathLibrary::FindLookAtRotation(SpringArm->GetComponentLocation(), SpringArmTarget);
+	
     if (SpringArmTurnTime < SpringArmTurnDuration)
     {
         SpringArmTurnTime += DeltaTime;
@@ -329,6 +375,8 @@ void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint
 
 void AHoopzCharacter::DashOrShot()
 {
+	if (CurrentState == 0) { return; }
+
 	if (Jumped == true)
 	{
 		ShotKey = 1;
@@ -340,6 +388,8 @@ void AHoopzCharacter::DashOrShot()
 
 void AHoopzCharacter::Dribble()
 {
+	if (CurrentState == 0) { return; }
+
 	if (MainAnimInstance->Dribble == true) {
 		MainAnimInstance->Dribble = false;
 	} else {
@@ -358,7 +408,6 @@ void AHoopzCharacter::TogglePivot()
 		MainAnimInstance->HasBall = true;
 		PivotMode = true;
 	}
-	
 }
 
 void AHoopzCharacter::ToggleOffense()

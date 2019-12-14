@@ -62,6 +62,12 @@ public:
 	USplineComponent* CapsulePivotPoints = nullptr;
 	USplineComponent* FootPivotPoints = nullptr;
 
+	int32 CurrentState;
+
+	// Dribble
+	FRotator TotalRotation;
+	// FRotator CapsuleRotationKey;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -87,8 +93,8 @@ private:
 	UMainAnimInstance* MainAnimInstance = nullptr;
 	USpringArmComponent* SpringArm = nullptr;
 	
-	FAttachmentTransformRules AttachRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
-	FDetachmentTransformRules DetachRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true);
+	// FAttachmentTransformRules AttachRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
+	// FDetachmentTransformRules DetachRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true);
 
 	// Pivot Variables
 	void Pivot();
@@ -102,9 +108,6 @@ private:
 	// Turn Timer
 	void OnTurnTimerExpire();
 	float TurnDelay = 0.3;
-	//float TurnTime = 0;
-	//float TurnDuration = 0.3;
-	//void TurnLerp(float DeltaTime);
 	
 	// Jump (x)
 	void JumpPressed();
