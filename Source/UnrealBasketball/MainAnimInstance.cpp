@@ -130,7 +130,7 @@ void UMainAnimInstance::AnimNotify_IdleJump()
     Dribble = false;
     ShotPoseIndex = 0;
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
-    IKAlpha = 0.25;
+    IKAlpha = 0;
 }
 void UMainAnimInstance::AnimNotify_OnDribble()
 {
@@ -233,7 +233,7 @@ void UMainAnimInstance::WhileJumped(float DeltaTimeX)
         }
     }
     
-    // Turn Capsule Towards Basket
+    // Turn Capsule Towards Basket - TODO : Consider only allowing partial or slowed automatic turn towards basket (adjust remaining rotation through directional input)
     if (HoopzCharacter) {
         FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
         FRotator TargetCapsuleRotation = CapsuleRotation;
