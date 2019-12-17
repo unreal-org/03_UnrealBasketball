@@ -14,7 +14,7 @@
 #include "MainAnimInstance.h"
 #include "GameFramework/SpringArmComponent.h"
 
-// Sets default values
+/////////////////////////////// Constructors //////////////////////////////////////////
 AHoopzCharacter::AHoopzCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -28,24 +28,24 @@ AHoopzCharacter::AHoopzCharacter(const FObjectInitializer& ObjectInitializer)
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-// Called when the game starts or when spawned
+
+///////////////////////////// Called when the game starts or when spawned //////////////////////////
 void AHoopzCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Character References
 	HoopzCharacterMovementComponent = Cast<UHoopzCharacterMovementComponent>(GetCharacterMovement());
 	PivotComponent = FindComponentByClass<USplineComponent>();
 	Camera = FindComponentByClass<UCameraComponent>();
 	CapsuleComponent = FindComponentByClass<UCapsuleComponent>();
 	MainAnimInstance = dynamic_cast<UMainAnimInstance*>(GetMesh()->GetAnimInstance());
+	
+	// Spring Arm
 	SpringArm = FindComponentByClass<USpringArmComponent>();
-
-	PlayerRotation = CapsuleComponent->GetComponentRotation();
-	//TargetPlayerRotation = PlayerRotation;
 	SpringArmRotation = SpringArm->GetComponentRotation();
 	TargetSpringArmRotation = SpringArmRotation;
 	
-	//LandedDelegate.AddDynamic(this, &AHoopzCharacter::JumpLanded);
 
 	for (TActorIterator<AStaticMeshActor> It(GetWorld()); It; ++It)
 	{
@@ -55,10 +55,10 @@ void AHoopzCharacter::BeginPlay()
 			BasketLocation = Basket->GetActorLocation();
 			SpringArmTarget = BasketLocation;
 			SpringArmTarget.Z = 90;
-			CapsuleTarget = BasketLocation;
 		}
 	}
 
+	// Pivot Point Actor Reference
 	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
 	{
 		AActor* Target = *It;
@@ -67,12 +67,16 @@ void AHoopzCharacter::BeginPlay()
 		}
 	}
 
-	// Access to Pivot Turn Spline Components
+	// Pivot Point Rotation
+	PivotPointRotation = CapsuleComponent->GetComponentRotation();
+
+	// Pivot Point Spline Components Reference
 	FootPivotPoints = dynamic_cast<USplineComponent*>(PivotPoint->GetRootComponent()->GetChildComponent(0));
 	CapsulePivotPoints = dynamic_cast<USplineComponent*>(PivotPoint->GetRootComponent()->GetChildComponent(1));
 }
 
-// Called every frame
+
+////////////////////////////// Called every frame //////////////////////////////
 void AHoopzCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -80,17 +84,14 @@ void AHoopzCharacter::Tick(float DeltaTime)
 	// switch (CurrentState)
     // {
     //     case 0: // Idle
-            
     //         break;
     //     case 1: // IdlePivot
 	// 		if (!ensure(SpringArm)) { SpringArmLerp(DeltaTime); }
 	// 		Pivot();
     //         break;
-    //     case 3: // Dribble
-            
+    //     case 3: // Dribble  
     //         break;
-    //     case 4: // Jump (Ball)
-            
+    //     case 4: // Jump (Ball)   
     //         break;
     //     case 6: // IdleOffense
     //         // spring arm static at rotation key
@@ -100,41 +101,60 @@ void AHoopzCharacter::Tick(float DeltaTime)
     //         return;
     // }
 
+	// Spring arm points and locks camera towards given target (Basket, Ball, or Player)
 	if (ensure(SpringArm)) { SpringArmLerp(DeltaTime); }
 
-	Pivot();
+	// Called during Pivot State (1)
+	if (CurrentState == 1) { Pivot(); }
 
+	// Called to lower and raise Capsule to adjust stance of Character
 	CapsuleDipper();
 
-	UE_LOG(LogTemp, Warning, TEXT("Current State : %i"), CurrentState)
-	// UE_LOG(LogTemp, Warning, TEXT("Foot spline name is : %s"), *FootPivotPoints->GetName())
+	// UE_LOG(LogTemp, Warning, TEXT("Current State : %i"), CurrentState)
 }
 
-// Called to bind functionality to input
+
+////////////////////// Called to bind functionality to input ///////////////////////////////////
 void AHoopzCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	// Directional Input
 	PlayerInputComponent->BindAxis("IntendMoveForward", this, &AHoopzCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("IntendMoveRight", this, &AHoopzCharacter::MoveRight);
 
+	// Face Buttons
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AHoopzCharacter::JumpPressed);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AHoopzCharacter::JumpReleased);
 	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AHoopzCharacter::TurnLeft);
 	PlayerInputComponent->BindAction("TurnRight", IE_Pressed, this, &AHoopzCharacter::TurnRight);
 	PlayerInputComponent->BindAction("DashOrShot", IE_Pressed, this, &AHoopzCharacter::DashOrShot);
+
+	// Shoulder Buttons
 	PlayerInputComponent->BindAction("Dribble", IE_Pressed, this, &AHoopzCharacter::Dribble);
+
+	// For Testing - DPad
 	PlayerInputComponent->BindAction("TogglePivot", IE_Pressed, this, &AHoopzCharacter::TogglePivot);
 	PlayerInputComponent->BindAction("ToggleOffense", IE_Pressed, this, &AHoopzCharacter::ToggleOffense);
 	
 }
 
+
+////////////////////////// Helper Functions ////////////////////////////
+void AHoopzCharacter::OnTurnTimerExpire()
+{
+    CanTurn = true;
+}
+
+
+////////////////////// Directional Input ///////////////////////////////
 void AHoopzCharacter::MoveForward(float Throw)
 {
 	// FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
 	if (CurrentState == 0) { return; }
 
 	FVector Direction = Camera->GetForwardVector();
+	// FVector Direction = GetActorForwardVector();
 	ThrowX = Throw;
 
 	if (PivotMode == true) {
@@ -150,6 +170,7 @@ void AHoopzCharacter::MoveRight(float Throw)
 	if (CurrentState == 0) { return; }
 
 	FVector Direction = Camera->GetRightVector();
+	// FVector Direction = GetActorRightVector();
 	ThrowY = Throw;
 
 	if (PivotMode == true) {
@@ -159,6 +180,142 @@ void AHoopzCharacter::MoveRight(float Throw)
 	}
 }
 
+//////////////////////////// Movement Mode Change Functions (Jump) ///////////////////////////////////
+void AHoopzCharacter::OnJumped_Implementation()    // Called on Jump
+{
+	if (!ensure(MainAnimInstance)) { return; }
+
+	Jumped = true;   // Makes character Jump
+	MainAnimInstance->Jumped = true;   // Change animation transition state
+}
+
+void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)   // Called on Landing
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+
+	if (!ensure(MainAnimInstance)) { return; }
+	MainAnimInstance->Jumped = false;     // Change transition variable for state change
+	Jumped = false;
+
+	if (MainAnimInstance->HasBall == true) {     // If character has ball
+		PivotMode = true;                        // TODO : check for double dribble
+	} else {			 // If  not - move to offense state (without ball)
+		PivotMode = false;
+		// MainAnimInstance->Offense = true;
+	}
+
+	CanChangeShot = true;   // Allows for one shot selection
+	ShotKey = 0;            // Initial Jump State Pose Key
+
+	EstablishPivot = false; // Reset Pivot variables
+	PivotKey = false;
+	PivotInputKey = -1;
+	PivotAttached = false;
+}
+
+
+///////////////////// Action Input //////////////////////////////////
+void AHoopzCharacter::JumpPressed()     // Face Button bottom press
+{
+	if (CurrentState == 0) { return; }    // Todo: Implement while moving one leg jumps
+
+	JumpHeldTime = GetWorld()->GetTimeSeconds();
+	CapsuleDip = true;
+}
+
+void AHoopzCharacter::JumpReleased()    // Face Button bottom release
+{
+	if (CurrentState == 0) { return; }
+
+	JumpHeldTime -= GetWorld()->GetTimeSeconds();
+	if (JumpHeldTime < -.3) {
+		bPressedJump = true;
+	}
+	CapsuleDip = false;
+}
+
+// TODO : Implement Post up turn (NULL)
+// TODO : Fix Multiple Input Problem
+void AHoopzCharacter::TurnLeft()     // Face Button top
+{
+	if (CurrentState == 0) { return; }
+
+	if (CanTurn) {
+		CanTurn = false;
+		if (PivotMode == true) {
+			if (EstablishPivot == false || PivotAttached == false) {
+				PivotKey = true;  // right moves, plant left
+				SetPivot();
+				EstablishPivot = true;
+			}
+			PivotPointRotation.Yaw -= 45;
+			TotalRotation.Yaw -= 45;
+			PivotPoint->SetActorRotation(PivotPointRotation, ETeleportType::None);
+			PivotTurn = true;
+			PivotTurnLeft = true;
+		} else {   // For Turning without ball
+			TotalRotation.Yaw -= 45;
+		}
+	}
+
+	// Set CanTurn = true on timer expire
+	FTimerHandle TurnTimer;
+	GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
+	return; 
+}
+
+void AHoopzCharacter::TurnRight()     // Face Button right
+{
+	if (CurrentState == 0) { return; }
+
+	if (CanTurn == true) {
+		CanTurn = false;
+		if (PivotMode == true) {
+			if (EstablishPivot == false || PivotAttached == false) {
+				PivotKey = false; // left moves, plant right
+				SetPivot();
+				EstablishPivot = true;
+			}
+			PivotPointRotation.Yaw += 45;
+			TotalRotation.Yaw += 45;
+			PivotPoint->SetActorRotation(PivotPointRotation, ETeleportType::None);
+			PivotTurn = true;
+			PivotTurnRight = true;
+
+		} else {
+			TotalRotation.Yaw += 45;
+		}
+	}
+	
+	FTimerHandle TurnTimer;
+	GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
+	return; 
+}
+
+void AHoopzCharacter::DashOrShot()   // Face Button Left 
+{
+	if (CurrentState == 0) { return; }
+
+	if (Jumped == true) { ShotKey = 1; }
+	else {
+		// dash
+	}
+}
+
+// TODO : Consider Shoulder trigger axis for variable height dribble
+void AHoopzCharacter::Dribble()    // Shoulder Trigger right 
+{
+	if (CurrentState == 0) { return; }
+
+	if (MainAnimInstance->Dribble == true) {
+		MainAnimInstance->Dribble = false;
+	} else {
+		MainAnimInstance->Dribble = true;
+	}
+}
+
+
+///////////////////// Called During Pivot - State 1 //////////////////////////
 void AHoopzCharacter::Pivot()
 {
 	if ((PivotForward + PivotRight).Size2D() < 5) { return; }
@@ -173,34 +330,28 @@ void AHoopzCharacter::Pivot()
 		else { PivotKey = true; } // Right Foot
 		SetPivot();
 		EstablishPivot = true;
-		PivotSet = true;
 	}
 }
 
-// Todo: Implement while moving one leg jumps
-void AHoopzCharacter::JumpPressed()
+void AHoopzCharacter::SetPivot()
 {
-	if (CurrentState == 0) { return; }
-
-	JumpHeldTime = GetWorld()->GetTimeSeconds();
-	CapsuleDip = true;
-}
-
-void AHoopzCharacter::JumpReleased()
-{
-	if (CurrentState == 0) { return; }
-
-	JumpHeldTime -= GetWorld()->GetTimeSeconds();
-	if (JumpHeldTime < -.3) {
-		if (PivotSet == true) {
-			// CapsuleComponent->DetachFromComponent(DetachRules); // detach from pivotpoint
-			PivotAttached = false;
-		}
-		bPressedJump = true;
+	FName Foot;
+	if (PivotKey == false) {  // Left moves, Plant Right
+		Foot = FName(TEXT("foot_r"));
+	} else {
+		Foot = FName(TEXT("foot_l"));
 	}
-	CapsuleDip = false;
+
+	FVector CapsulePivotTurnAnchor = GetMesh()->GetSocketLocation(Foot);
+	PivotPoint->SetActorLocation(CapsulePivotTurnAnchor, false);
+	PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
+	PivotPointRotation = PivotPoint->GetActorRotation();
+	MainAnimInstance->FootPlanted = false;
+	PivotAttached = true;
 }
 
+
+//////////////////// Capsule Dipper /////////////////////////////
 void AHoopzCharacter::SetCapsuleHalfHeight(float MaxValue, float MinValue)
 {
 	MaxCapsuleHalfHeight = MaxValue;
@@ -223,117 +374,13 @@ void AHoopzCharacter::CapsuleDipper()
 	}
 }
 
-void AHoopzCharacter::OnTurnTimerExpire()
-{
-    CanTurn = true;
-}
 
-
-// TODO : Implement dribble turn & Post up turn (NULL)
-// TODO : Fix Multiple Input Problem
-void AHoopzCharacter::TurnLeft()
-{
-	if (CurrentState == 0) { return; }
-
-	if (CanTurn) {
-		CanTurn = false;
-		
-		if (PivotMode == true) {
-			if (EstablishPivot == false || PivotSet == false) {
-				PivotKey = true;  // right moves, plant left
-				SetPivot();
-				PivotSet = true;
-				EstablishPivot = true;
-			}
-
-			PlayerRotation.Yaw -= 45;
-			PivotPoint->SetActorRotation(PlayerRotation, ETeleportType::None);
-			PivotTurn = true;
-			PivotTurnLeft = true;
-			
-			//return; 
-		}
-
-		else {   // for dribble
-			TotalRotation.Yaw -= 45;
-
-			// FTimerHandle TurnTimer;
-			// GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
-			// return; 
-		}
-	}
-	//else {
-		FTimerHandle TurnTimer;
-		GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
-		return; 
-    //}
-}
-
-void AHoopzCharacter::TurnRight()
-{
-	if (CurrentState == 0) { return; }
-
-	if (CanTurn == true) {
-		CanTurn = false;
-
-		if (PivotMode == true) {
-			if (EstablishPivot == false || PivotSet == false) {
-				PivotKey = false; // left moves, plant right
-				SetPivot();
-				PivotSet = true;  // remove?
-				EstablishPivot = true;
-			}
-
-			PlayerRotation.Yaw += 45;
-			PivotPoint->SetActorRotation(PlayerRotation, ETeleportType::None);
-			PivotTurn = true;
-			PivotTurnRight = true;
-			
-			//return;
-		}
-
-		else {
-			TotalRotation.Yaw += 45;
-
-			// FTimerHandle TurnTimer;
-			// GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
-			// return; 
-		}
-	}
-	//else {
-		FTimerHandle TurnTimer;
-		GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnTurnTimerExpire, TurnDelay, false);
-		return; 
-    //}
-}
-
-void AHoopzCharacter::SetPivot()
-{
-	FName Foot;
-	if (PivotKey == false) {  // Left moves, Plant Right
-		Foot = FName(TEXT("foot_r"));
-	} else {
-		Foot = FName(TEXT("foot_l"));
-	}
-
-	FVector CapsulePivotTurnAnchor = GetMesh()->GetSocketLocation(Foot);
-	PivotPoint->SetActorLocation(CapsulePivotTurnAnchor, false);
-	PivotPoint->SetActorRotation(CapsuleComponent->GetComponentRotation(), ETeleportType::None);
-	PlayerRotation = PivotPoint->GetActorRotation();
-	MainAnimInstance->FootPlanted = false;
-	PivotAttached = true;
-}
-
+/////////////////////////// Lerp Functions //////////////////////////////
 void AHoopzCharacter::SpringArmLerp(float DeltaTime)   
 {
     SpringArmTurnTime = 0;
-	// if (CurrentState == 6) { 
-	// 	TargetSpringArmRotation = UKismetMathLibrary::FindLookAtRotation(SpringArm->GetComponentLocation(), SpringArmTarget);
-	// 	TargetSpringArmRotation.Yaw += TotalRotation.Yaw;
-	// } else {
-	// 	TargetSpringArmRotation = UKismetMathLibrary::FindLookAtRotation(SpringArm->GetComponentLocation(), SpringArmTarget);
-	// }
 
+	// TODO : Allow for runtime switching of Spring arm Target
 	TargetSpringArmRotation = UKismetMathLibrary::FindLookAtRotation(SpringArm->GetComponentLocation(), SpringArmTarget);
 	
     if (SpringArmTurnTime < SpringArmTurnDuration)
@@ -342,59 +389,6 @@ void AHoopzCharacter::SpringArmLerp(float DeltaTime)
         SpringArmRotation = FMath::Lerp(SpringArmRotation, TargetSpringArmRotation, SpringArmTurnTime / SpringArmTurnDuration);
 		SpringArm->SetWorldRotation(SpringArmRotation, false);
     }
-}
-
-void AHoopzCharacter::OnJumped_Implementation()
-{
-	if (!ensure(MainAnimInstance)) { return; }
-
-	Jumped = true;
-
-	// change animation transition state
-	MainAnimInstance->Jumped = true;
-}
-
-// CAlled on Landing
-void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
-{
-	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
-
-	if (!ensure(MainAnimInstance)) { return; }
-	MainAnimInstance->Jumped = false;
-	Jumped = false;
-	if (MainAnimInstance->HasBall == true) { PivotMode = true; }
-	else { PivotMode = false; }
-	CanChangeShot = true;
-	ShotKey = 0;
-	EstablishPivot = false;
-	PivotSet = false;
-	PivotKey = false;
-	PivotInputKey = -1;
-	PivotAttached = false;
-}
-
-void AHoopzCharacter::DashOrShot()
-{
-	if (CurrentState == 0) { return; }
-
-	if (Jumped == true)
-	{
-		ShotKey = 1;
-	}
-	else {
-		// dash
-	}
-}
-
-void AHoopzCharacter::Dribble()
-{
-	if (CurrentState == 0) { return; }
-
-	if (MainAnimInstance->Dribble == true) {
-		MainAnimInstance->Dribble = false;
-	} else {
-		MainAnimInstance->Dribble = true;
-	}
 }
 
 

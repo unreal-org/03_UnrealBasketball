@@ -105,17 +105,17 @@ private:
 	int32 PrevMontageKey = -1;   // default -1
 	bool CanMove = true;
 
-	// Pivot by Pose Blend
-	float StepDelay = 0.3;    // TODO : Tweak to fix multiple input pivot turn
+	// Pivot variables
+	float StepDelay = 0.2;    // TODO : Tweak to fix multiple input pivot turn
 	int32 PoseKey = -1;
-	int32 PrevPoseKey = -1;
+	int32 PrevPoseKey = -1;  
 	void OnStepTimerExpire();
 	void PivotStep();
 	FRotator CapsuleAnchorRotation;
 	FVector PivotLeftFootAnchor;
 	FVector PivotRightFootAnchor;
 	float PivotInterpTime = 0;
-	float PivotInterpDuration = .3;
+	float PivotInterpDuration = .2;
 	void PivotInterp(float DeltaTimeX);
 	FVector NewCapsuleLocation;
 	FRotator NewCapsuleRotation;
@@ -139,7 +139,7 @@ private:
 	// Shot Selection
 	void WhileJumped(float DeltaTimeX);
 	float CapsuleTurnTime = 0;
-	float CapsuleTurnDuration = 0.15;
+	float CapsuleTurnDuration = 0.3;
 
 	// Idle Offense
 	void IdleOffense(float DeltaTimeX);

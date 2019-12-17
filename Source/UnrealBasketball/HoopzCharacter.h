@@ -24,24 +24,23 @@ class UNREALBASKETBALL_API AHoopzCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
+	// Constructors
 	AHoopzCharacter();
 	AHoopzCharacter(const FObjectInitializer& ObjectInitializer);
 
-	UFUNCTION()
-	void MoveForward(float Throw);
-	UFUNCTION()
-	void MoveRight(float Throw);
-	
-
-	bool PivotMode = false;
+	// Variables needed for MainAnimInstance
 	int32 PivotInputKey = -1;
-
-	FVector BasketLocation;
-
+	bool PivotMode = false;
 	bool EstablishPivot = false;
 	bool PivotKey = false;
 	bool PivotAttached = true;
+	bool CanTurn = true;
+	bool PivotTurn = false;
+	bool PivotTurnLeft = false;
+	bool PivotTurnRight = false;
+	FRotator PivotPointRotation;
+
+	FVector BasketLocation;
 
 	int32 ShotKey = 0;
 	bool CanChangeShot = true;
@@ -49,24 +48,17 @@ public:
 	float ThrowX;
 	float ThrowY;
 
-	// Change Capsule Half Height Access
+	// Modify Capsule Half Height
 	void SetCapsuleHalfHeight(float MaxValue, float MinValue);
 
-	bool CanTurn = true;
-	bool PivotTurn = false;
-	bool PivotTurnLeft = false;
-	bool PivotTurnRight = false;
-	FRotator PlayerRotation;
-
-	AActor* PivotPoint = nullptr;
+	// Pivot Spline Points
 	USplineComponent* CapsulePivotPoints = nullptr;
 	USplineComponent* FootPivotPoints = nullptr;
 
 	int32 CurrentState;
 
-	// Dribble
+	// Rotation of Player
 	FRotator TotalRotation;
-	// FRotator CapsuleRotationKey;
 
 protected:
 	// Called when the game starts or when spawned
@@ -85,6 +77,7 @@ protected:
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
 
 private:	
+	// Character Components
 	UHoopzCharacterMovementComponent* HoopzCharacterMovementComponent = nullptr;
 	USplineComponent* PivotComponent = nullptr;
 	AStaticMeshActor* Basket = nullptr;
@@ -93,13 +86,16 @@ private:
 	UMainAnimInstance* MainAnimInstance = nullptr;
 	USpringArmComponent* SpringArm = nullptr;
 	
-	// FAttachmentTransformRules AttachRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
-	// FDetachmentTransformRules DetachRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true);
+	// Pivot Point Reference
+	AActor* PivotPoint = nullptr;
+
+	// Movement
+	void MoveForward(float Throw);
+	void MoveRight(float Throw);
 
 	// Pivot Variables
 	void Pivot();
 	void SetPivot();
-	bool PivotSet = false;
 	FVector PivotForward;
 	FVector PivotRight;
 	void TurnLeft();
@@ -107,7 +103,7 @@ private:
 
 	// Turn Timer
 	void OnTurnTimerExpire();
-	float TurnDelay = 0.3;
+	float TurnDelay = 0.2;
 	
 	// Jump (x)
 	void JumpPressed();
@@ -123,7 +119,6 @@ private:
 	void CapsuleDipper();
 	float MaxCapsuleHalfHeight = 90;
 	float MinCapsuleHalfHeight = 80;
-	FVector CapsuleTarget;
 
 	// Face Button
 	void DashOrShot();
