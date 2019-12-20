@@ -27,6 +27,10 @@ public:
 	// Constructor
 	UMainAnimInstance(const FObjectInitializer& ObjectInitializer);
 
+	// Motion Frequency - Controls range of Locomotion(Connected to Limb & Spine Base Points)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector MotionFrequency;   // world space
+
 	// Feet
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector RightFootLocation;   // world space
@@ -87,18 +91,34 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
 	FVector BasketLocation;
 
+	// Foot IK Alpha
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	float IKAlpha = 0.85;
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	float LeftIKAlpha = 0.85;
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	float RightIKAlpha = 0.85;
 
 	// Pivot
 	bool FootPlanted = false;
+
+	// Locomotion
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	float MotionFrequency;
 
 private:
 	// State Machines
 	FAnimNode_StateMachine *MainState;
 
+	// Helper Functions
+	void CapsuleTargetLerp(float DeltaTimeX, float TurnDuration);
+
 	// Idle
 	void Idle(float DeltaTimeX);
+	float MaxReach = 70;
+	float StartTime;
+	float CycleTime;
+	float FootInterpSpeed;
 
 	// State Machine Functions
 	void Pivot(float DeltaTimeX);

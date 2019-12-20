@@ -10,6 +10,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SplineComponent.h"
 
+// TODO : Do Scratch work on proxy
 
 // Constructors
 UMainAnimInstance::UMainAnimInstance(const FObjectInitializer &ObjectInitializer)
@@ -48,18 +49,22 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
     {
         case 0: // Idle
             Idle(DeltaTimeX);
+            CapsuleTargetLerp(DeltaTimeX, CapsuleTurnDuration);
             break;
         case 1: // IdlePivot
             Pivot(DeltaTimeX);
             break;
         case 3: // Dribble
             IdleDribble(DeltaTimeX);
+            CapsuleTargetLerp(DeltaTimeX, .05);
             break;
         case 4: // Jump (Ball)
             WhileJumped(DeltaTimeX);
+            CapsuleTargetLerp(DeltaTimeX, CapsuleTurnDuration);
             break;
         case 6: // IdleOffense
             IdleOffense(DeltaTimeX);
+            CapsuleTargetLerp(DeltaTimeX, .05);
             break;
         default:
             return;
@@ -95,6 +100,8 @@ void UMainAnimInstance::AnimNotify_IdleEntry()
     // Reset Stance
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
     IKAlpha = 0.9;
+    LeftIKAlpha = 0.9;
+    RightIKAlpha = 0.9;
 }
 
 void UMainAnimInstance::AnimNotify_SetPivot()   
@@ -125,6 +132,8 @@ void UMainAnimInstance::AnimNotify_SetPivot()
     // Reset Stance
     HoopzCharacter->SetCapsuleHalfHeight(80, 75);
     IKAlpha = 1;
+    LeftIKAlpha = 1;
+    RightIKAlpha = 1;
 }
 
 void UMainAnimInstance::AnimNotify_OnDribble()
@@ -150,6 +159,8 @@ void UMainAnimInstance::AnimNotify_OnDribble()
     // Reset Stance
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
     IKAlpha = 0.9;
+    LeftIKAlpha = 0.9;
+    RightIKAlpha = 0.9;
 }
 
 void UMainAnimInstance::AnimNotify_IdleJump()
@@ -177,6 +188,8 @@ void UMainAnimInstance::AnimNotify_IdleJump()
     // Reset Stance
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
     IKAlpha = 0;
+    LeftIKAlpha = 0;
+    RightIKAlpha = 0;
 }
 
 void UMainAnimInstance::AnimNotify_IdleOffense()
@@ -191,6 +204,33 @@ void UMainAnimInstance::AnimNotify_IdleOffense()
     // Reset Stance
     HoopzCharacter->SetCapsuleHalfHeight(90, 80);
     IKAlpha = 0.9;
+    LeftIKAlpha = 0.9;
+    RightIKAlpha = 0.9;
+}
+
+
+/////////////////////////////// Helper Functions /////////////////////////////
+void UMainAnimInstance::CapsuleTargetLerp(float DeltaTimeX, float TurnDuration)   
+{
+    if (!ensure(HoopzCharacter)) { return; }
+    if (!ensure(PlayerCapsuleComponent)) { return; }
+    // Turn Capsule Towards Basket
+    // TODO : Allow for turn duration to be a character stat
+    // TODO : Allow for multiple targets (Ball, Basket, Opponent) 
+    if (HoopzCharacter) {
+        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
+        FRotator TargetCapsuleRotation = CapsuleRotation;
+        FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
+        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw + HoopzCharacter->TotalRotation.Yaw;
+        
+        CapsuleTurnTime = 0;
+        if (CapsuleTurnTime < CapsuleTurnDuration)
+        {
+            CapsuleTurnTime += DeltaTimeX;
+            CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / TurnDuration);
+            PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
+        }
+    }
 }
 
 
@@ -199,23 +239,58 @@ void UMainAnimInstance::AnimNotify_IdleOffense()
 // TODO: Procedural Walk
 void UMainAnimInstance::Idle(float DeltaTimeX)   
 {
-    if (!ensure(HoopzCharacter)) { return; }
-    if (!ensure(PlayerCapsuleComponent)) { return; }
+    // Main Locomotion Control Value
+    FVector MotionDirection;
+    MotionDirection.X = HoopzCharacter->ForwardThrow.X + HoopzCharacter->RightThrow.X;  // * Capsule Velocity
+    MotionDirection.Y = HoopzCharacter->ForwardThrow.Y + HoopzCharacter->RightThrow.Y;  // * Capsule Velocity
 
-    // Turn Capsule Towards Basket
-    if (HoopzCharacter) {
-        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
-        FRotator TargetCapsuleRotation = CapsuleRotation;
-        FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
-        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw;
-        
-        CapsuleTurnTime = 0;
-        if (CapsuleTurnTime < CapsuleTurnDuration)
-        {
-            CapsuleTurnTime += DeltaTimeX;
-            CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / 0.05);
-            PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
+    float CapsuleVelocity = PlayerCapsuleComponent.GetVelocity();
+
+    // If MotionFrequency = 0, Reset Cycle to 0
+    if (CapsuleVelocity <= 0.1) {
+        // reset foot bool & cycle
+    }
+    
+    else {
+        // Start Cycle with Foot that is closer to direction (unless Foot is at or close to MaxReach)
+        // Set FName Foot & Disable IK for that foot
+
+        // Start Cycle
+        if (CycleTime >= 1) {
+            StartTime = GetWorld()->GetTimeSeconds();
+            // Change Foot 
+            return;
         }
+
+        // Rotate Interpolation Points towards MotionDirection
+        // Add Offsets to Interpolation Points to avoid Leg collisions and Match Direction Motion
+        
+        // During a cycle the foot interpolates to 3 points
+        // Increase Speed of interpolation & Range of Motion for upperbody (based on Velocity)
+        FootInterpSpeed = CapsuleVelocity / 150 * 7;    // 150 = Max Move Speed - TODO : Soft Code
+        CycleTime = GetWorld()->GetTimeSeconds() - StartTime;
+        if (CycleTime < 0.2){
+            // LeftFootInterpPoint = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_l1")));
+            // RightFootInterpPoint = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_r1")));
+            // CapsuleDip
+        } else if (CycleTime < 0.5) {
+            // LeftFootInterpPoint = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_l2")));
+            // RightFootInterpPoint = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_r2")));
+            // CapsuleDip
+        } else if (CycleTime < 0.8) {
+            // LeftFootInterpPoint = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_l3")));
+            // RightFootInterpPoint = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_r3")));
+            // CapsuleDip
+        } else if (CycleTime < 1) {
+            // LeftFootInterpPoint = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_l4")));
+            // RightFootInterpPoint = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_r4")));
+            // CapsuleDip
+        }
+        
+        // MotionFrequency also controls range of motion in the pelvis, spine, & upperbody
+        // Sine wave linked to Chained Rotations - Multiply by FRotator
+        MotionFrequency = CapsuleVelocity / 150 * UKismetMathLibrary::Sin(UKismetMathLibrary::GetPI() * CycleTime);   // TODO : Speed up with increasing CapsuleVelocity
+            
     }
 }
 
@@ -351,17 +426,17 @@ void UMainAnimInstance::PivotInterp(float DeltaTimeX)
     if (PivotInterpTime < PivotInterpDuration)
     {
         PivotInterpTime += DeltaTimeX;
-        CapsuleLocation = FMath::VInterpTo(CapsuleLocation, NewCapsuleLocation, DeltaTimeX, 7);
+        CapsuleLocation = FMath::VInterpTo(CapsuleLocation, NewCapsuleLocation, DeltaTimeX, 5);
         CapsuleRotation = FMath::Lerp(CapsuleRotation, NewCapsuleRotation, PivotInterpTime / 0.15);   // speed up lerp
         PlayerCapsuleComponent->SetWorldLocation(CapsuleLocation, false);
         PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
 
         if (HoopzCharacter->PivotKey == false) { // left foot moves
-            FootLocation = FMath::VInterpTo(FootLocation, NewOffFootLocation, DeltaTimeX, 7);
+            FootLocation = FMath::VInterpTo(FootLocation, NewOffFootLocation, DeltaTimeX, 5);
             NewLeftFootLocation.X = FootLocation.X;
             NewLeftFootLocation.Y = FootLocation.Y;
         } else {
-            FootLocation = FMath::VInterpTo(FootLocation, NewOffFootLocation, DeltaTimeX, 7);
+            FootLocation = FMath::VInterpTo(FootLocation, NewOffFootLocation, DeltaTimeX, 5);
             NewRightFootLocation.X = FootLocation.X;
             NewRightFootLocation.Y = FootLocation.Y;
         }
@@ -446,24 +521,8 @@ void UMainAnimInstance::IdleDribble(float DeltaTimeX)
 {
     if (!ensure(HoopzCharacter)) { return; }
 
-    ThrowX = HoopzCharacter->ThrowY * 65;
-    ThrowY = HoopzCharacter->ThrowX * 65;
-
-     // Turn Capsule Towards Basket
-    if (HoopzCharacter) {
-        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();  
-        FRotator TargetCapsuleRotation = CapsuleRotation;
-        FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
-        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw + HoopzCharacter->TotalRotation.Yaw;
-        
-        CapsuleTurnTime = 0;
-        if (CapsuleTurnTime < CapsuleTurnDuration)
-        {
-            CapsuleTurnTime += DeltaTimeX;
-            CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / 0.05);
-            PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
-        }
-    }
+    // ThrowX = HoopzCharacter->ThrowY * 65;
+    // ThrowY = HoopzCharacter->ThrowX * 65;
 }
 
 
@@ -484,22 +543,6 @@ void UMainAnimInstance::WhileJumped(float DeltaTimeX)
         }
     }
     
-    // Turn Capsule Towards Basket
-    // TODO : Allow for turn duration to be a character stat
-    if (HoopzCharacter) {
-        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();
-        FRotator TargetCapsuleRotation = CapsuleRotation;
-        FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
-        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw;
-        
-        CapsuleTurnTime = 0;
-        if (CapsuleTurnTime < CapsuleTurnDuration)
-        {
-            CapsuleTurnTime += DeltaTimeX;
-            CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / CapsuleTurnDuration);
-            PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
-        }
-    }
 }
 
 
@@ -509,28 +552,14 @@ void UMainAnimInstance::IdleOffense(float DeltaTimeX)
 {
     if (!ensure(HoopzCharacter)) { return; }
 
-    ThrowX = HoopzCharacter->ThrowY * 65;
-    ThrowY = HoopzCharacter->ThrowX * 65;
+    // ThrowX = HoopzCharacter->ThrowY * 65;
+    // ThrowY = HoopzCharacter->ThrowX * 65;
 
-     // Turn Capsule Towards Basket
-    if (HoopzCharacter) {
-        FRotator CapsuleRotation = PlayerCapsuleComponent->GetComponentRotation();  
-        FRotator TargetCapsuleRotation = CapsuleRotation;
-        FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
-        TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw + HoopzCharacter->TotalRotation.Yaw;
-        
-        CapsuleTurnTime = 0;
-        if (CapsuleTurnTime < CapsuleTurnDuration)
-        {
-            CapsuleTurnTime += DeltaTimeX;
-            CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / 0.05);
-            PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
-        }
-    }
 }
 
 
 //////////////////////////////////////// IK Foot Placement /////////////////////////////////////
+// TODO : Move to SubAnimInstance on Refactor
 // TODO : Ragdoll IK
 // TODO : Toe IK
 FVector UMainAnimInstance::IKFootTrace(int32 Foot, float DeltaTimeX)
@@ -538,6 +567,16 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot, float DeltaTimeX)
     if (!ensure(HoopzCharacter)) { return FVector(0, 0, 0); }
     if (!ensure(PlayerSkeletalMesh)) { return FVector(0, 0, 0); }
     if (!ensure(PlayerCapsuleComponent)) { return FVector(0, 0, 0); }
+
+    /*
+    if (Motion == true) {    // Locomotion
+        if (Foot == 0) {     // Left Foot
+            FootSocketLocation = LeftFootInterpPoint;
+        } else {
+            FootSocketLocation = RightFootInterpPoint;
+        }
+    }
+    */
 
     FName FootName;
     FVector FootSocketLocation;
