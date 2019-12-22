@@ -104,7 +104,7 @@ public:
 
 	// Locomotion
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
-	float MotionFrequency;
+	float MotionWave;
 
 private:
 	// State Machines
@@ -115,10 +115,22 @@ private:
 
 	// Idle
 	void Idle(float DeltaTimeX);
+	bool FootKey = false;
+	bool PointSet1 = false;
+	bool PointSet2 = false;
+	bool PointSet3 = false;
+	bool PointSet4 = false;
 	float MaxReach = 70;
 	float StartTime;
-	float CycleTime;
-	float FootInterpSpeed;
+	float MotionTime;
+	float InterpWave;
+	float InterpSpeed;
+	float LeftInterpSpeed = 50;
+	float RightInterpSpeed = 50;
+	FVector LeftLegInterpTo;
+	FVector RightLegInterpTo;
+	FVector LeftLegTarget;
+	FVector RightLegTarget;
 
 	// State Machine Functions
 	void Pivot(float DeltaTimeX);
