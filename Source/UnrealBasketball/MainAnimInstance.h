@@ -116,11 +116,14 @@ private:
 	// Idle
 	void Idle(float DeltaTimeX);
 	bool FootKey = false;
+	bool InitialPose = true;
+	bool InitialStep = true;
 	bool PointSet1 = false;
 	bool PointSet2 = false;
 	bool PointSet3 = false;
 	bool PointSet4 = false;
-	float MaxReach = 70;
+	float MaxReach = 30;
+	float MaxStepOffset = 5;
 	float StartTime;
 	float MotionTime;
 	float InterpWave;

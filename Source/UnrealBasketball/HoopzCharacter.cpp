@@ -238,7 +238,7 @@ void AHoopzCharacter::JumpReleased()    // Face Button bottom release
 // TODO : Fix Multiple Input Problem
 void AHoopzCharacter::TurnLeft()     // Face Button top
 {
-	if (CurrentState == 0) { return; }
+	//if (CurrentState == 0) { return; }
 
 	if (CanTurn) {
 		CanTurn = false;
@@ -266,7 +266,7 @@ void AHoopzCharacter::TurnLeft()     // Face Button top
 
 void AHoopzCharacter::TurnRight()     // Face Button right
 {
-	if (CurrentState == 0) { return; }
+	//if (CurrentState == 0) { return; }
 
 	if (CanTurn == true) {
 		CanTurn = false;
