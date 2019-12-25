@@ -31,6 +31,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector MotionFrequency;   // world space
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector TestTarget;   // world space
+
 	// Feet
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector RightFootLocation;   // world space
@@ -123,7 +126,7 @@ private:
 	bool PointSet3 = false;
 	bool PointSet4 = false;
 	float MaxReach = 30;
-	float MaxStepOffset = 5;
+	float MaxStepOffset = 20;
 	float StartTime;
 	float MotionTime;
 	float InterpWave;

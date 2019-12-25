@@ -72,6 +72,8 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 
     LeftFootLocation = IKFootTrace(0, DeltaTimeX);   // TODO: Disable IK with Procedural cycles
     RightFootLocation = IKFootTrace(1, DeltaTimeX);
+
+    
 }
 
 
@@ -99,7 +101,7 @@ void UMainAnimInstance::AnimNotify_IdleEntry()
 
     // Reset Stance
     HoopzCharacter->SetCapsuleHalfHeight(85, 75);
-    IKAlpha = 0.9;
+    IKAlpha = 0.95;
     LeftIKAlpha = 0.9;
     RightIKAlpha = 0.9;
 }
@@ -252,25 +254,24 @@ void UMainAnimInstance::Idle(float DeltaTimeX)
 
     // If CapsuleVelocity = 0, Reset Cycle to 0
     if (CapsuleVelocity <= 0.01) {     /////////////////////////// Velocity Hits 0 on direction change - TODO : Use another variable? ////////////////////////////////////
-        MotionTime = 0;
-        MotionWave = 0;
+        //MotionTime = 0;
+        //MotionWave = 0;
         if (InitialPose == true) {
             RightLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_r");
             LeftLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_l");
         } else {
             // Maintain Natural Foot Positions - *** or if Footlocation.Z > 13.5 ***
-            if ((RightLegInterpTo - PlayerSkeletalMesh->GetSocketLocation("foot_r")).Size() >= MaxStepOffset) {
-                RightInterpSpeed = 5;
+            if ((RightLegInterpTo - PlayerSkeletalMesh->GetSocketLocation("ik_foot_r")).Size() >= MaxStepOffset) {
+                RightInterpSpeed = 10;
                 RightLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("ik_foot_r");
             }
-            if ((LeftLegInterpTo - PlayerSkeletalMesh->GetSocketLocation("foot_l")).Size() >= MaxStepOffset) {
-                LeftInterpSpeed = 5;
+            if ((LeftLegInterpTo - PlayerSkeletalMesh->GetSocketLocation("ik_foot_l")).Size() >= MaxStepOffset) {
+                LeftInterpSpeed = 10;
                 LeftLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("ik_foot_l");
             }
 
             InitialStep = true;
         }
-        
     }
     else {
         // Start Cycle with Foot that is closer to direction (unless Foot is at or close to MaxReach) & Set FName Foot
@@ -290,6 +291,10 @@ void UMainAnimInstance::Idle(float DeltaTimeX)
                 }
             }
             MotionTime = 0;
+            PointSet1 = false;
+            PointSet2 = false;
+            PointSet3 = false;
+            PointSet4 = false;
             // TODO : Calculate Percentage of MaxStepOffset and add to CycleTime
         }
 
@@ -300,18 +305,19 @@ void UMainAnimInstance::Idle(float DeltaTimeX)
         MotionTime += DeltaTimeX * (1 + MotionSpeed); 
         InterpWave = UKismetMathLibrary::Sin(UKismetMathLibrary::GetPI() * MotionTime);
         MotionWave = CapsuleVelocity / 100 * InterpWave;
-        float CycleTime = abs(UKismetMathLibrary::GenericPercent_FloatFloat(MotionTime, 1.f)); // Need variable divisor?
+        float CycleTime = abs(UKismetMathLibrary::GenericPercent_FloatFloat(MotionTime, 1.f));
 
         // MotionWave also controls range of motion in the pelvis, spine, & upperbody
         // Sine wave linked to Chained Rotations - Multiply by FRotator
         // Add Offset Interpolation Points to increase range of motion & avoid Leg collisions
         if (FootKey == false) {   // Left Foot moves
-            //RightInterpSpeed = 100;
+            LeftIKAlpha = .9;
+            // Reset Pelvis height here
             if (CycleTime < 0.3) {   // Need variable percentages times based on divisor?
                 if (PointSet1 == false) {
                     LeftLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_target_l5");// - MotionDirection;
                     PointSet1 = true;
-                    LeftInterpSpeed = 5; // TODO : 5 * MotionSpeed ?
+                    LeftInterpSpeed = 5;
                 }
             } else if (0.3 <= CycleTime && CycleTime < 0.5) {
                 if (PointSet2 == false) {
@@ -319,18 +325,21 @@ void UMainAnimInstance::Idle(float DeltaTimeX)
                     PointSet2 = true;
                     LeftInterpSpeed = 10;
                 }
+                //HoopzCharacter->SetCapsuleHalfHeight(Height - MotionTime/4, 75);     // TODO : Adjust Height by moving Pelvis
             } else if (0.5 <= CycleTime && CycleTime < 0.7) {
                 if (PointSet3 == false) {
-                    LeftLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_target_l7") + MotionDirection / 2;
+                    LeftLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_target_l7") + MotionDirection / 2; // Adjust divisor for higher MotionDirection
                     PointSet3 = true;
                     LeftInterpSpeed = 30;
                 }
+                //HoopzCharacter->SetCapsuleHalfHeight(Height - MotionTime/4, 75);
             } else if (0.7 <= CycleTime && CycleTime < 0.975) {
                 if (PointSet4 == false) {
                     LeftLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_target_l8") + MotionDirection / 3;
                     PointSet4 = true;
                     LeftInterpSpeed = 60;
                 }
+                //HoopzCharacter->SetCapsuleHalfHeight(Height + MotionTime/4, 75);
             } else if (0.975 <= CycleTime) {   
                 FootKey = true;
                 MotionTime = 0;
@@ -339,12 +348,14 @@ void UMainAnimInstance::Idle(float DeltaTimeX)
                 PointSet3 = false;
                 PointSet4 = false;
                 LeftLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_l");
+                LeftIKAlpha = 1;
                 LeftInterpSpeed = 100;
                 RightInterpSpeed = 25;
+                //HoopzCharacter->SetCapsuleHalfHeight(Height + MotionTime/4, 75);
             }
         }
         else {   // Right Foot moves
-            //LeftInterpSpeed = 100;
+            RightIKAlpha = .9;
             if (CycleTime < 0.3) {
                 if (PointSet1 == false) {
                     RightLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_target_r5");// - MotionDirection;
@@ -357,18 +368,21 @@ void UMainAnimInstance::Idle(float DeltaTimeX)
                     PointSet2 = true;
                     RightInterpSpeed = 10;
                 }
+                //HoopzCharacter->SetCapsuleHalfHeight(Height - MotionTime/4, 75);
             } else if (0.5 <= CycleTime && CycleTime < 0.7) {
                 if (PointSet3 == false) {
                     RightLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_target_r7") + MotionDirection / 2;
                     PointSet3 = true;
                     RightInterpSpeed = 30;
                 }
+                //HoopzCharacter->SetCapsuleHalfHeight(Height - MotionTime/4, 75);
             } else if (0.7 <= CycleTime && CycleTime < 0.975) {
                 if (PointSet4 == false) {
                     RightLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_target_r8") + MotionDirection / 3;
                     PointSet4 = true;
                     RightInterpSpeed = 60;
                 }
+                //HoopzCharacter->SetCapsuleHalfHeight(Height + MotionTime/4, 75);
             } else if (0.975 <= CycleTime) {
                 FootKey = false;
                 MotionTime = 0;
@@ -377,8 +391,10 @@ void UMainAnimInstance::Idle(float DeltaTimeX)
                 PointSet3 = false;
                 PointSet4 = false;
                 RightLegInterpTo = PlayerSkeletalMesh->GetSocketLocation("foot_r");
+                RightIKAlpha = 1;
                 LeftInterpSpeed = 25;
                 RightInterpSpeed = 100;
+                //HoopzCharacter->SetCapsuleHalfHeight(Height + MotionTime/4, 75);
             }
         }
 
@@ -394,15 +410,13 @@ void UMainAnimInstance::Idle(float DeltaTimeX)
         if (FootKey == false) {  // left foot moves
             FVector LeftFootCurrent = PlayerSkeletalMesh->GetSocketLocation("foot_l");
             LeftFootCurrent = FMath::VInterpTo(LeftFootCurrent, LeftLegInterpTo, DeltaTimeX, LeftInterpSpeed);
-            LeftLegTarget.X = LeftFootCurrent.X;
-            LeftLegTarget.Y = LeftFootCurrent.Y;
+            LeftLegTarget = LeftFootCurrent;
             RightLegTarget.X = RightLegInterpTo.X;
             RightLegTarget.Y = RightLegInterpTo.Y;
         } else {   // right foot moves
             FVector RightFootCurrent = PlayerSkeletalMesh->GetSocketLocation("foot_r");
             RightFootCurrent = FMath::VInterpTo(RightFootCurrent, RightLegInterpTo, DeltaTimeX, RightInterpSpeed);
-            RightLegTarget.X = RightFootCurrent.X;
-            RightLegTarget.Y = RightFootCurrent.Y;
+            RightLegTarget = RightFootCurrent;
             LeftLegTarget.X = LeftLegInterpTo.X;
             LeftLegTarget.Y = LeftLegInterpTo.Y;
         }
@@ -410,9 +424,7 @@ void UMainAnimInstance::Idle(float DeltaTimeX)
         
     PivotInterpTime = 0;
 
-    // UE_LOG(LogTemp, Warning, TEXT("Motion Time: %f"), MotionTime)
-    // UE_LOG(LogTemp, Warning, TEXT("Motion Wave: %f"), MotionWave)
-    // UE_LOG(LogTemp, Warning, TEXT("Motion Direction: %s"), *MotionDirection.ToString())
+    UE_LOG(LogTemp, Warning, TEXT("%s"), *PlayerSkeletalMesh->GetSocketLocation("foot_r").ToString())
 }
 
 ///////////////////////////// Pivot State - 1 //////////////////////////////////
@@ -688,6 +700,7 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot, float DeltaTimeX)
     if (!ensure(HoopzCharacter)) { return FVector(0, 0, 0); }
     if (!ensure(PlayerSkeletalMesh)) { return FVector(0, 0, 0); }
     if (!ensure(PlayerCapsuleComponent)) { return FVector(0, 0, 0); }
+    if (!ensure(MainState)) { return FVector(0, 0, 0); }
 
     /*
     if (Motion == true) {    // Locomotion
@@ -713,10 +726,11 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot, float DeltaTimeX)
                 FootSocketLocation = PivotLeftFootAnchor;
             }
         } else {
-            if (FootKey == false) {
-                FootSocketLocation = LeftLegTarget;
-            } else { 
-                FootSocketLocation = LeftLegInterpTo;
+            if (MainState->GetCurrentState() == 0) {
+                if (FootKey == false) { FootSocketLocation = LeftLegTarget; }
+                else { FootSocketLocation = LeftLegInterpTo; }
+            } else {
+                FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(FootName);
             }
         }
 
@@ -732,16 +746,16 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot, float DeltaTimeX)
                 FootSocketLocation = PivotRightFootAnchor;
             }
         } else {
-            if (FootKey == true) {
-                FootSocketLocation = RightLegTarget;
-            } else { 
-                FootSocketLocation = RightLegInterpTo;
+            if (MainState->GetCurrentState() == 0) {
+                if (FootKey == true) { FootSocketLocation = RightLegTarget; }
+                else { FootSocketLocation = RightLegInterpTo; }
+            } else {
+                FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(FootName);
             }
         }
     }
 
     float CapsuleHalfHeight = PlayerCapsuleComponent->GetUnscaledCapsuleHalfHeight();
-    
     FVector StartTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight);
     FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight - CapsuleHalfHeight - 15); // 15 = trace distance;
 
@@ -759,12 +773,8 @@ FVector UMainAnimInstance::IKFootTrace(int32 Foot, float DeltaTimeX)
         if (!ensure(HitResult.GetActor())) { return FVector(0, 0, 0); }
 
         // FootOffset Z
-        if (FootSocketLocation.Z < 13.47) {
-            FootSocketLocation.Z = (HitResult.Location - HitResult.TraceEnd).Size() - 15 + 13.47;
-        } else {
-            FootSocketLocation.Z = PlayerSkeletalMesh->GetSocketLocation(FootName).Z;
-        }
-
+        FootSocketLocation.Z = (HitResult.Location - HitResult.TraceEnd).Size() - 15 + 15;
+        
         // Use X & Y for Foot Rotation - TODO : Fix
         // if (Foot == 0) { 
         // LeftFootRotation.Roll = UKismetMathLibrary::DegAtan2(HitResult.Normal.Y, HitResult.Normal.Z);
