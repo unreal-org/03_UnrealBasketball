@@ -50,6 +50,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category= "JointAngles")
 	bool IK = false;
 
+	// Locomotion
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FRotator PelvisMotion;   // bone space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector PelvisHeight;   // bone space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FRotator Spine2Motion;   // bone space
+
 	
 	// Transition Variables
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
@@ -78,6 +86,7 @@ public:
 	// Pivot
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	int32 PivotPoseIndex = 0;
+
 	// Shot
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	int32 ShotPoseIndex = 0;
@@ -105,10 +114,6 @@ public:
 	// Pivot
 	bool FootPlanted = false;
 
-	// Locomotion
-	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
-	float MotionWave;
-
 private:
 	// State Machines
 	FAnimNode_StateMachine *MainState;
@@ -125,12 +130,11 @@ private:
 	bool PointSet2 = false;
 	bool PointSet3 = false;
 	bool PointSet4 = false;
-	float MaxReach = 30;
-	float MaxStepOffset = 20;
+	float MaxReach = 5;
+	float MaxStepOffset = 40;
 	float StartTime;
 	float MotionTime;
-	float InterpWave;
-	float InterpSpeed;
+	float MotionWave;
 	float LeftInterpSpeed = 50;
 	float RightInterpSpeed = 50;
 	FVector LeftLegInterpTo;
