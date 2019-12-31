@@ -131,7 +131,10 @@ void AHoopzCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAction("DashOrShot", IE_Pressed, this, &AHoopzCharacter::DashOrShot);
 
 	// Shoulder Buttons
-	PlayerInputComponent->BindAction("Dribble", IE_Pressed, this, &AHoopzCharacter::Dribble);
+	PlayerInputComponent->BindAction("DribbleLeft", IE_Pressed, this, &AHoopzCharacter::DribbleLeft);
+	PlayerInputComponent->BindAction("DribbleRight", IE_Pressed, this, &AHoopzCharacter::DribbleRight);
+	PlayerInputComponent->BindAction("PostLeft", IE_Pressed, this, &AHoopzCharacter::PostLeft);
+	PlayerInputComponent->BindAction("PostRight", IE_Pressed, this, &AHoopzCharacter::PostRight);
 
 	// For Testing - DPad
 	PlayerInputComponent->BindAction("TogglePivot", IE_Pressed, this, &AHoopzCharacter::TogglePivot);
@@ -146,6 +149,11 @@ void AHoopzCharacter::OnTurnTimerExpire()
     CanTurn = true;
 }
 
+void AHoopzCharacter::OnDashTimerExpire()
+{
+	CanDash = true;
+}
+
 
 ////////////////////// Directional Input ///////////////////////////////
 void AHoopzCharacter::MoveForward(float Throw)
@@ -155,7 +163,7 @@ void AHoopzCharacter::MoveForward(float Throw)
 
 	FVector ForwardDirection = Camera->GetForwardVector();
 	// FVector Direction = GetActorForwardVector();
-	ForwardThrow = ForwardDirection;
+	ForwardThrow = ForwardDirection * Throw;
 
 	if (PivotMode == true) {
         PivotForward = ForwardDirection * Throw * 40;
@@ -171,7 +179,7 @@ void AHoopzCharacter::MoveRight(float Throw)
 
 	FVector RightDirection = Camera->GetRightVector();
 	// FVector Direction = GetActorRightVector();
-	RightThrow = RightDirection;
+	RightThrow = RightDirection * Throw;
 
 	if (PivotMode == true) {
         PivotRight = RightDirection * Throw * 40;
@@ -238,7 +246,7 @@ void AHoopzCharacter::JumpReleased()    // Face Button bottom release
 // TODO : Fix Multiple Input Problem
 void AHoopzCharacter::TurnLeft()     // Face Button top
 {
-	//if (CurrentState == 0) { return; }
+	if (CurrentState == 2) { return; }
 
 	if (CanTurn) {
 		CanTurn = false;
@@ -253,8 +261,10 @@ void AHoopzCharacter::TurnLeft()     // Face Button top
 			PivotPoint->SetActorRotation(PivotPointRotation, ETeleportType::None);
 			PivotTurn = true;
 			PivotTurnLeft = true;
-		} else {   // For Turning without ball
+		}
+		else {   // For Turning outside pivot
 			TotalRotation.Yaw -= 45;
+			LocomotionTurn = true;
 		}
 	}
 
@@ -266,7 +276,7 @@ void AHoopzCharacter::TurnLeft()     // Face Button top
 
 void AHoopzCharacter::TurnRight()     // Face Button right
 {
-	//if (CurrentState == 0) { return; }
+	if (CurrentState == 2) { return; }
 
 	if (CanTurn == true) {
 		CanTurn = false;
@@ -281,9 +291,10 @@ void AHoopzCharacter::TurnRight()     // Face Button right
 			PivotPoint->SetActorRotation(PivotPointRotation, ETeleportType::None);
 			PivotTurn = true;
 			PivotTurnRight = true;
-
-		} else {
+		}
+		else {
 			TotalRotation.Yaw += 45;
+			LocomotionTurn = true;
 		}
 	}
 	
@@ -294,23 +305,78 @@ void AHoopzCharacter::TurnRight()     // Face Button right
 
 void AHoopzCharacter::DashOrShot()   // Face Button Left 
 {
-	if (CurrentState == 0) { return; }
+	// if (CurrentState == 0) { return; }
 
-	if (Jumped == true) { ShotKey = 1; }
-	else {
-		// dash
+	if (Jumped == true) { ShotKey = 3; }
+	else {  // Dash
+		if (CurrentState == 1 || CurrentState == 4) { return; }
+
+		// Add Impulse in Direction
+		if (CanDash == true) {
+			HoopzCharacterMovementComponent->AddImpulse((RightThrow + ForwardThrow) * 200, true);
+			CanDash = false;
+		}
 	}
+
+	FTimerHandle TurnTimer;
+	GetWorld()->GetTimerManager().SetTimer(TurnTimer, this, &AHoopzCharacter::OnDashTimerExpire, 3, false);
+	return; 
 }
 
 // TODO : Consider Shoulder trigger axis for variable height dribble
-void AHoopzCharacter::Dribble()    // Shoulder Trigger right 
+void AHoopzCharacter::DribbleRight()    // Shoulder Trigger right 
 {
-	if (CurrentState == 0) { return; }
+	if (CurrentState != 1 && CurrentState != 3 && CurrentState != 2) { return; }
 
 	if (MainAnimInstance->Dribble == true) {
 		MainAnimInstance->Dribble = false;
 	} else {
 		MainAnimInstance->Dribble = true;
+	}
+}
+void AHoopzCharacter::DribbleLeft()    // Shoulder Trigger left
+{
+	if (CurrentState != 1 && CurrentState != 3 && CurrentState != 2) { return; }
+
+	if (MainAnimInstance->Dribble == true) {
+		MainAnimInstance->Dribble = false;
+	} else {
+		MainAnimInstance->Dribble = true;
+	}
+}
+
+void AHoopzCharacter::PostLeft()
+{
+	if (CurrentState != 1 && CurrentState != 3 && CurrentState != 2) { return; }
+
+	if (MainAnimInstance->PostUp == true) {
+		if (MainAnimInstance->PostPoseIndex == 0) {
+			MainAnimInstance->PostUp = false;
+		} else if (MainAnimInstance->PostPoseIndex == 1) {
+			MainAnimInstance->PostPoseIndex = 0;
+			TotalRotation.Yaw = 135;
+		}
+	} else {
+		MainAnimInstance->PostUp = true;
+		MainAnimInstance->PostPoseIndex = 0;
+		TotalRotation.Yaw = 135;
+	}
+}
+void AHoopzCharacter::PostRight()
+{
+	if (CurrentState != 1 && CurrentState != 3 && CurrentState != 2) { return; }
+
+	if (MainAnimInstance->PostUp == true) {
+		if (MainAnimInstance->PostPoseIndex == 1) {
+			MainAnimInstance->PostUp = false;
+		} else if (MainAnimInstance->PostPoseIndex == 0) {
+			MainAnimInstance->PostPoseIndex = 1;
+			TotalRotation.Yaw = -135;
+		}
+	} else {
+		MainAnimInstance->PostUp = true;
+		MainAnimInstance->PostPoseIndex = 1;
+		TotalRotation.Yaw = -135;
 	}
 }
 

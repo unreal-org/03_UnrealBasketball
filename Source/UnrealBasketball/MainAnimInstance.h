@@ -27,6 +27,12 @@ public:
 	// Constructor
 	UMainAnimInstance(const FObjectInitializer& ObjectInitializer);
 
+	// Limb Scale
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector ArmScale;   // component space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FVector LegScale;   // component space
+
 	// Motion Frequency - Controls range of Locomotion(Connected to Limb & Spine Base Points)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector MotionFrequency;   // world space
@@ -66,6 +72,8 @@ public:
 	bool Jumped = false;
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	bool Dribble = false;
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	bool PostUp = false;
 
 	// Transition Events
 	UFUNCTION(BlueprintCallable)
@@ -78,6 +86,8 @@ public:
 	void AnimNotify_IdleJump();
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_OnDribble();
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_PostUpEntry();
 
 	// Montage Reference
 	UPROPERTY(BlueprintReadWrite, Category= "Montage Reference")
@@ -90,6 +100,10 @@ public:
 	// Shot
 	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
 	int32 ShotPoseIndex = 0;
+
+	// Post
+	UPROPERTY(BlueprintReadOnly, Category= "Transition Variables")
+	int32 PostPoseIndex = -1;
 
 	// Offense Transition & Variables
 	UPROPERTY(BlueprintReadWrite, Category= "Static Mesh Actors")
@@ -120,6 +134,7 @@ private:
 
 	// Helper Functions
 	void CapsuleTargetLerp(float DeltaTimeX, float TurnDuration);
+	void Locomotion(float DeltaTimeX);
 
 	// Idle
 	void Idle(float DeltaTimeX);
@@ -131,7 +146,7 @@ private:
 	bool PointSet3 = false;
 	bool PointSet4 = false;
 	float MaxReach = 5;
-	float MaxStepOffset = 40;
+	float MaxStepOffset = 30;
 	float StartTime;
 	float MotionTime;
 	float MotionWave;
@@ -141,6 +156,9 @@ private:
 	FVector RightLegInterpTo;
 	FVector LeftLegTarget;
 	FVector RightLegTarget;
+
+	// PostUp
+	void IdlePostUp(float DeltaTimeX);
 
 	// State Machine Functions
 	void Pivot(float DeltaTimeX);

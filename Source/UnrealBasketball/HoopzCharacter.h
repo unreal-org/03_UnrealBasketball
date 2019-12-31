@@ -51,7 +51,8 @@ public:
 	// Modify Capsule Half Height
 	void SetCapsuleHalfHeight(float MaxValue, float MinValue);
 
-	// Pivot Spline Points
+	// Pivot Point Reference
+	AActor* PivotPoint = nullptr;
 	USplineComponent* CapsulePivotPoints = nullptr;
 	USplineComponent* FootPivotPoints = nullptr;
 
@@ -59,6 +60,7 @@ public:
 
 	// Rotation of Player
 	FRotator TotalRotation;
+	bool LocomotionTurn = false;
 
 protected:
 	// Called when the game starts or when spawned
@@ -85,9 +87,6 @@ private:
 	UCapsuleComponent* CapsuleComponent = nullptr;
 	UMainAnimInstance* MainAnimInstance = nullptr;
 	USpringArmComponent* SpringArm = nullptr;
-	
-	// Pivot Point Reference
-	AActor* PivotPoint = nullptr;
 
 	// Movement
 	void MoveForward(float Throw);
@@ -101,7 +100,11 @@ private:
 	void TurnLeft();
 	void TurnRight();
 
-	// Turn Timer
+	// PostUp
+	void PostLeft();
+	void PostRight();
+
+	// Turn
 	void OnTurnTimerExpire();
 	float TurnDelay = 0.2;
 	
@@ -112,7 +115,12 @@ private:
 	bool Jumped = false;
 
 	// Dribble (R2) - *** NOTE : There is an option for Right Trigger to be an Axis ***
-	void Dribble();
+	void DribbleRight();
+	void DribbleLeft();
+
+	// Dash
+	void OnDashTimerExpire();
+	bool CanDash = true;
 
 	// Capsule
 	bool CapsuleDip = false;
