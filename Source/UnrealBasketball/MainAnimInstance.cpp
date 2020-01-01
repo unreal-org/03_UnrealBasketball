@@ -376,7 +376,6 @@ void UMainAnimInstance::Locomotion(float DeltaTimeX)
         }
 
         // TODO : FIX FIRST STEP LAG
-        // TODO : Add Sway
 
         // Increase Speed of interpolation & Range of Motion for upperbody (based on Velocity)
         float MotionSpeed = CapsuleVelocity / 75 * PostUpSpeedMod;    // 100 = Max Move Speed - TODO : Soft Code
@@ -385,12 +384,13 @@ void UMainAnimInstance::Locomotion(float DeltaTimeX)
         float HeightWave = UKismetMathLibrary::Cos(UKismetMathLibrary::GetPI() * MotionTime * 2);
         MotionWave = MotionSpeed * InterpWave;
         float CycleTime = abs(UKismetMathLibrary::GenericPercent_FloatFloat(MotionTime, 1.f));
+        PelvisMotion = FRotator(HoopzCharacter->RightThrow * 3 * MotionSpeed, 0, HoopzCharacter->ForwardThrow * 3 * MotionSpeed);
 
         // MotionWave also controls range of motion in the pelvis, spine, & upperbody
         // Sine wave linked to Chained Rotations - Multiply by FRotator
         // Add Offset Interpolation Points to increase range of motion & avoid Leg collisions
         if (FootKey == false) {   // Left Foot moves
-            PelvisMotion = MotionWave * FRotator(2, -3, 1);
+            PelvisMotion += MotionWave * FRotator(2, -3, 1);
             PelvisHeight.Z = HeightWave * MotionSpeed * 2 - 1;
             Spine2Motion = -MotionWave * FRotator(2, 2, 1);
             RightFootJump = true;
@@ -432,7 +432,7 @@ void UMainAnimInstance::Locomotion(float DeltaTimeX)
             }
         }
         else {   // Right Foot moves
-            PelvisMotion = MotionWave * FRotator(1, 3, -1);
+            PelvisMotion += MotionWave * FRotator(1, 3, -1);
             PelvisHeight.Z = HeightWave * MotionSpeed * 2 - 1;
             Spine2Motion = -MotionWave * FRotator(1, -2, -2);
             LeftFootJump = true;

@@ -63,8 +63,6 @@ public:
 	FVector PelvisHeight;   // bone space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FRotator Spine2Motion;   // bone space
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator SwayMotion;   // bone space
 
 	
 	// Transition Variables

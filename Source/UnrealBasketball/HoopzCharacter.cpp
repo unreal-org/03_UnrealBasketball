@@ -163,7 +163,7 @@ void AHoopzCharacter::MoveForward(float Throw)
 
 	FVector ForwardDirection = Camera->GetForwardVector();
 	// FVector Direction = GetActorForwardVector();
-	ForwardThrow = ForwardDirection * Throw;
+	ForwardThrow = Throw;
 
 	if (PivotMode == true) {
         PivotForward = ForwardDirection * Throw * 40;
@@ -179,7 +179,7 @@ void AHoopzCharacter::MoveRight(float Throw)
 
 	FVector RightDirection = Camera->GetRightVector();
 	// FVector Direction = GetActorRightVector();
-	RightThrow = RightDirection * Throw;
+	RightThrow = Throw;
 
 	if (PivotMode == true) {
         PivotRight = RightDirection * Throw * 40;

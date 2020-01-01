@@ -46,8 +46,8 @@ public:
 	bool ShotSelect = false;
 	bool CanChangeShot = true;
 
-	FVector ForwardThrow;
-	FVector RightThrow;
+	float ForwardThrow;
+	float RightThrow;
 
 	// Modify Capsule Half Height
 	void SetCapsuleHalfHeight(float MaxValue, float MinValue);
