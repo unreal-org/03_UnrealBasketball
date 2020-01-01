@@ -43,6 +43,7 @@ public:
 	FVector BasketLocation;
 
 	int32 ShotKey = 0;
+	bool ShotSelect = false;
 	bool CanChangeShot = true;
 
 	FVector ForwardThrow;

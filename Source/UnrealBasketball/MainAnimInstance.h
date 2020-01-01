@@ -63,6 +63,8 @@ public:
 	FVector PelvisHeight;   // bone space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FRotator Spine2Motion;   // bone space
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
+	FRotator SwayMotion;   // bone space
 
 	
 	// Transition Variables
@@ -145,7 +147,7 @@ private:
 	bool PointSet2 = false;
 	bool PointSet3 = false;
 	bool PointSet4 = false;
-	float MaxReach = 5;
+	float MaxReach = 20;
 	float MaxStepOffset = 30;
 	float StartTime;
 	float MotionTime;
@@ -159,6 +161,8 @@ private:
 
 	// PostUp
 	void IdlePostUp(float DeltaTimeX);
+	float PostUpSpeedMod = 1;   // Multiplied
+	float PostUpInterpMod = 0;  // Added
 
 	// State Machine Functions
 	void Pivot(float DeltaTimeX);
@@ -185,6 +189,10 @@ private:
 	FVector FirstStepLeftFootLocation;
 	FVector FirstStepRightFootLocation;
 	bool FirstStep = true;
+
+	// Jump
+	bool LeftFootJump = false;
+	bool RightFootJump = false;
 
 	// Foot Trace
 	FName TraceTag = FName(TEXT("TraceTag"));;

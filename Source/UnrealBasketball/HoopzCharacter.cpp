@@ -214,6 +214,7 @@ void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint
 
 	CanChangeShot = true;   // Allows for one shot selection
 	ShotKey = 0;            // Initial Jump State Pose Key
+	ShotSelect = false;
 
 	EstablishPivot = false; // Reset Pivot variables
 	PivotKey = false;
@@ -223,6 +224,7 @@ void AHoopzCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint
 
 
 ///////////////////// Action Input //////////////////////////////////
+// TODO : Directional Jumping
 void AHoopzCharacter::JumpPressed()     // Face Button bottom press
 {
 	if (CurrentState == 0) { return; }    // Todo: Implement while moving one leg jumps
@@ -307,13 +309,18 @@ void AHoopzCharacter::DashOrShot()   // Face Button Left
 {
 	// if (CurrentState == 0) { return; }
 
-	if (Jumped == true) { ShotKey = 3; }
+	if (Jumped == true) {
+		ShotSelect = true;
+		ShotKey = 3;
+	}
 	else {  // Dash
 		if (CurrentState == 1 || CurrentState == 4) { return; }
 
 		// Add Impulse in Direction
 		if (CanDash == true) {
-			HoopzCharacterMovementComponent->AddImpulse((RightThrow + ForwardThrow) * 200, true);
+			FVector DashVector = GetVelocity();
+			DashVector.Z = 10;
+			LaunchCharacter(DashVector * 3, false, false);    // TODO : Reimplement Dash & Disable IK while Dashing
 			CanDash = false;
 		}
 	}
@@ -352,7 +359,7 @@ void AHoopzCharacter::PostLeft()
 	if (MainAnimInstance->PostUp == true) {
 		if (MainAnimInstance->PostPoseIndex == 0) {
 			MainAnimInstance->PostUp = false;
-		} else if (MainAnimInstance->PostPoseIndex == 1) {
+		} else {
 			MainAnimInstance->PostPoseIndex = 0;
 			TotalRotation.Yaw = 135;
 		}
@@ -369,7 +376,7 @@ void AHoopzCharacter::PostRight()
 	if (MainAnimInstance->PostUp == true) {
 		if (MainAnimInstance->PostPoseIndex == 1) {
 			MainAnimInstance->PostUp = false;
-		} else if (MainAnimInstance->PostPoseIndex == 0) {
+		} else {
 			MainAnimInstance->PostPoseIndex = 1;
 			TotalRotation.Yaw = -135;
 		}
