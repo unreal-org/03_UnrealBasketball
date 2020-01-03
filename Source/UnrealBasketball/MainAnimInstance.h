@@ -161,6 +161,7 @@ private:
 	void IdlePostUp(float DeltaTimeX);
 	float PostUpSpeedMod = 1;   // Multiplied
 	float PostUpInterpMod = 0;  // Added
+	int32 PostUpReverse = 1;
 
 	// State Machine Functions
 	void Pivot(float DeltaTimeX);
