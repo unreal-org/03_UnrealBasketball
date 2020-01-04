@@ -63,6 +63,9 @@ public:
 	FRotator TotalRotation;
 	bool LocomotionTurn = false;
 
+	// MovementComponent
+	UHoopzCharacterMovementComponent* HoopzCharacterMovementComponent = nullptr;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -81,7 +84,6 @@ protected:
 
 private:	
 	// Character Components
-	UHoopzCharacterMovementComponent* HoopzCharacterMovementComponent = nullptr;
 	USplineComponent* PivotComponent = nullptr;
 	AStaticMeshActor* Basket = nullptr;
 	UCameraComponent* Camera = nullptr;
