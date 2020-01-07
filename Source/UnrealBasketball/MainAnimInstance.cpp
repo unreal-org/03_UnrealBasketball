@@ -399,7 +399,7 @@ void UMainAnimInstance::Locomotion(float DeltaTimeX)
         float HeightWave = UKismetMathLibrary::Cos(UKismetMathLibrary::GetPI() * MotionTime * 2);
         MotionWave = MotionSpeed * InterpWave;
         float CycleTime = abs(UKismetMathLibrary::GenericPercent_FloatFloat(MotionTime, 1.f));
-        PelvisMotion = FRotator(-HoopzCharacter->ForwardThrow * 4 * MotionSpeed, 0, HoopzCharacter->RightThrow * 4 * MotionSpeed);
+        PelvisMotion = FRotator(-MotionDirection.X / 15 * MotionSpeed, 0, MotionDirection.Y / 15 * MotionSpeed);  // TODO : Rotate by TotalRotation;
 
         // MotionWave also controls range of motion in the pelvis, spine, & upperbody
         // Sine wave linked to Chained Rotations - Multiply by FRotator

@@ -13,6 +13,7 @@
 #include "Engine/EngineTypes.h"
 #include "MainAnimInstance.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "BallControlComponent.h"
 
 /////////////////////////////// Constructors //////////////////////////////////////////
 AHoopzCharacter::AHoopzCharacter()
@@ -40,6 +41,7 @@ void AHoopzCharacter::BeginPlay()
 	Camera = FindComponentByClass<UCameraComponent>();
 	CapsuleComponent = FindComponentByClass<UCapsuleComponent>();
 	MainAnimInstance = dynamic_cast<UMainAnimInstance*>(GetMesh()->GetAnimInstance());
+	BallController = FindComponentByClass<UBallControlComponent>();
 	
 	// Spring Arm
 	SpringArm = FindComponentByClass<USpringArmComponent>();
@@ -138,7 +140,7 @@ void AHoopzCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	// For Testing - DPad
 	PlayerInputComponent->BindAction("TogglePivot", IE_Pressed, this, &AHoopzCharacter::TogglePivot);
-	PlayerInputComponent->BindAction("ToggleOffense", IE_Pressed, this, &AHoopzCharacter::ToggleOffense);
+	PlayerInputComponent->BindAction("ToggleBall", IE_Pressed, this, &AHoopzCharacter::ToggleBall);
 	
 }
 
@@ -477,11 +479,7 @@ void AHoopzCharacter::TogglePivot()
 	}
 }
 
-void AHoopzCharacter::ToggleOffense()
+void AHoopzCharacter::ToggleBall()
 {
-	if (MainAnimInstance->Offense == true) {
-		MainAnimInstance->Offense = false;
-	} else {
-		MainAnimInstance->Offense = true;
-	}
+	BallController->AttachBall(GetMesh(), FName(TEXT("ball_socket_r")));
 }

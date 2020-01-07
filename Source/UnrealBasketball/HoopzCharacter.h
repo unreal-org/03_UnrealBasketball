@@ -14,9 +14,7 @@ class UCapsuleComponent;
 class USceneComponent;
 class UMainAnimInstance;
 class USpringArmComponent;
-
-struct FAttachmentTransformRules;
-struct FDetachmentTransformRules;
+class UBallControlComponent;
 
 UCLASS()
 class UNREALBASKETBALL_API AHoopzCharacter : public ACharacter
@@ -90,6 +88,7 @@ private:
 	UCapsuleComponent* CapsuleComponent = nullptr;
 	UMainAnimInstance* MainAnimInstance = nullptr;
 	USpringArmComponent* SpringArm = nullptr;
+	UBallControlComponent* BallController = nullptr;
 
 	// Movement
 	void MoveForward(float Throw);
@@ -147,5 +146,5 @@ private:
 
 	// Testing
 	void TogglePivot();
-	void ToggleOffense();
+	void ToggleBall();
 };
