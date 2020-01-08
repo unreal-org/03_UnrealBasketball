@@ -194,7 +194,7 @@ private:
 	bool RightFootJump = false;
 
 	// Foot Trace
-	FName TraceTag = FName(TEXT("TraceTag"));;
+	FName TraceTag = FName(TEXT("TraceTag"));
 	FCollisionQueryParams TraceParameters;
 	FVector IKFootTrace(int32 Foot, float DeltaTimeX);
 

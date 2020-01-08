@@ -7,6 +7,8 @@
 #include "BallControlComponent.generated.h"
 
 class ABasketBall;
+class UPhysicsHandleComponent;
+class USkeletalMeshComponent;
 
 struct FAttachmentTransformRules;
 struct FDetachmentTransformRules;
@@ -25,7 +27,7 @@ public:
 	UBallControlComponent();
 
 	// Attach Ball
-	void AttachBall(USceneComponent* SkeletalMesh, FName Socket);
+	void AttachBall();
 
 protected:
 	// Called when the game starts
@@ -36,8 +38,14 @@ protected:
 
 private:
 	ABasketBall* BasketBall = nullptr;
+	USkeletalMeshComponent* SkelMesh = nullptr;
 
-	FAttachmentTransformRules AttachmentRule = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
-	FDetachmentTransformRules DetachmentRule = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, false);
+	// Physics Handle
+	UPhysicsHandleComponent* BallHandle = nullptr;
+	FName TraceTag = FName(TEXT("TraceTag"));
+	FCollisionQueryParams BallTrace;
+
+	// FAttachmentTransformRules AttachmentRule = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
+	// FDetachmentTransformRules DetachmentRule = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, false);
 		
 };

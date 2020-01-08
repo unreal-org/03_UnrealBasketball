@@ -319,10 +319,11 @@ void AHoopzCharacter::DashOrShot()   // Face Button Left
 		if (CurrentState == 1 || CurrentState == 4) { return; }
 
 		// Add Impulse in Direction
+		// TODO : Reimplement Dash & Disable IK while Dashing
 		if (CanDash == true) {
-			FVector DashVector = GetVelocity();
-			DashVector.Z = 10;
-			LaunchCharacter(DashVector * 3, false, false);    // TODO : Reimplement Dash & Disable IK while Dashing
+			// FVector DashVector = GetVelocity();
+			// DashVector.Z = 10;
+			// LaunchCharacter(DashVector * 3, false, false);    
 			CanDash = false;
 		}
 	}
@@ -481,5 +482,6 @@ void AHoopzCharacter::TogglePivot()
 
 void AHoopzCharacter::ToggleBall()
 {
-	BallController->AttachBall(GetMesh(), FName(TEXT("ball_socket_r")));
+	//BallController->AttachBall();
+	return;
 }
