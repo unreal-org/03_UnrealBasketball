@@ -38,7 +38,7 @@ public:
 	FVector MotionFrequency;   // world space
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FVector TestTarget;   // world space
+	FRotator NeckAngle;   // world space
 
 	// Feet
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
@@ -58,7 +58,7 @@ public:
 
 	// Locomotion
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
-	FRotator PelvisMotion;   // bone space
+	FRotator PelvisMotion;   // world space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
 	FVector PelvisHeight;   // bone space
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "JointAngles")
@@ -135,6 +135,12 @@ private:
 	// Helper Functions
 	void CapsuleTargetLerp(float DeltaTimeX, float TurnDuration);
 	void Locomotion(float DeltaTimeX);
+	void ClampNeck(FRotator LookAtNeck);
+
+	// Locomotion 2
+	void Locomotion2(float DeltaTimeX);
+	FRotator TargetMotion;
+
 
 	// Idle
 	void Idle(float DeltaTimeX);

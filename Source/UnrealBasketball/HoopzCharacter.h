@@ -44,9 +44,6 @@ public:
 	bool ShotSelect = false;
 	bool CanChangeShot = true;
 
-	float ForwardThrow;
-	float RightThrow;
-
 	// Modify Capsule Half Height
 	void SetCapsuleHalfHeight(float MaxValue, float MinValue);
 
@@ -63,6 +60,12 @@ public:
 
 	// MovementComponent
 	UHoopzCharacterMovementComponent* HoopzCharacterMovementComponent = nullptr;
+
+	// Locomotion 2
+	FVector ForwardThrow;
+	FVector RightThrow;
+	FVector ForwardLean;
+	FVector RightLean;
 
 protected:
 	// Called when the game starts or when spawned

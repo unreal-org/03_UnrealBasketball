@@ -35,7 +35,6 @@ void UMainAnimInstance::NativeInitializeAnimation()
 
     LeftFootLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("foot_l")));
     RightFootLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("foot_r")));
-    //PelvisMotion = FRotator(0, 90, -90);
 
     BasketLocation = FVector(419, 0 , 168);
 }
@@ -52,6 +51,7 @@ void UMainAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
         case 0: // Idle
             Idle(DeltaTimeX);
             CapsuleTargetLerp(DeltaTimeX, .05);
+            // Locomotion2(DeltaTimeX);
             break;
         case 1: // IdlePivot
             Pivot(DeltaTimeX);
@@ -114,6 +114,8 @@ void UMainAnimInstance::AnimNotify_IdleEntry()
     IKAlpha = 0.95;
     LeftIKAlpha = 1;
     RightIKAlpha = 1;
+
+    PelvisMotion = FRotator(0, 0, 0);
 }
 
 void UMainAnimInstance::AnimNotify_SetPivot()   
@@ -290,7 +292,142 @@ void UMainAnimInstance::AnimNotify_IdleOffense()
 }
 
 
+//////////////////////////////////////// IK Foot Placement /////////////////////////////////////
+// TODO : Move to SubAnimInstance on Refactor
+// TODO : Ragdoll IK
+// TODO : Toe IK
+FVector UMainAnimInstance::IKFootTrace(int32 Foot, float DeltaTimeX)
+{
+    if (!ensure(HoopzCharacter)) { return FVector(0, 0, 0); }
+    if (!ensure(PlayerSkeletalMesh)) { return FVector(0, 0, 0); }
+    if (!ensure(PlayerCapsuleComponent)) { return FVector(0, 0, 0); }
+    if (!ensure(MainState)) { return FVector(0, 0, 0); }
+
+    FName FootName;
+    FVector FootSocketLocation;
+    if (Foot == 0) {
+        FootName = FName(TEXT("foot_l"));
+        LeftJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_l")));
+
+        // return Pivot Location if Pivot Mode - else foot location
+        if (FootPlanted == true)  {
+            if (HoopzCharacter->PivotKey == false) {  // Left Foot Moves, Right Plants
+                FootSocketLocation = NewLeftFootLocation;
+            } else {
+                FootSocketLocation = PivotLeftFootAnchor;
+            }
+        } else {
+            // if (MainState->GetCurrentState() == 0 ) {
+            //     // Move feet to given location
+
+            } else if (MainState->GetCurrentState() == 0 || MainState->GetCurrentState() == 2 || MainState->GetCurrentState() == 3) {
+                if (FootKey == false) {
+                    FootSocketLocation = LeftLegTarget;
+                    if (HoopzCharacter->GetVelocity().Size() > 0) { return FootSocketLocation; }
+                }
+                else { FootSocketLocation = LeftLegInterpTo; }
+            } else {
+                FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(FootName);
+            }
+        }
+
+    } else { 
+        FootName = FName(TEXT("foot_r"));
+        RightJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_r")));
+
+        if (FootPlanted == true)  {
+            if (HoopzCharacter->PivotKey == true) {  // Right Foot Moves
+                FootSocketLocation = NewRightFootLocation;
+            } else {
+                FootSocketLocation = PivotRightFootAnchor;
+            }
+        } else {
+            // if (MainState->GetCurrentState() == 0 ) {
+            //     // Move feet to given location
+
+            } else if (MainState->GetCurrentState() == 0 || MainState->GetCurrentState() == 2 || MainState->GetCurrentState() == 3) {
+                if (FootKey == true) {
+                    FootSocketLocation = RightLegTarget;
+                    if (HoopzCharacter->GetVelocity().Size() > 0) { return FootSocketLocation; }
+                }
+                else { FootSocketLocation = RightLegInterpTo; }
+            } else {
+                FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(FootName);
+            }
+        }
+    }
+
+    float CapsuleHalfHeight = PlayerCapsuleComponent->GetUnscaledCapsuleHalfHeight();
+    FVector StartTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight);
+    FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight - CapsuleHalfHeight - 30); // 30 = trace distance;
+
+    FHitResult HitResult(ForceInit);
+    
+    bool HitConfirm = GetWorld()->LineTraceSingleByChannel(   // Line trace for feet
+            HitResult,
+            StartTrace,
+            EndTrace,
+            ECollisionChannel::ECC_Visibility,
+            TraceParameters);
+
+    if (HitConfirm)
+    {
+        if (!ensure(HitResult.GetActor())) { return FVector(0, 0, 0); }
+
+        // FootOffset Z
+        FootSocketLocation.Z = (HitResult.Location - HitResult.TraceEnd).Size() - 30 + 13.5 * LegScale.X;
+        
+        // Foot Rotations
+        if (Foot == 0) { 
+        LeftFootRotation.Roll = UKismetMathLibrary::DegAtan2(HitResult.Normal.Y, HitResult.Normal.Z);
+        LeftFootRotation.Pitch = UKismetMathLibrary::DegAtan2(HitResult.Normal.X, HitResult.Normal.Z);
+        } else { 
+        RightFootRotation.Roll = UKismetMathLibrary::DegAtan2(HitResult.Normal.Y, HitResult.Normal.Z);
+        RightFootRotation.Pitch = UKismetMathLibrary::DegAtan2(HitResult.Normal.X, HitResult.Normal.Z);
+        } 
+
+        return FootSocketLocation; 
+    }
+    
+    return FootSocketLocation;  // else - don't offset
+}
+
+
 /////////////////////////////// Helper Functions /////////////////////////////
+void UMainAnimInstance::Locomotion2(float DeltaTimeX)
+{
+    if (!ensure(HoopzCharacter)) { return; }
+    if (!ensure(PlayerSkeletalMesh)) { return; }
+
+    // Lean
+    FVector MotionLean = HoopzCharacter->ForwardThrow + HoopzCharacter->RightThrow;
+    float MotionLag = MotionLean.Size() / (HoopzCharacter->ForwardLean + HoopzCharacter->RightLean).Size();
+
+    // Lerp
+    TargetMotion = FRotator(-MotionLean.X * 15 * (MotionLag + .25), 0, MotionLean.Y * 15 * (MotionLag + .25));
+    CapsuleTurnTime = 0;
+    if (CapsuleTurnTime < CapsuleTurnDuration)
+    {
+        CapsuleTurnTime += DeltaTimeX;
+        PelvisMotion = FMath::Lerp(PelvisMotion, TargetMotion, CapsuleTurnTime / 0.1);
+    }
+
+    // trace vector from head to ground & update balance variable
+    FVector Head = PlayerSkeletalMesh->GetSocketLocation("head");
+    FVector Root = PlayerSkeletalMesh->GetSocketLocation("root");
+    Head.Z = 0;
+    Root.Z = 0;
+    FVector Balance = Head - Root;
+
+    // adjust feet & addmovementinput towards balance vector until balance is restored
+    if (Balance.Size() > 5) {
+        HoopzCharacter->AddMovementInput(Balance, 1, false);
+
+        // Determine FootLocations & Interp
+
+    }
+}
+
 void UMainAnimInstance::CapsuleTargetLerp(float DeltaTimeX, float TurnDuration)   
 {
     if (!ensure(HoopzCharacter)) { return; }
@@ -304,15 +441,27 @@ void UMainAnimInstance::CapsuleTargetLerp(float DeltaTimeX, float TurnDuration)
         FRotator TargetCapsuleRotation = CapsuleRotation;
         FRotator LookAtCapsuleRotation = UKismetMathLibrary::FindLookAtRotation(PlayerCapsuleComponent->GetComponentLocation(), HoopzCharacter->BasketLocation);
         TargetCapsuleRotation.Yaw = LookAtCapsuleRotation.Yaw + HoopzCharacter->TotalRotation.Yaw;
+
+        FRotator CurrentNeck = PlayerSkeletalMesh->GetSocketRotation(FName(TEXT("neck_01")));
+        FRotator LookAtNeck = CurrentNeck;
+        ClampNeck(LookAtNeck);
         
         CapsuleTurnTime = 0;
         if (CapsuleTurnTime < CapsuleTurnDuration)
         {
             CapsuleTurnTime += DeltaTimeX;
             CapsuleRotation = FMath::Lerp(CapsuleRotation, TargetCapsuleRotation, CapsuleTurnTime / TurnDuration);
+            NeckAngle = FMath::Lerp(CurrentNeck, LookAtNeck, CapsuleTurnTime / 2);
             PlayerCapsuleComponent->SetWorldRotation(CapsuleRotation, false);
         }
     }
+}
+
+void UMainAnimInstance::ClampNeck(FRotator LookAtNeck)
+{
+    LookAtNeck.Pitch = FMath::ClampAngle(NeckAngle.Pitch, -90, 90);
+    LookAtNeck.Yaw = FMath::ClampAngle(NeckAngle.Yaw, -90, 90);
+    LookAtNeck.Roll = FMath:: ClampAngle(NeckAngle.Roll, -90, 90);
 }
 
 void UMainAnimInstance::Locomotion(float DeltaTimeX)
@@ -399,7 +548,7 @@ void UMainAnimInstance::Locomotion(float DeltaTimeX)
         float HeightWave = UKismetMathLibrary::Cos(UKismetMathLibrary::GetPI() * MotionTime * 2);
         MotionWave = MotionSpeed * InterpWave;
         float CycleTime = abs(UKismetMathLibrary::GenericPercent_FloatFloat(MotionTime, 1.f));
-        PelvisMotion = FRotator(-MotionDirection.X / 15 * MotionSpeed, 0, MotionDirection.Y / 15 * MotionSpeed);  // TODO : Rotate by TotalRotation;
+        PelvisMotion = FRotator(-MotionDirection.X / 20 * (MotionSpeed + 0.5), 0, MotionDirection.Y / 20 * (MotionSpeed + 0.5));  
 
         // MotionWave also controls range of motion in the pelvis, spine, & upperbody
         // Sine wave linked to Chained Rotations - Multiply by FRotator
@@ -802,99 +951,3 @@ void UMainAnimInstance::IdleOffense(float DeltaTimeX)
     if (!ensure(HoopzCharacter)) { return; }
 
 }
-
-
-//////////////////////////////////////// IK Foot Placement /////////////////////////////////////
-// TODO : Move to SubAnimInstance on Refactor
-// TODO : Ragdoll IK
-// TODO : Toe IK
-FVector UMainAnimInstance::IKFootTrace(int32 Foot, float DeltaTimeX)
-{
-    if (!ensure(HoopzCharacter)) { return FVector(0, 0, 0); }
-    if (!ensure(PlayerSkeletalMesh)) { return FVector(0, 0, 0); }
-    if (!ensure(PlayerCapsuleComponent)) { return FVector(0, 0, 0); }
-    if (!ensure(MainState)) { return FVector(0, 0, 0); }
-
-    FName FootName;
-    FVector FootSocketLocation;
-    if (Foot == 0) {
-        FootName = FName(TEXT("foot_l"));
-        LeftJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_l")));
-
-        // return Pivot Location if Pivot Mode - else foot location
-        if (FootPlanted == true)  {
-            if (HoopzCharacter->PivotKey == false) {  // Left Foot Moves, Right Plants
-                FootSocketLocation = NewLeftFootLocation;
-            } else {
-                FootSocketLocation = PivotLeftFootAnchor;
-            }
-        } else {
-            if (MainState->GetCurrentState() == 0 || MainState->GetCurrentState() == 2 || MainState->GetCurrentState() == 3) {
-                if (FootKey == false) {
-                    FootSocketLocation = LeftLegTarget;
-                    if (HoopzCharacter->GetVelocity().Size() > 0) { return FootSocketLocation; }
-                }
-                else { FootSocketLocation = LeftLegInterpTo; }
-            } else {
-                FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(FootName);
-            }
-        }
-
-    } else { 
-        FootName = FName(TEXT("foot_r"));
-        RightJointTargetLocation = PlayerSkeletalMesh->GetSocketLocation(FName(TEXT("joint_target_r")));
-
-        if (FootPlanted == true)  {
-            if (HoopzCharacter->PivotKey == true) {  // Right Foot Moves
-                FootSocketLocation = NewRightFootLocation;
-            } else {
-                FootSocketLocation = PivotRightFootAnchor;
-            }
-        } else {
-            if (MainState->GetCurrentState() == 0 || MainState->GetCurrentState() == 2 || MainState->GetCurrentState() == 3) {
-                if (FootKey == true) {
-                    FootSocketLocation = RightLegTarget;
-                    if (HoopzCharacter->GetVelocity().Size() > 0) { return FootSocketLocation; }
-                }
-                else { FootSocketLocation = RightLegInterpTo; }
-            } else {
-                FootSocketLocation = PlayerSkeletalMesh->GetSocketLocation(FootName);
-            }
-        }
-    }
-
-    float CapsuleHalfHeight = PlayerCapsuleComponent->GetUnscaledCapsuleHalfHeight();
-    FVector StartTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight);
-    FVector EndTrace = FVector(FootSocketLocation.X, FootSocketLocation.Y, CapsuleHalfHeight - CapsuleHalfHeight - 30); // 30 = trace distance;
-
-    FHitResult HitResult(ForceInit);
-    
-    bool HitConfirm = GetWorld()->LineTraceSingleByChannel(   // Line trace for feet
-            HitResult,
-            StartTrace,
-            EndTrace,
-            ECollisionChannel::ECC_Visibility,
-            TraceParameters);
-
-    if (HitConfirm)
-    {
-        if (!ensure(HitResult.GetActor())) { return FVector(0, 0, 0); }
-
-        // FootOffset Z
-        FootSocketLocation.Z = (HitResult.Location - HitResult.TraceEnd).Size() - 30 + 13.5 * LegScale.X;
-        
-        // Foot Rotations
-        if (Foot == 0) { 
-        LeftFootRotation.Roll = UKismetMathLibrary::DegAtan2(HitResult.Normal.Y, HitResult.Normal.Z);
-        LeftFootRotation.Pitch = UKismetMathLibrary::DegAtan2(HitResult.Normal.X, HitResult.Normal.Z);
-        } else { 
-        RightFootRotation.Roll = UKismetMathLibrary::DegAtan2(HitResult.Normal.Y, HitResult.Normal.Z);
-        RightFootRotation.Pitch = UKismetMathLibrary::DegAtan2(HitResult.Normal.X, HitResult.Normal.Z);
-        } 
-
-        return FootSocketLocation; 
-    }
-    
-    return FootSocketLocation;  // else - don't offset
-}
-

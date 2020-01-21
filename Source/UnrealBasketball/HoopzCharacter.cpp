@@ -161,11 +161,18 @@ void AHoopzCharacter::OnDashTimerExpire()
 void AHoopzCharacter::MoveForward(float Throw)
 {
 	// FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
-	// if (CurrentState == 0) { return; }
+
+	// Locomotion 2
+	if (CurrentState == 0) {
+		// Lean Direction
+		ForwardLean = Camera->GetForwardVector();
+		ForwardThrow = ForwardLean * Throw;
+
+		return;
+	}
 
 	FVector ForwardDirection = Camera->GetForwardVector();
 	// FVector Direction = GetActorForwardVector();
-	ForwardThrow = Throw;
 
 	if (PivotMode == true) {
         PivotForward = ForwardDirection * Throw * 40;
@@ -177,11 +184,18 @@ void AHoopzCharacter::MoveForward(float Throw)
 void AHoopzCharacter::MoveRight(float Throw)
 {
 	// FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
-	// if (CurrentState == 0) { return; }
+	
+	// Locomotion 2
+	if (CurrentState == 0) {
+		// Lean towards direction
+		RightLean = Camera->GetRightVector();
+		RightThrow = RightLean * Throw;
+
+		return;
+	}
 
 	FVector RightDirection = Camera->GetRightVector();
 	// FVector Direction = GetActorRightVector();
-	RightThrow = Throw;
 
 	if (PivotMode == true) {
         PivotRight = RightDirection * Throw * 40;
